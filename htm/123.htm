@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>防滑鼠右鍵</title>
+</head>
+<body>
+    <div>
+        防滑鼠右鍵,檢視原始碼
+        <br />
+        防ctrl+c,copy網頁內容
+    </div>
+</body>
+</html>
+
+<script type="text/javascript">
+//防滑鼠右鍵
+document.oncontextmenu=function(){
+	return false;
+}
+
+//防ctrl+c
+document.onkeydown=function(){
+	if(event.keyCode==67){
+		return false;
+	}
+}
+</script>
+
+<script>
+// disabled F12 key
+document.onkeypress = function (event) {  
+event = (event || window.event);  
+if (event.keyCode == 123) {  
+return false;  
+}  
+}  
+document.onmousedown = function (event) {  
+event = (event || window.event);  
+if (event.keyCode == 123) {  
+return false;  
+}  
+}  
+document.onkeydown = function (event) {  
+event = (event || window.event);  
+if (event.keyCode == 123) {  
+return false;  
+}  
+}  
+</script>
