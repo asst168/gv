@@ -2,7 +2,7 @@
 
 <head>
 <meta http-equiv="Content-Language" content="zh-tw">
-<meta name="GENERATOR" content="Microsoft FrontPage 12.0">
+<meta name="GENERATOR" content="Microsoft FrontPage 6.0">
 <meta name="ProgId" content="FrontPage.Editor.Document">
 <meta http-equiv="Content-Type" content="text/html; charset=big5">
 <title>安太歲</title>
@@ -31,11 +31,6 @@ text=document
 print(text)
 }
 </script>
-<style type="text/css">
-.auto-style1 {
-	text-align: center;
-}
-</style>
 </head>
 
 <body topmargin="0" leftmargin="0" rightmargin="0" bottommargin="0" marginwidth="0" marginheight="0" background="images/di2.gif" style="background-attachment: fixed">
@@ -123,6 +118,7 @@ print(text)
 												<td width="531" height="34" align="left">
 												<span style="font-size: 11pt">
 												<input value name="email" size="52" style="font-family: 細明體"></span><font face="Tahoma" style="font-size: 11pt">
+												<input class="font3" onclick="javascript:go();" type="button" value="E-Mail 登記" name="btn3"></td>
 											</tr>
 											<tr>
 												<td colspan="2" align="center" height="20">
@@ -140,36 +136,6 @@ print(text)
 												<font face="Tahoma" style="font-size: 11pt"><b><font color="#990000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 每名金額酌收新台幣 </font>
 												&#21441;佰元正<font color="#0000FF"> </font>
 												<font color="#990000">。</font></b></font></p>
-												<p style="margin-top: 0; margin-bottom: 0" align="left">
-												&nbsp;</p>
-												<p style="margin-top: 0; margin-bottom: 0" class="auto-style1">
-		<font face="Tahoma" style="font-size: 11pt">
-												<strong>** 因應歐盟 GDPR ( 一般資料保護法規）的規範，暫不開放[E-Mail]登記。**<script language="JavaScript">
-<!--
-
-function go(){
-location.href = "mailto:msyusyu@yahoo.com.tw?subject=我要登記 安太歲..&body=" +
-"★姓    名：" + document.form.name.value + escape("\n") +
-"★地    址：" + document.form.add.value + escape("\n") +
-"★出生日期：" + document.form.b1.value +"年"+ document.form.b2.value +"月"+ document.form.b3.value +"日"+ escape("\n") +
-"★電    話：" + document.form.phone.value + escape("\n") +
-"★Email：" + document.form.email.value + escape("\n") ;
-}
-
-// -->
-</script><script language="JavaScript">
-function DoPrint()
-	{
-		var text;
-		text = PrintArea.innerHTML;	
-				document.open();
-				document.write("");
-				document.write(text);
-				document.close();
-				print();
-				window.location.href = window.location.href;
-	}
-        </script></strong></p>
 												</td>
 											</tr>
 											</table>
@@ -182,6 +148,34 @@ function DoPrint()
 					</div>
 				</div>
 			</form>
+			<p>
+			<script language="JavaScript">
+<!--
+
+function go(){
+location.href = "mailto:msyusyu@yahoo.com.tw?subject=我要登記 安太歲..&body=" +
+"★姓    名：" + document.form.name.value + escape("\n") +
+"★地    址：" + document.form.add.value + escape("\n") +
+"★出生日期：" + document.form.b1.value +"年"+ document.form.b2.value +"月"+ document.form.b3.value +"日"+ escape("\n") +
+"★電    話：" + document.form.phone.value + escape("\n") +
+"★Email：" + document.form.email.value + escape("\n") ;
+}
+
+// -->
+</script>
+			<script language="JavaScript">
+function DoPrint()
+	{
+		var text;
+		text = PrintArea.innerHTML;	
+				document.open();
+				document.write("");
+				document.write(text);
+				document.close();
+				print();
+				window.location.href = window.location.href;
+	}
+        </script>
 		</td>
 		</tr>
 </table>
