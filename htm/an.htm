@@ -1,192 +1,117 @@
-<html>
-
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
-<meta http-equiv="Content-Language" content="zh-tw">
-<meta name="GENERATOR" content="Microsoft FrontPage 12.0">
-<meta name="ProgId" content="FrontPage.Editor.Document">
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>安太歲</title>
-<!--[if lt IE 7]>
-<link rel="stylesheet" type="text/css" href="highslide/highslide-ie6.css" />
-<![endif]-->
-<style fprolloverstyle>
-	a, A:link, a:visited, a:active
-		{color: #990000; text-decoration: none; font-family: Tahoma, Verdana; font-size: 15px;}
-	A:hover
-		{color: #0000ff; text-decoration: none; font-family: Tahoma, Verdana; font-size: 15px; font-weight: normal;background: #ffff00}
-
-	a
-		{color: #000000; text-decoration: none; font-family: Tahoma, Verdana; font-size: 15px;}
-
-	a
-		{color: #990000; text-decoration: none; font-family: Tahoma, Verdana; font-size: 15px;}
-
-	a
-		{color: #990000; text-decoration: none; font-family: Tahoma, Verdana; font-size: 15px;}
-</style>
-<SCRIPT LANGUAGE="JavaScript">
-<!-- print this page -->
-function varitext(text){
-text=document
-print(text)
-}
-</script>
-<style type="text/css">
-.auto-style2 {
-	font-size: 11pt;
-	font-weight: bold;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vue 表單自動跳欄 + Mailto 寄信</title>
+  <script src="https://unpkg.com/vue@3"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+<body>
+<div id="app" class="container mt-4">
+  <h3 class="mb-4">安太歲登記表</h3>
+  <form @submit.prevent="submitForm">
+    <div class="mb-3">
+      <label class="form-label">姓名</label>
+      <input type="text" class="form-control" v-model="form.name" ref="nameRef" @keydown.enter.prevent="focusNext('birthRef')" required autofocus>
+    </div>
 
-<body topmargin="0" leftmargin="0" rightmargin="0" bottommargin="0" marginwidth="0" marginheight="0" background="images/di2.gif" style="background-attachment: fixed">
+    <div class="mb-3">
+      <label class="form-label">生日</label>
+      <input type="text" class="form-control" v-model="form.birth" ref="birthRef" @keydown.enter.prevent="focusNext('addressRef')">
+    </div>
 
-<table border="0" width="700" id="table1" cellspacing="0" cellpadding="0" align="center">
-	<font face="Tahoma" style="font-size: 11pt">
-	<tr>
-		<td height="250" valign="top">
-		<form name="form">
-			<div align="center">
-				<div id="PrintArea" name="PrintArea">
-					<font face="Tahoma" style="font-size: 11pt">
-					<table border="0" width="700" id="table21" cellspacing="0" cellpadding="0">
-						<tr>
-							<td><font face="Tahoma" style="font-size: 11pt">
-							<p style="margin-top: 0; margin-bottom: 0" align="left">
-							<b>&nbsp; </b></td>
-						</tr>
-					</table>
-					</font>
-					<table id="table18" cellspacing="0" cellpadding="0" border="0" style="width: 783px">
-						<tr>
-							<td align="center">
-							<table id="table19" cellspacing="0" cellpadding="0" border="0" style="width: 753px">
-								<tr>
-									<td align="center">
-									<table class="font3" id="table20" style="border-collapse: collapse; width: 708px;" cellpadding="2" border="0" height="317">
-										<tr>
-											<td colspan="2" align="center" height="48">
-											<p style="margin-top: 0; margin-bottom: 0">
-											<b>
-											<font face="標楷體" color="#990000" size="6">
-											安太歲 登記表</font></b></p>
-											<hr></td>
-										</tr>
-										<tr>
-											<td align="right" width="80" height="34">
-											<b>
-											<font color="#990000" face="Tahoma" style="font-size: 11pt">
-											姓名:</font></b></td>
-											<td height="34" align="left" style="width: 550">
-											<span style="font-size: 11pt">
-											<input value name="name" size="50" style="font-family: monospace"></span></td>
-										</tr>
-										<tr>
-											<td align="right" width="80" height="34">
-											<b>
-											<font color="#990000" face="Tahoma" style="font-size: 11pt">
-											地址:</font></b></td>
-											<td height="34" align="left" style="width: 550px">
-											<span style="font-size: 11pt">
-											<input size="73" value name="add" style="font-family: 細明體"></span></td>
-										</tr>
-										<tr>
-											<td align="right" width="80" height="34">
-											<b>
-											<font color="#990000" face="Tahoma" style="font-size: 11pt">
-											出生日期:</font></b></td>
-											<td height="34" align="left" style="width: 550px">
-											<font face="Tahoma" color="#990000">
-											<span class="auto-style2">民國</span></font><span style="font-size: 11pt">
-											<input value name="b1" size="6" maxlength="4" style="font-family: 細明體"></span><font face="Tahoma" color="#990000"><span class="auto-style2">年</span></font><span style="font-size: 11pt"><input value name="b2" size="4" maxlength="2" style="font-family: 細明體"></span><font face="Tahoma" color="#990000"><span class="auto-style2">月</span></font><span style="font-size: 11pt"><input value name="b3" size="4" maxlength="2" style="font-family: 細明體"></span><font face="Tahoma" color="#990000"><span class="auto-style2">日</span></font></td>
-										</tr>
-										<tr>
-											<td align="right" width="80" height="34">
-											<b>
-											<font color="#990000" face="Tahoma" style="font-size: 11pt">
-											電話:</font></b></td>
-											<td height="34" align="left" valign="top" style="width: 550px">
-											<span style="font-size: 11pt">
-											<input value name="phone" size="20" style="font-family: 細明體"></span>
-											<font face="Tahoma" style="font-size: 11pt">
-											<b><font style="font-size: 11pt">
-											<font face="Tahoma" style="font-size: 11pt">
-											<INPUT NAME="print" TYPE="button" VALUE="列印此頁"
-												ONCLICK="varitext()">&nbsp;&nbsp; </font>
-											傳真登記：</font>05-2623899</b></td>
-										</tr>
-										<tr>
-											<td align="right" width="80" height="34">
-											<b>
-											<font face="Tahoma" color="#990000" style="font-size: 11pt">
-											E-mail:</font></b></td>
-											<td height="34" align="left" style="width: 550px">
-											<span style="font-size: 11pt">
-											<input value name="email" size="52" style="font-family: 細明體"></span><font face="Tahoma" style="font-size: 11pt">
-											<input class="font3" onclick="javascript:go();" type="button" value="E-Mail 登記" name="btn3"></td>
-										</tr>
-										<tr>
-											<td colspan="2" align="center" height="20">
-											<hr>
-											<font face="Tahoma" style="font-size: 11pt">
-											<p style="margin-top: 0; margin-bottom: 0" align="left">
-											<b>
-											<font color="#990000" face="Tahoma" style="font-size: 11pt">
-											備註：郵政劃撥帳號：</font>31584285<font color="#990000" face="Tahoma" style="font-size: 11pt">&nbsp; 
-											| 戶名：</font>梅山玉虛宮</b></p>
-											<p style="margin-top: 0; margin-bottom: 0" align="left">
-											<b><font color="#990000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-											本宮收到善款後，將寄上感謝狀。</font></b></p>
-											</font>
-											<p style="margin-top: 0; margin-bottom: 0" align="left">
-											<font face="Tahoma" style="font-size: 11pt">
-											<b><font color="#990000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-											每名金額酌收新台幣 </font>叁佰元正<font color="#0000FF">
-											</font><font color="#990000">。</font></b></font></p>
-											</td>
-										</tr>
-									</table>
-									</td>
-								</tr>
-							</table>
-							</td>
-						</tr>
-					</table>
-				</div>
-			</div>
-		</form>
-		<p>
-			<script language="JavaScript">
-<!--
+    <div class="mb-3">
+      <label class="form-label">地址</label>
+      <input type="text" class="form-control" v-model="form.address" ref="addressRef" @keydown.enter.prevent="focusNext('telRef')">
+    </div>
 
-function go(){
-location.href = "mailto:msyusyu@yahoo.com.tw?subject=我要登記 安太歲..&body=" +
-"□姓名：" + document.form.name.value + escape("\n") +
-"□生日：" + document.form.b1.value +"/"+ document.form.b2.value +"/"+ document.form.b3.value +" 吉時"+ escape("\n") +
-"□地址：" + document.form.add.value + escape("\n") +
-"□電話：" + document.form.phone.value + escape("\n") +
-"□信箱：" + document.form.email.value + escape("\n") ;
-}
+    <div class="mb-3">
+      <label class="form-label">電話</label>
+      <input type="text" class="form-control" v-model="form.tel" ref="telRef" @keydown.enter.prevent="focusNext('emailRef')">
+    </div>
 
-// -->
+    <div class="mb-3">
+      <label class="form-label">郵件信箱</label>
+      <input type="email" class="form-control" v-model="form.email" ref="emailRef" @keydown.enter.prevent="submitForm">
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary">郵件送出>登記</button>
+      <button type="button" class="btn btn-secondary" @click="printForm">列印</button>
+    </div>
+  </form>
+</div>
+
+<script>
+const { createApp, ref } = Vue;
+
+createApp({
+  setup() {
+    const form = ref({
+      name: '',
+      birth: '',
+      address: '',
+      tel: '',
+      email: ''
+    });
+
+    const nameRef = ref(null);
+    const birthRef = ref(null);
+    const addressRef = ref(null);
+    const telRef = ref(null);
+    const emailRef = ref(null);
+
+    const refs = {
+      nameRef,
+      birthRef,
+      addressRef,
+      telRef,
+      emailRef
+    };
+
+    const focusNext = (nextField) => {
+      refs[nextField]?.value?.focus();
+    };
+
+    const submitForm = () => {
+      if (!form.value.email.includes('@')) {
+        alert('請輸入正確的 Email 格式');
+        return;
+      }
+
+      const subject = encodeURIComponent('安太歲登記資料');
+      const body = encodeURIComponent(
+        `👤 姓名：${form.value.name}\n` +
+        `🎂 生日：${form.value.birth}\n` +
+        `🏠 地址：${form.value.address}\n` +
+        `📞 電話：${form.value.tel}\n` +
+        `📧 郵箱：${form.value.email}\n\n` +
+        `敬請查收 🙏`
+      );
+
+      const recipient = 'msyusyu@yahoo.com.tw'; // 請改為你自己的收件信箱
+      const mailtoLink = `mailto:${recipient}?subject=${subject}&body=${body}`;
+      window.location.href = mailtoLink;
+
+      alert('已開啟預設信箱 ✉️，請確認寄件');
+      form.value = { name: '', birth: '', address: '', tel: '', email: '' };
+      nameRef.value.focus();
+    };
+
+    const printForm = () => {
+      window.print();
+    };
+
+    return {
+      form,
+      nameRef, birthRef, addressRef, telRef, emailRef,
+      focusNext,
+      submitForm,
+      printForm
+    };
+  }
+}).mount('#app');
 </script>
-			<script language="JavaScript">
-function DoPrint()
-	{
-		var text;
-		text = PrintArea.innerHTML;	
-				document.open();
-				document.write("");
-				document.write(text);
-				document.close();
-				print();
-				window.location.href = window.location.href;
-	}
-        </script>
-		</td>
-	</tr>
-</table>
-
 </body>
-
 </html>
