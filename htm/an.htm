@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vue 表單自動跳欄 + Mailto 寄信</title>
+  <title>安太歲登記表</title>
   <script src="https://unpkg.com/vue@3"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
@@ -18,7 +18,7 @@
 
     <div class="mb-3">
       <label class="form-label">生日</label>
-      <input type="text" class="form-control" v-model="form.birth" ref="birthRef" @keydown.enter.prevent="focusNext('addressRef')">
+      <input type="text" class="form-control" v-model="form.birth" placeholder="如 民國99年01月02日 請書寫> 99/01/02" ref="birthRef" @keydown.enter.prevent="focusNext('addressRef')">
     </div>
 
     <div class="mb-3">
@@ -40,7 +40,24 @@
       <button type="submit" class="btn btn-primary">郵件送出>登記</button>
       <button type="button" class="btn btn-secondary" @click="printForm">列印</button>
     </div>
-  </form>
+	<td colspan="2" align="center" height="20">
+	<hr>
+	<font face="Tahoma" style="font-size: 11pt">
+	<p style="margin-top: 0; margin-bottom: 0" align="left">
+	<b>
+	<font color="#990000" face="Tahoma" style="font-size: 11pt">
+	備註：郵政劃撥帳號：</font>31584285<font color="#990000" face="Tahoma" style="font-size: 11pt">
+	| 戶名：</font>梅山玉虛宮</b></p>
+	<p style="margin-top: 0; margin-bottom: 0" align="left">
+	<b><font color="#990000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+	本宮收到善款後，將寄上感謝狀。</font></b></p>
+	</font>
+	<p style="margin-top: 0; margin-bottom: 0" align="left">
+	<font face="Tahoma" style="font-size: 11pt">
+	<b><font color="#990000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+	每名金額酌收新台幣 </font>叁佰伍元正<font color="#0000FF">
+	</font><font color="#990000">。</font></b></font></p> 
+</form>
 </div>
 
 <script>
