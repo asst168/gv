@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>便當叫號系統（語音+取消+密碼重置，號碼001~100）</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 2em;
+      background-color: #f9f9f9;
+      min-height: 100vh;
+      margin: 0;
+      position: relative;
+    }
+    .menu-container {
+      display: flex;
+      justify-content: center;
+      gap: 3em;
+      margin-bottom: 2em;
+    }
+    .menu-item {
+      border: 2px solid #ccc;
+      padding: 1.5em;
+      border-radius: 15px;
+      width: 200px;
+      background-color: #fff;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+    }
+    .menu-item button {
+      font-size: 1.5em;
+      padding: 0.5em 1em;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .counter {
+      margin-top: 0.8em;
+      font-size: 1.2em;
+      color: #555;
+    }
+    #ticket {
+      margin-top: 2em;
+      font-size: 2em;
+      min-height: 1.8em;
+    }
+    #qrcode {
+      margin-top: 1em;
+    }
+    #qrcode img {
+      width: 200px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    .callout {
+      margin-top: 2em;
+      font-size: 1.5em;
+      color: #2c3e50;
+      min-height: 2em;
+    }
+    #cancelBtn {
+      margin-top: 1.5em;
+      padding: 0.5em 1.2em;
+      font-size: 1.2em;
+      border-radius: 8px;
+      background-color: #f39c12;
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: none; /* 預設隱藏 */
+    }
+    #resetBtn {
+      position: fixed;
+      right: 15px;
+      bottom: 15px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: 1.5em;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #passwordPrompt {
+      position: fixed;
+      bottom: 70px;
+      right: 15px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      display: none;
+      width: 220px;
+      text-align: left;
+    }
+    #passwordPrompt input[type="password"] {
+      width: calc(100% - 20px);
+      padding: 6px 10px;
+      margin-bottom: 8px;
+      font-size: 1em;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    #passwordPrompt button {
+      padding: 6px 12px;
+      font-size: 1em;
+      border-radius: 6px;
+      border: none;
+      background-color: #27ae60;
+      color: white;
+      cursor: pointer;
+    }
+    #passwordError {
+      color: red;
+      font-size: 0.9em;
+      margin-top: 4px;
+      min-height: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <h1>🍱 便當叫號系統</h1>
+  <p>請選擇您的便當品項（限號碼 001 ~ 100）</p>
+
+  <div class="menu-container">
+    <div class="menu-item">
+      <button onclick="getTicket('雞腿')">🍗 雞腿便當</button>
+      <div class="counter" id="count-雞腿">目前號碼：000</div>
+    </div>
+    <div class="menu-item">
+      <button onclick="getTicket('排骨')">🥩 排骨便當</button>
+      <div class="counter" id="count-排骨">目前號碼：000</div>
+    </div>
+  </div>
+
+  <div id="ticket"></div>
+  <div id="qrcode"></div>
+  <div class="callout" id="callout"></div>
+
+  <button id="cancelBtn" onclick="cancelLastTicket()">取消本次號碼</button>
+
+  <!-- 長按3秒出現重置密碼輸入 -->
+  <button id="resetBtn" title="長按 3 秒重置號碼">🔄</button>
+
+  <div id="passwordPrompt">
+    <label for="resetPassword">請輸入管理密碼重置號碼：</label><br/>
+    <input type="password" id="resetPassword" autocomplete="off" />
+    <button onclick="checkPassword()">確定</button>
+    <div id="passwordError"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script>
+    const counters = {
+      '雞腿': parseInt(localStorage.getItem('雞腿')) || 0,
+      '排骨': parseInt(localStorage.getItem('排骨')) || 0
+    };
+
+    let lastTicket = null;
+    let cancelTimeout = null;
+
+    function updateCounts() {
+      document.getElementById('count-雞腿').textContent = `目前號碼：${String(counters['雞腿']).padStart(3,'0')}`;
+      document.getElementById('count-排骨').textContent = `目前號碼：${String(counters['排骨']).padStart(3,'0')}`;
+    }
+
+    function speak(text) {
+      if (!window.speechSynthesis) return;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'zh-TW';
+      speechSynthesis.cancel();
+      speechSynthesis.speak(utterance);
+    }
+
+    function getTicket(type) {
+      if (counters[type] >= 100) {
+        alert(`${type}便當已發完（001 ~ 100 號）`);
+        return;
+      }
+
+      counters[type]++;
+      const number = counters[type];
+
+      localStorage.setItem(type, counters[type]);
+
+      const numberStr = String(number).padStart(3,'0');
+      const ticketText = `${type}便當 #${numberStr}`;
+
+      document.getElementById('ticket').textContent = `您的號碼牌是：${ticketText}`;
+      document.getElementById('qrcode').innerHTML = '';
+      QRCode.toCanvas(document.createElement('canvas'), ticketText, function(err, canvas) {
+        if (err) {
+          console.error(err);
+          return;
+        }
+        const img = document.createElement('img');
+        img.src = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = img.src;
+        link.download = `${ticketText}.png`;
+        link.appendChild(img);
+        link.title = '點我下載 QR Code 圖片';
+        document.getElementById('qrcode').appendChild(link);
+      });
+
+      updateCounts();
+
+      // 改成開頭加「請注意」
+      const callText = `您的 ${type}便當，${numberStr}號，請下載二維碼，以便領餐！`;
+      document.getElementById('callout').textContent = callText;
+      speak(callText);
+
+      lastTicket = {type, number};
+      document.getElementById('cancelBtn').style.display = 'inline-block';
+
+      if(cancelTimeout) clearTimeout(cancelTimeout);
+      cancelTimeout = setTimeout(() => {
+        lastTicket = null;
+        document.getElementById('cancelBtn').style.display = 'none';
+      }, 10000);
+    }
+
+    function cancelLastTicket() {
+      if(!lastTicket) return;
+      if(!confirm(`確定要取消 ${lastTicket.type}便當 #${String(lastTicket.number).padStart(3,'0')} 嗎？`)) return;
+
+      counters[lastTicket.type] = lastTicket.number - 1;
+      localStorage.setItem(lastTicket.type, counters[lastTicket.type]);
+      updateCounts();
+
+      document.getElementById('ticket').textContent = '';
+      document.getElementById('qrcode').innerHTML = '';
+      document.getElementById('callout').textContent = '';
+      speechSynthesis.cancel();
+
+      lastTicket = null;
+      document.getElementById('cancelBtn').style.display = 'none';
+
+      alert('已成功取消上次號碼');
+    }
+
+    const resetBtn = document.getElementById('resetBtn');
+    const passwordPrompt = document.getElementById('passwordPrompt');
+    const passwordInput = document.getElementById('resetPassword');
+    const passwordError = document.getElementById('passwordError');
+    let pressTimer = null;
+
+    resetBtn.addEventListener('mousedown', () => {
+      pressTimer = setTimeout(() => {
+        passwordPrompt.style.display = 'block';
+        passwordInput.focus();
+      }, 3000);
+    });
+    resetBtn.addEventListener('mouseup', () => clearTimeout(pressTimer));
+    resetBtn.addEventListener('mouseleave', () => clearTimeout(pressTimer));
+
+    function checkPassword() {
+      const pwd = passwordInput.value;
+      const correctPassword = '1234';
+
+      if(pwd === correctPassword) {
+        if(confirm('密碼正確，確定要重置號碼？')) {
+          localStorage.removeItem('雞腿');
+          localStorage.removeItem('排骨');
+          counters['雞腿'] = 0;
+          counters['排骨'] = 0;
+          updateCounts();
+          document.getElementById('ticket').textContent = '';
+          document.getElementById('qrcode').innerHTML = '';
+          document.getElementById('callout').textContent = '';
+          lastTicket = null;
+          document.getElementById('cancelBtn').style.display = 'none';
+          alert('號碼已重置為 000');
+          passwordPrompt.style.display = 'none';
+          passwordInput.value = '';
+          passwordError.textContent = '';
+        }
+      } else {
+        passwordError.textContent = '密碼錯誤，請重新輸入';
+        passwordInput.value = '';
+        passwordInput.focus();
+      }
+    }
+
+    updateCounts();
+  </script>
+</body>
+</html>
