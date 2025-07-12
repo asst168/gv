@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>安太歲登記表</title>
+  <title>點燈登記表</title>
   <script src="https://unpkg.com/vue@3"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
 <div id="app" class="container mt-4">
-  <h3 class="mb-4">安太歲登記表</h3>
+  <h3 class="mb-4">點燈登記表</h3>
   <form @submit.prevent="submitForm">
     <div class="mb-3">
       <label class="form-label">姓名</label>
@@ -33,7 +33,7 @@
 
     <div class="mb-3">
       <label class="form-label">信箱</label>
-      <input type="email" class="form-control" v-model="form.email" ref="emailRef" @keydown.enter.prevent="submitForm">
+      <input type="email" class="form-control" v-model="form.email" placeholder="aaa@bbb.zz"  ref="emailRef" @keydown.enter.prevent="submitForm">
     </div>
 
     <div class="d-flex gap-2">
@@ -46,15 +46,15 @@
 	<p style="margin-top: 0; margin-bottom: 0" align="left">
 	<b>
 	<font color="#990000" face="Tahoma" style="font-size: 11pt">
-	郵政劃撥帳號：</font>31584285<font color="#990000" face="Tahoma" style="font-size: 11pt">	| 戶名：</font>梅山玉虛宮</b></p>
+	郵政劃撥帳號：</font>12345678<font color="#990000" face="Tahoma" style="font-size: 11pt">	| 戶名：</font>宮廟</b></p>
 	<p style="margin-top: 0; margin-bottom: 0" align="left">
 	<b><font color="#990000">
-	本宮收到善款後，將寄上感謝狀。 | 傳真登記：05-2623899</font></b></p>
+	本宮廟收到善款後，將寄上感謝狀。 | 傳真登記：99-1234567</font></b></p>
 	</font>
 	<p style="margin-top: 0; margin-bottom: 0" align="left">
 	<font face="Tahoma" style="font-size: 11pt">
 	<b><font color="#990000">
-	每名金額酌收新台幣 </font>叁佰元正<font color="#0000FF">
+	每名金額酌收新台幣 </font>元正<font color="#0000FF">
 	</font><font color="#990000">。</font></b></font></p> 
 </form>
 </div>
@@ -96,7 +96,7 @@ createApp({
         return;
       }
 
-      const subject = encodeURIComponent('安太歲登記資料');
+      const subject = encodeURIComponent('點燈登記資料');
       const body = encodeURIComponent(
         `👤 姓名：${form.value.name}\n` +
         `🎂 生日：${form.value.birth}\n` +
@@ -106,7 +106,7 @@ createApp({
         `敬請查收 🙏`
       );
 
-      const recipient = 'msyusyu@yahoo.com.tw'; // 請改為你自己的收件信箱
+      const recipient = '123@456.com.tw'; // 請改為你自己的收件信箱
       const mailtoLink = `mailto:${recipient}?subject=${subject}&body=${body}`;
       window.location.href = mailtoLink;
 
