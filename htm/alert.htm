@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>記事提醒系統（超究極完整版）</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { padding: 18px; background:#f8f9fa; }
+    .due-soon { background-color: #fff3cd !important; }
+    .overdue { background-color: #f8d7da !important; }
+    .status-ok { color: #198754; font-weight:600; }
+    .status-soon { color: #856404; font-weight:600; }
+    .status-bad { color: #842029; font-weight:600; }
+    .small-muted { font-size: .85rem; color: #6c757d; }
+    .table-wrap { max-height: 56vh; overflow:auto; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="mb-3">📅 記事提醒</h1>
+
+    <!-- alert area -->
+    <div id="alertArea"></div>
+
+    <!-- controls -->
+    <div class="card mb-3">
+      <div class="card-body">
+        <form id="addForm" class="row g-2 align-items-center">
+          <div class="col-md-4">
+            <input id="title" class="form-control" placeholder="事件名稱 (必填)" required>
+          </div>
+          <div class="col-md-3">
+            <input id="date" type="date" class="form-control" required>
+          </div>
+          <div class="col-md-2">
+            <input id="remindDays" type="number" class="form-control" min="0" value="0" placeholder="提前提醒(天)">
+          </div>
+          <div class="col-md-2">
+            <input id="cycleMonths" type="number" class="form-control" min="0" value="0" placeholder="循環(月)">
+          </div>
+          <div class="col-md-1 d-grid">
+            <button class="btn btn-primary" type="submit">新增</button>
+          </div>
+        </form>
+
+        <div class="mt-3 small-muted">
+          功能：自動遞延 / 單次提醒 / 桌面通知 + 聲音 / 匯入合併 / 匯出 JSON 或 .ics
+          <div class="mt-2">
+            <button id="exportJsonBtn" class="btn btn-sm btn-outline-secondary">匯出 JSON</button>
+            <button id="importBtn" class="btn btn-sm btn-outline-secondary">匯入 JSON</button>
+            <input id="importFile" type="file" accept=".json" style="display:none">
+            <button id="exportIcsBtn" class="btn btn-sm btn-outline-info">匯出 .ics (下一次)</button>
+            <button id="clearBtn" class="btn btn-sm btn-outline-danger float-end">清空全部</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- events table -->
+    <div class="card">
+      <div class="card-body table-wrap p-0">
+        <table class="table table-hover table-bordered mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>事件</th>
+              <th>日期</th>
+              <th>提前(天)</th>
+              <th>循環(月)</th>
+              <th>狀態</th>
+              <th style="min-width:220px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="eventTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- edit modal -->
+  <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="editForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">編輯事件</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editIndex">
+          <div class="mb-3">
+            <label class="form-label">事件名稱</label>
+            <input id="editTitle" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">日期</label>
+            <input id="editDate" type="date" class="form-control" required>
+          </div>
+          <div class="row">
+            <div class="col mb-3">
+              <label class="form-label">提前提醒(天)</label>
+              <input id="editRemindDays" type="number" class="form-control" min="0">
+            </div>
+            <div class="col mb-3">
+              <label class="form-label">循環(月)</label>
+              <input id="editCycleMonths" type="number" class="form-control" min="0">
+            </div>
+          </div>
+          <div class="small-muted">修改後立即儲存並影響下一次檢查。</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="submit" class="btn btn-primary">儲存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- audio (inline, short beep) -->
+  <audio id="notifySound">
+    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=" type="audio/wav">
+  </audio>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+  // ---------- Utilities ----------
+  const STORAGE_KEY = 'reminder_super_v1';
+  function loadEvents() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch(e){ console.error(e); return []; }
+  }
+  function saveEvents(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+
+  function formatYMD(d){
+    const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${dd}`;
+  }
+  function parseYMD(s){
+    if(!s) return null;
+    const [y,m,dd] = s.split('-').map(Number);
+    return new Date(y, m-1, dd);
+  }
+  function startOfDay(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function daysBetween(a,b){ return Math.round((startOfDay(b)-startOfDay(a))/86400000); } // b - a
+
+  // ---------- App State ----------
+  let events = loadEvents(); // each: { title, date:'YYYY-MM-DD', remindDays:int, cycleMonths:int, lastNotifiedForDate: 'YYYY-MM-DD'|null }
+  const alertArea = document.getElementById('alertArea');
+  const notifySound = document.getElementById('notifySound');
+  const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+  // Request notification permission early (but don't spam)
+  if ("Notification" in window && Notification.permission === "default") {
+    try { Notification.requestPermission(); } catch(e){ /*ignore*/ }
+  }
+
+  // ---------- Core: check, auto-defer, prepare reminders ----------
+  function checkAndNotify(autoDefer=true){
+    const today = startOfDay(new Date());
+    const messages = [];
+    let changed = false;
+
+    // 1) auto defer past events that have cycleMonths>0
+    for (let ev of events){
+      let evDate = parseYMD(ev.date);
+      if (!evDate) continue;
+      let diff = daysBetween(today, evDate); // today -> evDate
+      if (diff <= 0 && (parseInt(ev.cycleMonths)||0) > 0 && autoDefer){
+        // advance until eventDate > today
+        let loops=0;
+        while (daysBetween(today, evDate) <= 0 && loops < 200){
+          evDate.setMonth(evDate.getMonth() + (parseInt(ev.cycleMonths)||0));
+          loops++;
+        }
+        const newDate = formatYMD(evDate);
+        if (newDate !== ev.date){
+          ev.date = newDate;
+          ev.lastNotifiedForDate = null; // reset notification record for new occurrence
+          changed = true;
+        }
+      }
+    }
+
+    // 2) collect reminders (single-shot per occurrence using lastNotifiedForDate)
+    for (let ev of events){
+      const evDate = parseYMD(ev.date);
+      if (!evDate) continue;
+      const diff = daysBetween(today, evDate);
+      const remindDays = parseInt(ev.remindDays) || 0;
+      if (diff >= 0 && diff <= remindDays){
+        if (ev.lastNotifiedForDate !== ev.date){
+          messages.push({ title: ev.title, date: ev.date, days: diff });
+          ev.lastNotifiedForDate = ev.date;
+          changed = true;
+        }
+      }
+    }
+
+    if (changed) saveEvents(events);
+    renderEvents();
+
+    if (messages.length > 0){
+      // combine into alert area + play sound + show desktop notifications
+      const html = `<div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <strong>提醒：</strong><ul class="mb-0">${messages.map(m => `<li>「${escapeHtml(m.title)}」將於 ${m.date} (${m.days} 天後)</li>`).join('')}</ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>`;
+      alertArea.innerHTML = html;
+
+      // play sound (short beep). If browser blocks autoplay, user interaction is needed.
+      try { notifySound.currentTime = 0; notifySound.play().catch(()=>{}); } catch(e){}
+
+      // desktop notifications (one per event, but compact)
+      if ("Notification" in window && Notification.permission === "granted") {
+        for (let m of messages){
+          const n = new Notification(m.title, {
+            body: `將於 ${m.date} 到期（${m.days} 天後）`,
+            tag: `reminder-${m.title}-${m.date}`
+          });
+          // optional click to focus
+          n.onclick = ()=> window.focus();
+        }
+      }
+    } else {
+      alertArea.innerHTML = ''; // clear alerts if none (optional)
+    }
+  }
+
+  // ---------- Render ----------
+  function escapeHtml(s){
+    return (s+'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+  }
+  function sortEvents(){
+    events.sort((a,b) => {
+      const da = parseYMD(a.date), db = parseYMD(b.date);
+      return da - db;
+    });
+  }
+  function renderEvents(){
+    sortEvents();
+    const tbody = document.getElementById('eventTable');
+    tbody.innerHTML = '';
+    const today = startOfDay(new Date());
+    events.forEach((ev, idx) => {
+      const evDate = parseYMD(ev.date);
+      let statusText = '✅ 正常', statusClass='status-ok', rowClass='';
+      if (!evDate){ statusText='❌ 日期錯誤'; statusClass='status-bad'; rowClass=''; }
+      else {
+        const diff = daysBetween(today, evDate);
+        if (diff < 0){ statusText='❌ 已過期'; statusClass='status-bad'; rowClass='overdue'; }
+        else if (diff <= (parseInt(ev.remindDays)||0)){ statusText='⚠ 即將到期'; statusClass='status-soon'; rowClass='due-soon'; }
+      }
+      const tr = document.createElement('tr');
+      tr.className = rowClass;
+      tr.innerHTML = `
+        <td style="vertical-align:middle;">
+          <div style="font-weight:600">${escapeHtml(ev.title)}</div>
+          <div class="small-muted">上次提醒：${ev.lastNotifiedForDate||'-'}</div>
+        </td>
+        <td style="vertical-align:middle;">${ev.date}</td>
+        <td style="vertical-align:middle;">${ev.remindDays} 天</td>
+        <td style="vertical-align:middle;">${ev.cycleMonths} 月</td>
+        <td style="vertical-align:middle;"><span class="${statusClass}">${statusText}</span></td>
+        <td style="vertical-align:middle;">
+          <div class="btn-group" role="group">
+            <button class="btn btn-sm btn-outline-primary" onclick="openEdit(${idx})">編輯</button>
+            <button class="btn btn-sm btn-success" onclick="manualNext(${idx})">下一週期</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="removeEvent(${idx})">刪除</button>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ---------- CRUD ----------
+  document.getElementById('addForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const t = document.getElementById('title').value.trim();
+    const dt = document.getElementById('date').value;
+    if (!t || !dt) return;
+    const rd = parseInt(document.getElementById('remindDays').value) || 0;
+    const cm = parseInt(document.getElementById('cycleMonths').value) || 0;
+    events.push({ title: t, date: dt, remindDays: rd, cycleMonths: cm, lastNotifiedForDate: null });
+    saveEvents(events);
+    document.getElementById('addForm').reset();
+    checkAndNotify(true);
+  });
+
+  function removeEvent(i){
+    if (!confirm('確定刪除此事件？')) return;
+    events.splice(i,1);
+    saveEvents(events);
+    renderEvents();
+  }
+  window.removeEvent = removeEvent;
+
+  function manualNext(i){
+    const ev = events[i];
+    const cm = parseInt(ev.cycleMonths)||0;
+    if (cm <= 0){ alert('此事件未設定循環月數。'); return; }
+    let d = parseYMD(ev.date);
+    d.setMonth(d.getMonth() + cm);
+    ev.date = formatYMD(d); ev.lastNotifiedForDate = null;
+    saveEvents(events); renderEvents();
+  }
+  window.manualNext = manualNext;
+
+  // ---------- Edit ----------
+  function openEdit(i){
+    const ev = events[i];
+    if (!ev) return;
+    document.getElementById('editIndex').value = i;
+    document.getElementById('editTitle').value = ev.title;
+    document.getElementById('editDate').value = ev.date;
+    document.getElementById('editRemindDays').value = ev.remindDays;
+    document.getElementById('editCycleMonths').value = ev.cycleMonths;
+    editModal.show();
+  }
+  window.openEdit = openEdit;
+
+  document.getElementById('editForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const idx = parseInt(document.getElementById('editIndex').value);
+    if (isNaN(idx) || !events[idx]) return;
+    const title = document.getElementById('editTitle').value.trim();
+    const date = document.getElementById('editDate').value;
+    const rd = parseInt(document.getElementById('editRemindDays').value)||0;
+    const cm = parseInt(document.getElementById('editCycleMonths').value)||0;
+    // if date changed, reset notification record
+    if (events[idx].date !== date) events[idx].lastNotifiedForDate = null;
+    events[idx].title = title; events[idx].date = date; events[idx].remindDays = rd; events[idx].cycleMonths = cm;
+    saveEvents(events); editModal.hide(); checkAndNotify(true);
+  });
+
+  // ---------- Export / Import (merge) / ICS / Clear ----------
+  document.getElementById('exportJsonBtn').addEventListener('click', ()=>{
+    const data = JSON.stringify(events, null, 2);
+    const blob = new Blob([data], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'reminder_export_'+(new Date().toISOString().slice(0,10))+'.json'; a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('importBtn').addEventListener('click', ()=> document.getElementById('importFile').click());
+  document.getElementById('importFile').addEventListener('change', e=>{
+    const f = e.target.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const arr = JSON.parse(ev.target.result);
+        if (!Array.isArray(arr)) throw new Error('格式錯誤，需為陣列');
+        // merge: add new items that are not duplicate (title+date) ; update existing if same title+date?
+        let added=0, skipped=0;
+        for (const it of arr){
+          if (!it.title || !it.date) { skipped++; continue; }
+          const key = `${it.title}||${it.date}`;
+          const exists = events.some(x=>`${x.title}||${x.date}` === key);
+          if (!exists){
+            // normalize fields
+            events.push({
+              title: String(it.title),
+              date: String(it.date),
+              remindDays: parseInt(it.remindDays)||0,
+              cycleMonths: parseInt(it.cycleMonths)||0,
+              lastNotifiedForDate: it.lastNotifiedForDate || null
+            });
+            added++;
+          } else skipped++;
+        }
+        saveEvents(events);
+        checkAndNotify(true);
+        alert(`匯入完成：新增 ${added} 項，略過 ${skipped} 項（可能重複或格式錯誤）`);
+      } catch(err){
+        alert('匯入失敗：' + err.message);
+      } finally {
+        e.target.value = '';
+      }
+    };
+    reader.readAsText(f);
+  });
+
+  // export .ics for next occurrence of each event (simple all-day VEVENT)
+  document.getElementById('exportIcsBtn').addEventListener('click', ()=>{
+    let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//ReminderSuper//EN\r\n';
+    const today = startOfDay(new Date());
+    for (const ev of events){
+      let d = parseYMD(ev.date);
+      if (!d) continue;
+      // ensure it's the next occurrence (if past and has cycle, we may compute next)
+      if (daysBetween(today, d) <= 0 && (parseInt(ev.cycleMonths)||0) > 0){
+        let loops=0;
+        while (daysBetween(today, d) <= 0 && loops < 200){
+          d.setMonth(d.getMonth() + (parseInt(ev.cycleMonths)||0));
+          loops++;
+        }
+      }
+      const dt = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+      // simple all-day event: DTSTART;VALUE=DATE:YYYYMMDD
+      ics += 'BEGIN:VEVENT\r\n';
+      ics += `UID:${encodeURIComponent(ev.title)}-${dt}@reminder.local\r\n`;
+      ics += `DTSTAMP:${new Date().toISOString().replace(/[-:]/g,'').split('.')[0]}Z\r\n`;
+      ics += `DTSTART;VALUE=DATE:${dt}\r\n`;
+      ics += `DTEND;VALUE=DATE:${dt}\r\n`;
+      ics += `SUMMARY:${ev.title}\r\n`;
+      ics += 'END:VEVENT\r\n';
+    }
+    ics += 'END:VCALENDAR\r\n';
+    const blob = new Blob([ics], {type:'text/calendar;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'reminder_events.ics'; a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', ()=>{
+    if (!confirm('確定清空全部事件？此操作不可還原')) return;
+    events = []; saveEvents(events); renderEvents(); alert('已清空');
+  });
+
+  // ---------- Init ----------
+  renderEvents();
+  // initial check: auto-defer + notify (true)
+  checkAndNotify(true);
+
+  // periodic check once per minute while page open
+  setInterval(()=> checkAndNotify(true), 60*1000);
+
+  // expose check for debugging (optional)
+  window.checkAndNotify = checkAndNotify;
+
+  </script>
+</body>
+</html>
