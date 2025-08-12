@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>客戶消費週期預測</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 20px; background: #f8f8f8; }
+h1 { color: #333; }
+label { display: block; margin-top: 10px; }
+input, button { padding: 5px; margin-top: 5px; }
+button { margin-top: 10px; background: #4CAF50; color: white; border: none; cursor: pointer; }
+button:hover { background: #45a049; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+th { background: #eee; }
+.action-btn { background: #f44336; color: white; padding: 5px; border: none; cursor: pointer; }
+.action-btn.edit { background: #ff9800; }
+.export-btn { background: #2196F3; margin-right: 5px; }
+</style>
+</head>
+<body>
+
+<h1>客戶消費週期預測</h1>
+
+<label>客戶名稱：
+  <input type="text" id="customerName" placeholder="輸入客戶名稱">
+</label>
+
+<label>最近第一次（最新）消費日期：
+  <input type="date" id="d1">
+</label>
+
+<label>最近第二次（上上一次）消費日期：
+  <input type="date" id="d2">
+</label>
+
+<label>最近第三次（上上上一次，可不填）消費日期：
+  <input type="date" id="d3">
+</label>
+
+<button id="mainBtn" onclick="calc()">新增客戶</button>
+
+<h2>消費週期紀錄</h2>
+<div>
+  <button class="export-btn" onclick="exportCSV()">匯出 CSV</button>
+  <button class="export-btn" onclick="exportJSON()">匯出 JSON</button>
+</div>
+<table id="dataTable">
+  <thead>
+    <tr>
+      <th>客戶</th>
+      <th>平均週期(天)</th>
+      <th>最近消費日</th>
+      <th>下次消費日</th>
+      <th>準確值</th>
+      <th>操作</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+let records = [];
+let editIndex = null;
+
+function parseDate(v) {
+  return v ? new Date(v + 'T00:00:00') : null;
+}
+function daysBetween(a, b) {
+  return Math.round((b - a) / (1000 * 60 * 60 * 24));
+}
+function addDays(d, days) {
+  const nd = new Date(d);
+  nd.setDate(nd.getDate() + days);
+  return nd;
+}
+function fmtDate(d) {
+  return d.getFullYear() + '-' +
+         String(d.getMonth()+1).padStart(2,'0') + '-' +
+         String(d.getDate()).padStart(2,'0');
+}
+
+function calc(){
+  const name = document.getElementById('customerName').value.trim();
+  const v1 = parseDate(document.getElementById('d1').value); // 最近一次
+  const v2 = parseDate(document.getElementById('d2').value); // 上上一次
+  const v3 = parseDate(document.getElementById('d3').value); // 上上上一次
+
+  if (!name) {
+    alert("請輸入客戶名稱");
+    return;
+  }
+  if (!v1 || !v2) {
+    alert("請至少輸入最近兩次消費日期");
+    return;
+  }
+
+  const dates = [v1, v2, v3].filter(x=>x);
+  let intervalDays = null;
+  let method = '';
+
+  if(dates.length === 2){
+    method = 'two';
+    intervalDays = daysBetween(dates[1], dates[0]);
+  } else {
+    method = 'three';
+    const i1 = daysBetween(dates[2], dates[1]);
+    const i2 = daysBetween(dates[1], dates[0]);
+    const wRecent = 0.7, wOld = 0.3;
+    intervalDays = Math.round(i1 * wOld + i2 * wRecent);
+  }
+
+  const lastDate = dates[0];
+  const next = addDays(lastDate, intervalDays);
+
+  let confidence = method === 'three' ? 0.9 : 0.7;
+
+  const record = {
+    customer: name,
+    cycle: intervalDays,
+    lastDate: fmtDate(lastDate),
+    nextDate: fmtDate(next),
+    accuracy: (confidence*100).toFixed(0) + "%",
+    d1: fmtDate(v1),
+    d2: fmtDate(v2),
+    d3: v3 ? fmtDate(v3) : ""
+  };
+
+  if (editIndex !== null) {
+    records[editIndex] = record;
+    editIndex = null;
+    document.querySelector("#mainBtn").textContent = "新增客戶";
+  } else {
+    records.push(record);
+  }
+  renderTable();
+  clearInputs();
+}
+
+function renderTable() {
+  const tbody = document.querySelector("#dataTable tbody");
+  tbody.innerHTML = "";
+  records.forEach((r, idx) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r.customer}</td>
+      <td>${r.cycle}</td>
+      <td>${r.lastDate}</td>
+      <td>${r.nextDate}</td>
+      <td>${r.accuracy}</td>
+      <td>
+        <button class="action-btn edit" onclick="editRecord(${idx})">修改</button>
+        <button class="action-btn" onclick="deleteRecord(${idx})">刪除</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function editRecord(index) {
+  const r = records[index];
+  document.getElementById('customerName').value = r.customer;
+  document.getElementById('d1').value = r.d1;
+  document.getElementById('d2').value = r.d2;
+  document.getElementById('d3').value = r.d3;
+  editIndex = index;
+  document.querySelector("#mainBtn").textContent = "更新客戶";
+}
+
+function deleteRecord(index) {
+  if (confirm("確定要刪除此紀錄嗎？")) {
+    records.splice(index, 1);
+    renderTable();
+  }
+}
+
+function clearInputs() {
+  document.getElementById('customerName').value = "";
+  document.getElementById('d1').value = "";
+  document.getElementById('d2').value = "";
+  document.getElementById('d3').value = "";
+  editIndex = null;
+  document.querySelector("#mainBtn").textContent = "新增客戶";
+}
+
+function exportCSV() {
+  let csv = "客戶,平均週期,最近消費日,下次消費日,準確值\n";
+  records.forEach(r => {
+    csv += `${r.customer},${r.cycle},${r.lastDate},${r.nextDate},${r.accuracy}\n`;
+  });
+  // 加 UTF-8 BOM 避免 Excel 亂碼
+  downloadFile("records.csv", "\uFEFF" + csv);
+}
+
+function exportJSON() {
+  const json = JSON.stringify(records, null, 2);
+  downloadFile("records.json", json);
+}
+
+function downloadFile(filename, content) {
+  const blob = new Blob([content], {type: "text/plain;charset=utf-8"});
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+}
+</script>
+
+</body>
+</html>
