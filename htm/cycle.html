@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<title>客戶消費週期預測 - 全歷史趨勢圖（即時更新版）</title>
+<title>客戶消費週期預測 - 全歷史 + 波動率 + 流失預警</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   body { font-family: Arial, sans-serif; margin: 20px; background: #f8f8f8; }
@@ -11,24 +11,32 @@
   input, button { padding: 6px 10px; margin-top: 6px; }
   button { background: #4CAF50; color: white; border: none; cursor: pointer; margin-right: 6px; border-radius: 4px; }
   button:hover { background: #45a049; }
-  table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+  .secondary { background: #9e9e9e; }
+  .export-btn { background: #2196F3; }
+  .remove-date { background: #d9534f; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; background: white; }
   th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
   th { background: #f0f0f0; }
   .action-btn { background: #f44336; }
   .action-btn.edit { background: #ff9800; }
-  .export-btn { background: #2196F3; }
   .date-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
   .date-row input[type="date"] { flex: 1; padding: 6px; }
-  .remove-date { background: #d9534f; }
-  .secondary { background: #9e9e9e; }
-  .chart-container { margin-top: 30px; background: white; padding: 16px; border: 1px solid #ddd; border-radius: 6px; }
+  .chart-container { margin-top: 24px; background: white; padding: 16px; border: 1px solid #ddd; border-radius: 6px; }
   .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .hint { color: #666; font-size: 12px; margin-top: 4px; }
+  .badge { padding: 4px 8px; border-radius: 12px; color: #fff; font-weight: bold; display: inline-block; }
+  .risk-high { background: #e53935; }   /* 紅：流失風險 */
+  .risk-med  { background: #fb8c00; }   /* 橙：即將到期 */
+  .risk-low  { background: #43a047; }   /* 綠：正常 */
+  .legend { font-size: 12px; color: #555; margin-top: 6px; }
+  .legend span { display:inline-block; margin-right:10px; }
+  .legend .dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:4px; position:relative; top:1px; }
+  .dot.low { background:#43a047; } .dot.med { background:#fb8c00; } .dot.high { background:#e53935; }
 </style>
 </head>
 <body>
 
-<h1>客戶消費週期預測 - 全歷史趨勢圖（即時更新版）</h1>
+<h1>客戶消費週期預測（全歷史 + 波動率 + 流失預警）</h1>
 
 <div class="controls">
   <label>客戶名稱：
@@ -40,13 +48,13 @@
 <div id="datesSection">
   <label>消費日期紀錄（由新到舊；至少兩筆）</label>
   <div id="datesContainer"></div>
-  <div class="hint">提示：點「+ 新增日期」可增加欄位；刪除任一筆會即時重算表格與圖表。</div>
+  <div class="hint">提示：點「+ 新增日期」可增加欄位；新增/刪除/修改日期將即時重算表格與圖表。</div>
   <button onclick="addDate()">+ 新增日期</button>
 </div>
 
 <div style="margin-top:10px;">
   <button id="mainBtn" onclick="saveRecord()">新增/更新客戶（存檔）</button>
-  <span class="hint">（即時計算已生效；此按鈕用於正式存檔與重置狀態）</span>
+  <span class="hint">即時計算已生效；此按鈕用於正式存檔與重置輸入區。</span>
 </div>
 
 <h2>消費週期紀錄</h2>
@@ -54,15 +62,22 @@
   <button class="export-btn" onclick="exportCSV()">匯出 CSV</button>
   <button class="export-btn" onclick="exportJSON()">匯出 JSON</button>
 </div>
+<div class="legend">
+  <span><i class="dot low"></i>✔ 正常</span>
+  <span><i class="dot med"></i>⏳ 即將到期（≥90% 週期）</span>
+  <span><i class="dot high"></i>⚠ 流失風險（>150% 週期）</span>
+</div>
 
 <table id="dataTable">
   <thead>
     <tr>
       <th>客戶</th>
       <th>平均週期(天)</th>
+      <th>波動率(天)</th>
       <th>最近消費日</th>
       <th>下次消費日</th>
       <th>紀錄數</th>
+      <th>預警</th>
       <th>操作</th>
     </tr>
   </thead>
@@ -85,6 +100,13 @@
   function daysBetween(a,b){ return Math.round((b-a)/(1000*60*60*24)); }
   function addDays(d,days){ let nd=new Date(d); nd.setDate(nd.getDate()+days); return nd; }
   function fmtDate(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0')+"-"+String(d.getDate()).padStart(2,'0'); }
+  function todayStr(){ const d = new Date(); return fmtDate(d); }
+  function stdDev(arr){
+    if (!arr || arr.length <= 1) return 0;
+    const mean = arr.reduce((a,b)=>a+b,0) / arr.length;
+    const variance = arr.reduce((s,x)=> s + Math.pow(x-mean,2), 0) / (arr.length); // 母體標準差
+    return Math.round(Math.sqrt(variance));
+  }
 
   // ===== 日期欄位動態處理 =====
   function addDate(value=""){
@@ -95,11 +117,7 @@
       <button class="remove-date" onclick="removeDate(this)">刪除</button>`;
     document.getElementById("datesContainer").appendChild(row);
   }
-
-  function removeDate(btn){
-    btn.parentElement.remove();
-    autoCalc();
-  }
+  function removeDate(btn){ btn.parentElement.remove(); autoCalc(); }
 
   function getDatesFromInputs(){
     const inputs = document.querySelectorAll("#datesContainer input[type='date']");
@@ -110,73 +128,77 @@
     return dates;
   }
 
+  // ===== 風險判定 =====
+  function riskAssess(avgCycle, lastDate){
+    if (!avgCycle || !lastDate) return {label:"", level:"low"};
+    const daysSince = daysBetween(parseDate(lastDate), parseDate(todayStr()));
+    const ratio = daysSince / avgCycle;
+    if (ratio > 1.5) return {label:"⚠ 流失風險", level:"high"};
+    if (ratio >= 0.9) return {label:"⏳ 即將到期", level:"med"};
+    return {label:"✔ 正常", level:"low"};
+  }
+
   // ===== 即時計算 + 表格即時更新 + 圖表更新 =====
   function autoCalc(){
     const name = document.getElementById("customerName").value.trim();
     const dates = getDatesFromInputs();
 
-    // 沒有名稱或資料不足，不做任何更新，但若正在編輯，維持圖表顯示
-    if (!name || dates.length < 2) {
-      renderTable();
-      return;
-    }
+    if (!name || dates.length < 2) { renderTable(); return; }
 
-    // 計算所有間隔與平均
+    // 計算所有間隔、平均、波動率、預測、風險
     const intervals = [];
     for (let i=0; i<dates.length-1; i++){
       intervals.push(daysBetween(parseDate(dates[i+1]), parseDate(dates[i])));
     }
     const avg = Math.round(intervals.reduce((a,b)=>a+b, 0) / intervals.length);
+    const vol = stdDev(intervals);
     const nextDate = fmtDate(addDays(parseDate(dates[0]), avg));
+    const risk = riskAssess(avg, dates[0]);
 
     // 找到目前應更新的索引：編輯中 or 同名
     let idx = (editIndex !== null) ? editIndex : records.findIndex(r => r.customer === name);
 
-    if (idx !== -1) {
-      // 更新現有
-      records[idx] = {
-        customer: name,
-        cycle: avg,
-        lastDate: dates[0],
-        nextDate: nextDate,
-        dates: dates
-      };
-    } else {
-      // 新客戶即時預覽（還沒正式按存檔，但表格先顯示）
-      records.push({
-        customer: name,
-        cycle: avg,
-        lastDate: dates[0],
-        nextDate: nextDate,
-        dates: dates
-      });
-      idx = records.length - 1;
-    }
+    const payload = {
+      customer: name,
+      cycle: avg,
+      volatility: vol,
+      lastDate: dates[0],
+      nextDate: nextDate,
+      dates: dates,
+      risk: risk.label,
+      riskLevel: risk.level
+    };
+
+    if (idx !== -1) records[idx] = payload;
+    else { records.push(payload); idx = records.length - 1; }
 
     saveToLocal();
     renderTable();
     showChart(name, intervals);
-    // 調整主按鈕文案
     document.getElementById("mainBtn").textContent = (editIndex !== null) ? "更新客戶（存檔）" : "新增客戶（存檔）";
   }
 
-  // ===== 存檔（重置輸入狀態；資料已在 autoCalc 中即時寫入） =====
-  function saveRecord(){
-    clearInputs(); // 清空輸入與狀態
-  }
+  // ===== 存檔（重置輸入狀態；資料已在 autoCalc 即時寫入） =====
+  function saveRecord(){ clearInputs(); }
 
   // ===== 表格渲染 =====
   function renderTable(){
     const tbody = document.querySelector("#dataTable tbody");
     tbody.innerHTML = "";
     records.forEach((r, i) => {
+      const badgeClass =
+        r.riskLevel === "high" ? "badge risk-high" :
+        r.riskLevel === "med"  ? "badge risk-med"  :
+                                 "badge risk-low";
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${r.customer}</td>
+        <td>${r.customer ?? ""}</td>
         <td>${r.cycle ?? ""}</td>
+        <td>${r.volatility ?? 0}</td>
         <td>${r.lastDate ?? ""}</td>
         <td>${r.nextDate ?? ""}</td>
         <td>${(r.dates && r.dates.length) ? r.dates.length : 0}</td>
+        <td><span class="${badgeClass}">${r.risk ?? ""}</span></td>
         <td>
           <button class="action-btn edit" onclick="editRecord(${i})">修改</button>
           <button class="action-btn" onclick="deleteRecord(${i})">刪除</button>
@@ -194,7 +216,7 @@
     r.dates.forEach(d => addDate(d));
     editIndex = i;
     document.getElementById("mainBtn").textContent = "更新客戶（存檔）";
-    autoCalc(); // 載入後即時計算 + 顯示圖表
+    autoCalc(); // 載入後即時計算 + 顯示圖表/預警
   }
 
   function deleteRecord(i){
@@ -203,13 +225,8 @@
     saveToLocal();
     renderTable();
     document.querySelector(".chart-container").style.display = "none";
-    // 若刪到正在編輯的那筆，重置編輯狀態
-    if (editIndex === i) {
-      clearInputs();
-    } else if (editIndex !== null && i < editIndex) {
-      // 調整編輯索引（被刪除的在編輯索引之前）
-      editIndex--;
-    }
+    if (editIndex === i) { clearInputs(); }
+    else if (editIndex !== null && i < editIndex) { editIndex--; }
   }
 
   function clearInputs(){
@@ -224,11 +241,11 @@
 
   // ===== 匯出 =====
   function exportCSV(){
-    let csv = "客戶,平均週期,最近消費日,下次消費日,紀錄數\n";
+    let csv = "客戶,平均週期(天),波動率(天),最近消費日,下次消費日,紀錄數,預警\n";
     records.forEach(r => {
-      csv += `${r.customer},${r.cycle ?? ""},${r.lastDate ?? ""},${r.nextDate ?? ""},${(r.dates && r.dates.length) ? r.dates.length : 0}\n`;
+      csv += `${r.customer ?? ""},${r.cycle ?? ""},${r.volatility ?? 0},${r.lastDate ?? ""},${r.nextDate ?? ""},${(r.dates && r.dates.length) ? r.dates.length : 0},${r.risk ?? ""}\n`;
     });
-    downloadFile("records.csv", "\uFEFF" + csv); // 加 UTF-8 BOM，避免 Excel 亂碼
+    downloadFile("records.csv", "\uFEFF" + csv); // UTF-8 BOM for Excel
   }
 
   function exportJSON(){
@@ -247,10 +264,7 @@
   // ===== 圖表 =====
   function showChart(name, intervals){
     const container = document.querySelector(".chart-container");
-    if (!intervals || intervals.length === 0) {
-      container.style.display = "none";
-      return;
-    }
+    if (!intervals || intervals.length === 0) { container.style.display = "none"; return; }
     container.style.display = "block";
     document.getElementById("chartTitle").textContent = `${name} - 全歷史間隔趨勢（天）`;
 
@@ -281,8 +295,7 @@
   // ===== 初始化 =====
   (function init(){
     renderTable();
-    // 初始至少一列日期欄位
-    addDate();
+    addDate(); // 初始至少一列日期欄位
   })();
 </script>
 
