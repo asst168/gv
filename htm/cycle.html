@@ -2,49 +2,59 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<title>客戶消費週期預測</title>
+<title>客戶消費週期預測 - 全歷史趨勢圖（即時更新版）</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-body { font-family: Arial, sans-serif; margin: 20px; background: #f8f8f8; }
-h1 { color: #333; }
-label { display: block; margin-top: 10px; }
-input, button { padding: 5px; margin-top: 5px; }
-button { margin-top: 10px; background: #4CAF50; color: white; border: none; cursor: pointer; }
-button:hover { background: #45a049; }
-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-th { background: #eee; }
-.action-btn { background: #f44336; color: white; padding: 5px; border: none; cursor: pointer; }
-.action-btn.edit { background: #ff9800; }
-.export-btn { background: #2196F3; margin-right: 5px; }
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f8f8f8; }
+  h1 { color: #333; }
+  label { display: block; margin-top: 10px; }
+  input, button { padding: 6px 10px; margin-top: 6px; }
+  button { background: #4CAF50; color: white; border: none; cursor: pointer; margin-right: 6px; border-radius: 4px; }
+  button:hover { background: #45a049; }
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+  th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+  th { background: #f0f0f0; }
+  .action-btn { background: #f44336; }
+  .action-btn.edit { background: #ff9800; }
+  .export-btn { background: #2196F3; }
+  .date-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+  .date-row input[type="date"] { flex: 1; padding: 6px; }
+  .remove-date { background: #d9534f; }
+  .secondary { background: #9e9e9e; }
+  .chart-container { margin-top: 30px; background: white; padding: 16px; border: 1px solid #ddd; border-radius: 6px; }
+  .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .hint { color: #666; font-size: 12px; margin-top: 4px; }
 </style>
 </head>
 <body>
 
-<h1>客戶消費週期預測</h1>
+<h1>客戶消費週期預測 - 全歷史趨勢圖（即時更新版）</h1>
 
-<label>客戶名稱：
-  <input type="text" id="customerName" placeholder="輸入客戶名稱">
-</label>
+<div class="controls">
+  <label>客戶名稱：
+    <input type="text" id="customerName" placeholder="輸入客戶名稱" oninput="autoCalc()">
+  </label>
+  <button class="secondary" onclick="clearInputs()">清除輸入</button>
+</div>
 
-<label>最近第一次（最新）消費日期：
-  <input type="date" id="d1">
-</label>
+<div id="datesSection">
+  <label>消費日期紀錄（由新到舊；至少兩筆）</label>
+  <div id="datesContainer"></div>
+  <div class="hint">提示：點「+ 新增日期」可增加欄位；刪除任一筆會即時重算表格與圖表。</div>
+  <button onclick="addDate()">+ 新增日期</button>
+</div>
 
-<label>最近第二次（上上一次）消費日期：
-  <input type="date" id="d2">
-</label>
-
-<label>最近第三次（上上上一次，可不填）消費日期：
-  <input type="date" id="d3">
-</label>
-
-<button id="mainBtn" onclick="calc()">新增客戶</button>
+<div style="margin-top:10px;">
+  <button id="mainBtn" onclick="saveRecord()">新增/更新客戶（存檔）</button>
+  <span class="hint">（即時計算已生效；此按鈕用於正式存檔與重置狀態）</span>
+</div>
 
 <h2>消費週期紀錄</h2>
-<div>
+<div class="controls" style="margin-bottom:6px;">
   <button class="export-btn" onclick="exportCSV()">匯出 CSV</button>
   <button class="export-btn" onclick="exportJSON()">匯出 JSON</button>
 </div>
+
 <table id="dataTable">
   <thead>
     <tr>
@@ -52,158 +62,228 @@ th { background: #eee; }
       <th>平均週期(天)</th>
       <th>最近消費日</th>
       <th>下次消費日</th>
-      <th>準確值</th>
+      <th>紀錄數</th>
       <th>操作</th>
     </tr>
   </thead>
   <tbody></tbody>
 </table>
 
+<div class="chart-container" style="display:none;">
+  <h3 id="chartTitle">客戶消費間隔趨勢</h3>
+  <canvas id="cycleChart" height="110"></canvas>
+</div>
+
 <script>
-let records = [];
-let editIndex = null;
+  let records = JSON.parse(localStorage.getItem("crmRecordsHistory") || "[]");
+  let editIndex = null;
+  let chartInstance = null;
 
-function parseDate(v) {
-  return v ? new Date(v + 'T00:00:00') : null;
-}
-function daysBetween(a, b) {
-  return Math.round((b - a) / (1000 * 60 * 60 * 24));
-}
-function addDays(d, days) {
-  const nd = new Date(d);
-  nd.setDate(nd.getDate() + days);
-  return nd;
-}
-function fmtDate(d) {
-  return d.getFullYear() + '-' +
-         String(d.getMonth()+1).padStart(2,'0') + '-' +
-         String(d.getDate()).padStart(2,'0');
-}
+  // ===== 工具函式 =====
+  function saveToLocal(){ localStorage.setItem("crmRecordsHistory", JSON.stringify(records)); }
+  function parseDate(v){ return v ? new Date(v + 'T00:00:00') : null; }
+  function daysBetween(a,b){ return Math.round((b-a)/(1000*60*60*24)); }
+  function addDays(d,days){ let nd=new Date(d); nd.setDate(nd.getDate()+days); return nd; }
+  function fmtDate(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0')+"-"+String(d.getDate()).padStart(2,'0'); }
 
-function calc(){
-  const name = document.getElementById('customerName').value.trim();
-  const v1 = parseDate(document.getElementById('d1').value); // 最近一次
-  const v2 = parseDate(document.getElementById('d2').value); // 上上一次
-  const v3 = parseDate(document.getElementById('d3').value); // 上上上一次
-
-  if (!name) {
-    alert("請輸入客戶名稱");
-    return;
-  }
-  if (!v1 || !v2) {
-    alert("請至少輸入最近兩次消費日期");
-    return;
+  // ===== 日期欄位動態處理 =====
+  function addDate(value=""){
+    const row = document.createElement("div");
+    row.className = "date-row";
+    row.innerHTML = `
+      <input type="date" value="${value}" onchange="autoCalc()">
+      <button class="remove-date" onclick="removeDate(this)">刪除</button>`;
+    document.getElementById("datesContainer").appendChild(row);
   }
 
-  const dates = [v1, v2, v3].filter(x=>x);
-  let intervalDays = null;
-  let method = '';
-
-  if(dates.length === 2){
-    method = 'two';
-    intervalDays = daysBetween(dates[1], dates[0]);
-  } else {
-    method = 'three';
-    const i1 = daysBetween(dates[2], dates[1]);
-    const i2 = daysBetween(dates[1], dates[0]);
-    const wRecent = 0.7, wOld = 0.3;
-    intervalDays = Math.round(i1 * wOld + i2 * wRecent);
+  function removeDate(btn){
+    btn.parentElement.remove();
+    autoCalc();
   }
 
-  const lastDate = dates[0];
-  const next = addDays(lastDate, intervalDays);
-
-  let confidence = method === 'three' ? 0.9 : 0.7;
-
-  const record = {
-    customer: name,
-    cycle: intervalDays,
-    lastDate: fmtDate(lastDate),
-    nextDate: fmtDate(next),
-    accuracy: (confidence*100).toFixed(0) + "%",
-    d1: fmtDate(v1),
-    d2: fmtDate(v2),
-    d3: v3 ? fmtDate(v3) : ""
-  };
-
-  if (editIndex !== null) {
-    records[editIndex] = record;
-    editIndex = null;
-    document.querySelector("#mainBtn").textContent = "新增客戶";
-  } else {
-    records.push(record);
+  function getDatesFromInputs(){
+    const inputs = document.querySelectorAll("#datesContainer input[type='date']");
+    const dates = [];
+    inputs.forEach(i => { if (i.value) dates.push(i.value); });
+    // 由新到舊排序
+    dates.sort((a,b) => new Date(b) - new Date(a));
+    return dates;
   }
-  renderTable();
-  clearInputs();
-}
 
-function renderTable() {
-  const tbody = document.querySelector("#dataTable tbody");
-  tbody.innerHTML = "";
-  records.forEach((r, idx) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${r.customer}</td>
-      <td>${r.cycle}</td>
-      <td>${r.lastDate}</td>
-      <td>${r.nextDate}</td>
-      <td>${r.accuracy}</td>
-      <td>
-        <button class="action-btn edit" onclick="editRecord(${idx})">修改</button>
-        <button class="action-btn" onclick="deleteRecord(${idx})">刪除</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
+  // ===== 即時計算 + 表格即時更新 + 圖表更新 =====
+  function autoCalc(){
+    const name = document.getElementById("customerName").value.trim();
+    const dates = getDatesFromInputs();
 
-function editRecord(index) {
-  const r = records[index];
-  document.getElementById('customerName').value = r.customer;
-  document.getElementById('d1').value = r.d1;
-  document.getElementById('d2').value = r.d2;
-  document.getElementById('d3').value = r.d3;
-  editIndex = index;
-  document.querySelector("#mainBtn").textContent = "更新客戶";
-}
+    // 沒有名稱或資料不足，不做任何更新，但若正在編輯，維持圖表顯示
+    if (!name || dates.length < 2) {
+      renderTable();
+      return;
+    }
 
-function deleteRecord(index) {
-  if (confirm("確定要刪除此紀錄嗎？")) {
-    records.splice(index, 1);
+    // 計算所有間隔與平均
+    const intervals = [];
+    for (let i=0; i<dates.length-1; i++){
+      intervals.push(daysBetween(parseDate(dates[i+1]), parseDate(dates[i])));
+    }
+    const avg = Math.round(intervals.reduce((a,b)=>a+b, 0) / intervals.length);
+    const nextDate = fmtDate(addDays(parseDate(dates[0]), avg));
+
+    // 找到目前應更新的索引：編輯中 or 同名
+    let idx = (editIndex !== null) ? editIndex : records.findIndex(r => r.customer === name);
+
+    if (idx !== -1) {
+      // 更新現有
+      records[idx] = {
+        customer: name,
+        cycle: avg,
+        lastDate: dates[0],
+        nextDate: nextDate,
+        dates: dates
+      };
+    } else {
+      // 新客戶即時預覽（還沒正式按存檔，但表格先顯示）
+      records.push({
+        customer: name,
+        cycle: avg,
+        lastDate: dates[0],
+        nextDate: nextDate,
+        dates: dates
+      });
+      idx = records.length - 1;
+    }
+
+    saveToLocal();
     renderTable();
+    showChart(name, intervals);
+    // 調整主按鈕文案
+    document.getElementById("mainBtn").textContent = (editIndex !== null) ? "更新客戶（存檔）" : "新增客戶（存檔）";
   }
-}
 
-function clearInputs() {
-  document.getElementById('customerName').value = "";
-  document.getElementById('d1').value = "";
-  document.getElementById('d2').value = "";
-  document.getElementById('d3').value = "";
-  editIndex = null;
-  document.querySelector("#mainBtn").textContent = "新增客戶";
-}
+  // ===== 存檔（重置輸入狀態；資料已在 autoCalc 中即時寫入） =====
+  function saveRecord(){
+    clearInputs(); // 清空輸入與狀態
+  }
 
-function exportCSV() {
-  let csv = "客戶,平均週期,最近消費日,下次消費日,準確值\n";
-  records.forEach(r => {
-    csv += `${r.customer},${r.cycle},${r.lastDate},${r.nextDate},${r.accuracy}\n`;
-  });
-  // 加 UTF-8 BOM 避免 Excel 亂碼
-  downloadFile("records.csv", "\uFEFF" + csv);
-}
+  // ===== 表格渲染 =====
+  function renderTable(){
+    const tbody = document.querySelector("#dataTable tbody");
+    tbody.innerHTML = "";
+    records.forEach((r, i) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${r.customer}</td>
+        <td>${r.cycle ?? ""}</td>
+        <td>${r.lastDate ?? ""}</td>
+        <td>${r.nextDate ?? ""}</td>
+        <td>${(r.dates && r.dates.length) ? r.dates.length : 0}</td>
+        <td>
+          <button class="action-btn edit" onclick="editRecord(${i})">修改</button>
+          <button class="action-btn" onclick="deleteRecord(${i})">刪除</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  }
 
-function exportJSON() {
-  const json = JSON.stringify(records, null, 2);
-  downloadFile("records.json", json);
-}
+  // ===== 修改 / 刪除 / 清空 =====
+  function editRecord(i){
+    const r = records[i];
+    document.getElementById("customerName").value = r.customer;
+    const container = document.getElementById("datesContainer");
+    container.innerHTML = "";
+    r.dates.forEach(d => addDate(d));
+    editIndex = i;
+    document.getElementById("mainBtn").textContent = "更新客戶（存檔）";
+    autoCalc(); // 載入後即時計算 + 顯示圖表
+  }
 
-function downloadFile(filename, content) {
-  const blob = new Blob([content], {type: "text/plain;charset=utf-8"});
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = filename;
-  link.click();
-}
+  function deleteRecord(i){
+    if (!confirm("確定刪除此客戶紀錄？")) return;
+    records.splice(i, 1);
+    saveToLocal();
+    renderTable();
+    document.querySelector(".chart-container").style.display = "none";
+    // 若刪到正在編輯的那筆，重置編輯狀態
+    if (editIndex === i) {
+      clearInputs();
+    } else if (editIndex !== null && i < editIndex) {
+      // 調整編輯索引（被刪除的在編輯索引之前）
+      editIndex--;
+    }
+  }
+
+  function clearInputs(){
+    document.getElementById("customerName").value = "";
+    const container = document.getElementById("datesContainer");
+    container.innerHTML = "";
+    addDate(); // 至少留一列
+    editIndex = null;
+    document.getElementById("mainBtn").textContent = "新增/更新客戶（存檔）";
+    document.querySelector(".chart-container").style.display = "none";
+  }
+
+  // ===== 匯出 =====
+  function exportCSV(){
+    let csv = "客戶,平均週期,最近消費日,下次消費日,紀錄數\n";
+    records.forEach(r => {
+      csv += `${r.customer},${r.cycle ?? ""},${r.lastDate ?? ""},${r.nextDate ?? ""},${(r.dates && r.dates.length) ? r.dates.length : 0}\n`;
+    });
+    downloadFile("records.csv", "\uFEFF" + csv); // 加 UTF-8 BOM，避免 Excel 亂碼
+  }
+
+  function exportJSON(){
+    const json = JSON.stringify(records, null, 2);
+    downloadFile("records.json", json);
+  }
+
+  function downloadFile(filename, content){
+    const blob = new Blob([content], {type: "text/plain;charset=utf-8"});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+  }
+
+  // ===== 圖表 =====
+  function showChart(name, intervals){
+    const container = document.querySelector(".chart-container");
+    if (!intervals || intervals.length === 0) {
+      container.style.display = "none";
+      return;
+    }
+    container.style.display = "block";
+    document.getElementById("chartTitle").textContent = `${name} - 全歷史間隔趨勢（天）`;
+
+    if (chartInstance) chartInstance.destroy();
+    const ctx = document.getElementById("cycleChart");
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: intervals.map((_, i) => `間隔 ${i+1}`),
+        datasets: [{
+          label: '間隔天數',
+          data: intervals,
+          borderColor: '#4CAF50',
+          fill: false,
+          tension: 0.2,
+          pointRadius: 4,
+          pointBackgroundColor: '#4CAF50'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  }
+
+  // ===== 初始化 =====
+  (function init(){
+    renderTable();
+    // 初始至少一列日期欄位
+    addDate();
+  })();
 </script>
 
 </body>
