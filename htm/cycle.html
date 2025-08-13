@@ -2,302 +2,270 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<title>客戶消費週期預測 - 全歷史 + 波動率 + 流失預警</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>客戶消費週期預測系統</title>
 <style>
-  body { font-family: Arial, sans-serif; margin: 20px; background: #f8f8f8; }
-  h1 { color: #333; }
-  label { display: block; margin-top: 10px; }
-  input, button { padding: 6px 10px; margin-top: 6px; }
-  button { background: #4CAF50; color: white; border: none; cursor: pointer; margin-right: 6px; border-radius: 4px; }
-  button:hover { background: #45a049; }
-  .secondary { background: #9e9e9e; }
-  .export-btn { background: #2196F3; }
-  .remove-date { background: #d9534f; }
-  table { width: 100%; border-collapse: collapse; margin-top: 16px; background: white; }
-  th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-  th { background: #f0f0f0; }
-  .action-btn { background: #f44336; }
-  .action-btn.edit { background: #ff9800; }
-  .date-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
-  .date-row input[type="date"] { flex: 1; padding: 6px; }
-  .chart-container { margin-top: 24px; background: white; padding: 16px; border: 1px solid #ddd; border-radius: 6px; }
-  .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .hint { color: #666; font-size: 12px; margin-top: 4px; }
-  .badge { padding: 4px 8px; border-radius: 12px; color: #fff; font-weight: bold; display: inline-block; }
-  .risk-high { background: #e53935; }   /* 紅：流失風險 */
-  .risk-med  { background: #fb8c00; }   /* 橙：即將到期 */
-  .risk-low  { background: #43a047; }   /* 綠：正常 */
-  .legend { font-size: 12px; color: #555; margin-top: 6px; }
-  .legend span { display:inline-block; margin-right:10px; }
-  .legend .dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:4px; position:relative; top:1px; }
-  .dot.low { background:#43a047; } .dot.med { background:#fb8c00; } .dot.high { background:#e53935; }
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background: #f5f5f5;
+}
+.container {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  max-width: 900px;
+  margin: auto;
+}
+label { display: block; margin-top: 10px; font-weight: bold; }
+input[type="text"], input[type="date"] {
+  padding: 5px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+input[type="date"] {
+  width: 140px; /* 適中寬度 */
+}
+button {
+  margin-top: 10px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+#mainBtn { background: #4CAF50; color: white; }
+#exportCSV, #exportJSON { background: #2196F3; color: white; }
+.action-btn { padding: 4px 8px; margin: 0 2px; }
+.edit { background: #FFC107; }
+.remove-date { background: #e74c3c; color: white; margin-left: 5px; }
+table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+table, th, td { border: 1px solid #ccc; }
+th, td { padding: 8px; text-align: center; }
+.status-normal { background: #d4edda; }
+.status-warning { background: #fff3cd; }
+.status-danger { background: #f8d7da; }
+.chart-container { margin-top: 20px; background: white; padding: 10px; border-radius: 8px; display: none; }
+.date-row { margin-bottom: 5px; }
 </style>
 </head>
 <body>
+<div class="container">
+<h2>客戶消費週期預測系統</h2>
+<label>客戶名稱：</label>
+<input type="text" id="customerName" placeholder="輸入客戶名稱">
 
-<h1>客戶消費週期預測（全歷史 + 波動率 + 流失預警）</h1>
+<div id="datesContainer">
+  <label>消費日期紀錄：</label>
+  <div class="date-row">
+    <input type="date" onchange="autoCalc()">
+    <button class="remove-date" onclick="removeDate(this)">刪除</button>
+  </div>
+</div>
+<button onclick="addDate()">+ 新增日期</button><br>
 
-<div class="controls">
-  <label>客戶名稱：
-    <input type="text" id="customerName" placeholder="輸入客戶名稱" oninput="autoCalc()">
-  </label>
-  <button class="secondary" onclick="clearInputs()">清除輸入</button>
-</div>
-
-<div id="datesSection">
-  <label>消費日期紀錄（由新到舊；至少兩筆）</label>
-  <div id="datesContainer"></div>
-  <div class="hint">提示：點「+ 新增日期」可增加欄位；新增/刪除/修改日期將即時重算表格與圖表。</div>
-  <button onclick="addDate()">+ 新增日期</button>
-</div>
-
-<div style="margin-top:10px;">
-  <button id="mainBtn" onclick="saveRecord()">新增/更新客戶（存檔）</button>
-  <span class="hint">即時計算已生效；此按鈕用於正式存檔與重置輸入區。</span>
-</div>
-
-<h2>消費週期紀錄</h2>
-<div class="controls" style="margin-bottom:6px;">
-  <button class="export-btn" onclick="exportCSV()">匯出 CSV</button>
-  <button class="export-btn" onclick="exportJSON()">匯出 JSON</button>
-</div>
-<div class="legend">
-  <span><i class="dot low"></i>✔ 正常</span>
-  <span><i class="dot med"></i>⏳ 即將到期（≥90% 週期）</span>
-  <span><i class="dot high"></i>⚠ 流失風險（>150% 週期）</span>
-</div>
+<button id="mainBtn" onclick="saveRecord()">新增客戶</button>
+<button id="exportCSV" onclick="exportCSV()">匯出 CSV</button>
+<button id="exportJSON" onclick="exportJSON()">匯出 JSON</button>
 
 <table id="dataTable">
   <thead>
     <tr>
       <th>客戶</th>
-      <th>平均週期(天)</th>
-      <th>波動率(天)</th>
+      <th>平均週期</th>
       <th>最近消費日</th>
       <th>下次消費日</th>
+      <th>波動率</th>
+      <th>狀態</th>
       <th>紀錄數</th>
-      <th>預警</th>
       <th>操作</th>
     </tr>
   </thead>
   <tbody></tbody>
 </table>
 
-<div class="chart-container" style="display:none;">
-  <h3 id="chartTitle">客戶消費間隔趨勢</h3>
-  <canvas id="cycleChart" height="110"></canvas>
+<div class="chart-container">
+  <h3 id="chartTitle"></h3>
+  <canvas id="cycleChart"></canvas>
+</div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  let records = JSON.parse(localStorage.getItem("crmRecordsHistory") || "[]");
-  let editIndex = null;
-  let chartInstance = null;
+let records = JSON.parse(localStorage.getItem("crmRecordsHistory") || "[]");
+let editIndex = null;
+let chartInstance = null;
 
-  // ===== 工具函式 =====
-  function saveToLocal(){ localStorage.setItem("crmRecordsHistory", JSON.stringify(records)); }
-  function parseDate(v){ return v ? new Date(v + 'T00:00:00') : null; }
-  function daysBetween(a,b){ return Math.round((b-a)/(1000*60*60*24)); }
-  function addDays(d,days){ let nd=new Date(d); nd.setDate(nd.getDate()+days); return nd; }
-  function fmtDate(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0')+"-"+String(d.getDate()).padStart(2,'0'); }
-  function todayStr(){ const d = new Date(); return fmtDate(d); }
-  function stdDev(arr){
-    if (!arr || arr.length <= 1) return 0;
-    const mean = arr.reduce((a,b)=>a+b,0) / arr.length;
-    const variance = arr.reduce((s,x)=> s + Math.pow(x-mean,2), 0) / (arr.length); // 母體標準差
-    return Math.round(Math.sqrt(variance));
+function saveToLocal(){
+  localStorage.setItem("crmRecordsHistory", JSON.stringify(records));
+}
+function parseDate(v){ return v ? new Date(v + 'T00:00:00') : null; }
+function daysBetween(a,b){ return Math.round((b-a)/(1000*60*60*24)); }
+function addDays(d,days){ let nd=new Date(d); nd.setDate(nd.getDate()+days); return nd; }
+function fmtDate(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0')+"-"+String(d.getDate()).padStart(2,'0'); }
+function stddev(arr){
+  if(arr.length < 2) return 0;
+  const avg = arr.reduce((a,b)=>a+b,0)/arr.length;
+  return Math.sqrt(arr.reduce((a,b)=>a+Math.pow(b-avg,2),0)/arr.length).toFixed(1);
+}
+
+function addDate(value=""){
+  const row = document.createElement("div");
+  row.className = "date-row";
+  row.innerHTML = `<input type="date" value="${value}" onchange="autoCalc()">
+                   <button class="remove-date" onclick="removeDate(this)">刪除</button>`;
+  document.getElementById("datesContainer").appendChild(row);
+}
+
+function removeDate(btn){
+  btn.parentElement.remove();
+  autoCalc();
+}
+
+function getDatesFromInputs(){
+  let inputs = document.querySelectorAll("#datesContainer input[type='date']");
+  let dates = [];
+  inputs.forEach(i => { if (i.value) dates.push(i.value); });
+  dates.sort((a,b) => new Date(b) - new Date(a));
+  return dates;
+}
+
+function autoCalc(){
+  const name = document.getElementById("customerName").value.trim();
+  if (!name) return;
+  const dates = getDatesFromInputs();
+  if (dates.length < 2) return;
+
+  let intervals = [];
+  for (let i=0; i<dates.length-1; i++){
+    intervals.push(daysBetween(parseDate(dates[i+1]), parseDate(dates[i])));
+  }
+  const avg = Math.round(intervals.reduce((a,b)=>a+b,0) / intervals.length);
+  const nextDate = fmtDate(addDays(parseDate(dates[0]), avg));
+  const deviation = stddev(intervals);
+
+  const daysSinceLast = daysBetween(parseDate(dates[0]), new Date());
+  let status = "正常", statusClass = "status-normal";
+  if (daysSinceLast > avg * 1.5){
+    status = "⚠ 流失風險"; statusClass = "status-danger";
+  } else if (daysSinceLast >= avg * 0.9){
+    status = "⏳ 即將到期"; statusClass = "status-warning";
   }
 
-  // ===== 日期欄位動態處理 =====
-  function addDate(value=""){
-    const row = document.createElement("div");
-    row.className = "date-row";
-    row.innerHTML = `
-      <input type="date" value="${value}" onchange="autoCalc()">
-      <button class="remove-date" onclick="removeDate(this)">刪除</button>`;
-    document.getElementById("datesContainer").appendChild(row);
+  let idx = editIndex !== null ? editIndex : records.findIndex(r => r.customer === name);
+  if (idx !== -1) {
+    records[idx] = { customer: name, cycle: avg, lastDate: dates[0], nextDate, deviation, status, statusClass, dates };
+  } else {
+    records.push({ customer: name, cycle: avg, lastDate: dates[0], nextDate, deviation, status, statusClass, dates });
+    idx = records.length - 1;
   }
-  function removeDate(btn){ btn.parentElement.remove(); autoCalc(); }
+  saveToLocal();
+  renderTable();
+  showChart(name, intervals);
+}
 
-  function getDatesFromInputs(){
-    const inputs = document.querySelectorAll("#datesContainer input[type='date']");
-    const dates = [];
-    inputs.forEach(i => { if (i.value) dates.push(i.value); });
-    // 由新到舊排序
-    dates.sort((a,b) => new Date(b) - new Date(a));
-    return dates;
+function saveRecord(){ clearInputs(); }
+
+function renderTable(){
+  const tbody = document.querySelector("#dataTable tbody");
+  tbody.innerHTML = "";
+  records.forEach((r,i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r.customer}</td>
+      <td>${r.cycle}</td>
+      <td>${r.lastDate}</td>
+      <td>${r.nextDate}</td>
+      <td>${r.deviation}</td>
+      <td class="${r.statusClass}">${r.status}</td>
+      <td>${r.dates.length}</td>
+      <td>
+        <button class="action-btn edit" onclick="editRecord(${i})">修改</button>
+        <button class="action-btn" onclick="deleteRecord(${i})">刪除</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function editRecord(i){
+  const r = records[i];
+  document.getElementById("customerName").value = r.customer;
+  const container = document.getElementById("datesContainer");
+  container.innerHTML = '<label>消費日期紀錄：</label>';
+  r.dates.forEach(d => addDate(d));
+  editIndex = i;
+  document.getElementById("mainBtn").textContent = "更新客戶";
+  autoCalc();
+}
+
+function deleteRecord(i){
+  if (confirm("確定刪除？")){
+    records.splice(i,1);
+    saveToLocal();
+    renderTable();
+    document.querySelector(".chart-container").style.display = "none";
   }
+}
 
-  // ===== 風險判定 =====
-  function riskAssess(avgCycle, lastDate){
-    if (!avgCycle || !lastDate) return {label:"", level:"low"};
-    const daysSince = daysBetween(parseDate(lastDate), parseDate(todayStr()));
-    const ratio = daysSince / avgCycle;
-    if (ratio > 1.5) return {label:"⚠ 流失風險", level:"high"};
-    if (ratio >= 0.9) return {label:"⏳ 即將到期", level:"med"};
-    return {label:"✔ 正常", level:"low"};
-  }
+function clearInputs(){
+  document.getElementById("customerName").value = "";
+  const container = document.getElementById("datesContainer");
+  container.innerHTML = '<label>消費日期紀錄：</label>';
+  addDate();
+  editIndex = null;
+  document.getElementById("mainBtn").textContent = "新增客戶";
+  document.querySelector(".chart-container").style.display = "none";
+}
 
-  // ===== 即時計算 + 表格即時更新 + 圖表更新 =====
-  function autoCalc(){
-    const name = document.getElementById("customerName").value.trim();
-    const dates = getDatesFromInputs();
+function exportCSV(){
+  let csv = "客戶,平均週期,最近消費日,下次消費日,波動率,狀態,紀錄數\n";
+  records.forEach(r => {
+    csv += `${r.customer},${r.cycle},${r.lastDate},${r.nextDate},${r.deviation},${r.status},${r.dates.length}\n`;
+  });
+  downloadFile("records.csv", "\uFEFF" + csv);
+}
 
-    if (!name || dates.length < 2) { renderTable(); return; }
+function exportJSON(){
+  const json = JSON.stringify(records, null, 2);
+  downloadFile("records.json", json);
+}
 
-    // 計算所有間隔、平均、波動率、預測、風險
-    const intervals = [];
-    for (let i=0; i<dates.length-1; i++){
-      intervals.push(daysBetween(parseDate(dates[i+1]), parseDate(dates[i])));
+function downloadFile(filename, content){
+  const blob = new Blob([content], {type: "text/plain;charset=utf-8"});
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+}
+
+function showChart(name, intervals){
+  document.querySelector(".chart-container").style.display = "block";
+  document.getElementById("chartTitle").textContent = `${name} - 全歷史間隔趨勢`;
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(document.getElementById("cycleChart"), {
+    type: 'line',
+    data: {
+      labels: intervals.map((_,i)=>`間隔 ${i+1}`),
+      datasets: [{
+        label: '間隔天數',
+        data: intervals,
+        borderColor: '#4CAF50',
+        fill: false,
+        tension: 0.2,
+        pointRadius: 5,
+        pointBackgroundColor: '#4CAF50'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
     }
-    const avg = Math.round(intervals.reduce((a,b)=>a+b, 0) / intervals.length);
-    const vol = stdDev(intervals);
-    const nextDate = fmtDate(addDays(parseDate(dates[0]), avg));
-    const risk = riskAssess(avg, dates[0]);
+  });
+}
 
-    // 找到目前應更新的索引：編輯中 or 同名
-    let idx = (editIndex !== null) ? editIndex : records.findIndex(r => r.customer === name);
-
-    const payload = {
-      customer: name,
-      cycle: avg,
-      volatility: vol,
-      lastDate: dates[0],
-      nextDate: nextDate,
-      dates: dates,
-      risk: risk.label,
-      riskLevel: risk.level
-    };
-
-    if (idx !== -1) records[idx] = payload;
-    else { records.push(payload); idx = records.length - 1; }
-
-    saveToLocal();
-    renderTable();
-    showChart(name, intervals);
-    document.getElementById("mainBtn").textContent = (editIndex !== null) ? "更新客戶（存檔）" : "新增客戶（存檔）";
-  }
-
-  // ===== 存檔（重置輸入狀態；資料已在 autoCalc 即時寫入） =====
-  function saveRecord(){ clearInputs(); }
-
-  // ===== 表格渲染 =====
-  function renderTable(){
-    const tbody = document.querySelector("#dataTable tbody");
-    tbody.innerHTML = "";
-    records.forEach((r, i) => {
-      const badgeClass =
-        r.riskLevel === "high" ? "badge risk-high" :
-        r.riskLevel === "med"  ? "badge risk-med"  :
-                                 "badge risk-low";
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${r.customer ?? ""}</td>
-        <td>${r.cycle ?? ""}</td>
-        <td>${r.volatility ?? 0}</td>
-        <td>${r.lastDate ?? ""}</td>
-        <td>${r.nextDate ?? ""}</td>
-        <td>${(r.dates && r.dates.length) ? r.dates.length : 0}</td>
-        <td><span class="${badgeClass}">${r.risk ?? ""}</span></td>
-        <td>
-          <button class="action-btn edit" onclick="editRecord(${i})">修改</button>
-          <button class="action-btn" onclick="deleteRecord(${i})">刪除</button>
-        </td>`;
-      tbody.appendChild(tr);
-    });
-  }
-
-  // ===== 修改 / 刪除 / 清空 =====
-  function editRecord(i){
-    const r = records[i];
-    document.getElementById("customerName").value = r.customer;
-    const container = document.getElementById("datesContainer");
-    container.innerHTML = "";
-    r.dates.forEach(d => addDate(d));
-    editIndex = i;
-    document.getElementById("mainBtn").textContent = "更新客戶（存檔）";
-    autoCalc(); // 載入後即時計算 + 顯示圖表/預警
-  }
-
-  function deleteRecord(i){
-    if (!confirm("確定刪除此客戶紀錄？")) return;
-    records.splice(i, 1);
-    saveToLocal();
-    renderTable();
-    document.querySelector(".chart-container").style.display = "none";
-    if (editIndex === i) { clearInputs(); }
-    else if (editIndex !== null && i < editIndex) { editIndex--; }
-  }
-
-  function clearInputs(){
-    document.getElementById("customerName").value = "";
-    const container = document.getElementById("datesContainer");
-    container.innerHTML = "";
-    addDate(); // 至少留一列
-    editIndex = null;
-    document.getElementById("mainBtn").textContent = "新增/更新客戶（存檔）";
-    document.querySelector(".chart-container").style.display = "none";
-  }
-
-  // ===== 匯出 =====
-  function exportCSV(){
-    let csv = "客戶,平均週期(天),波動率(天),最近消費日,下次消費日,紀錄數,預警\n";
-    records.forEach(r => {
-      csv += `${r.customer ?? ""},${r.cycle ?? ""},${r.volatility ?? 0},${r.lastDate ?? ""},${r.nextDate ?? ""},${(r.dates && r.dates.length) ? r.dates.length : 0},${r.risk ?? ""}\n`;
-    });
-    downloadFile("records.csv", "\uFEFF" + csv); // UTF-8 BOM for Excel
-  }
-
-  function exportJSON(){
-    const json = JSON.stringify(records, null, 2);
-    downloadFile("records.json", json);
-  }
-
-  function downloadFile(filename, content){
-    const blob = new Blob([content], {type: "text/plain;charset=utf-8"});
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    link.click();
-  }
-
-  // ===== 圖表 =====
-  function showChart(name, intervals){
-    const container = document.querySelector(".chart-container");
-    if (!intervals || intervals.length === 0) { container.style.display = "none"; return; }
-    container.style.display = "block";
-    document.getElementById("chartTitle").textContent = `${name} - 全歷史間隔趨勢（天）`;
-
-    if (chartInstance) chartInstance.destroy();
-    const ctx = document.getElementById("cycleChart");
-    chartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: intervals.map((_, i) => `間隔 ${i+1}`),
-        datasets: [{
-          label: '間隔天數',
-          data: intervals,
-          borderColor: '#4CAF50',
-          fill: false,
-          tension: 0.2,
-          pointRadius: 4,
-          pointBackgroundColor: '#4CAF50'
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } }
-      }
-    });
-  }
-
-  // ===== 初始化 =====
-  (function init(){
-    renderTable();
-    addDate(); // 初始至少一列日期欄位
-  })();
+renderTable();
 </script>
-
 </body>
 </html>
