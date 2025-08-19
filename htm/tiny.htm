@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>百變金剛：智慧版 tinytable</title>
+<style>
+  /* Base Styles */
+  body { 
+    font-family: Cambria, sans-serif; 
+    margin: 0; 
+    background: #f7f7f7; 
+    text-align: center;
+    color: #333;
+    padding: 20px;
+  }
+  h2 {
+    color: #007BFF;
+    margin-bottom: 20px;
+  }
+  table { 
+    width: 100%; 
+    margin: 20px auto; 
+    border-collapse: collapse; 
+    background: #fff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  th, td { 
+    padding: 12px 8px; 
+    border: 1px solid #ddd; 
+    text-align: center; 
+  }
+  th { 
+    background: #87CEFA; 
+    color: white; 
+    cursor: pointer; 
+    position: sticky; 
+    top: 0; 
+    z-index: 2; 
+    font-weight: bold;
+    white-space: nowrap; /* Prevent wrapping */
+  }
+  th:hover { 
+    background: #71b7e6; 
+  }
+  tr:nth-child(even) td { 
+    background: #e1f7d5; 
+  }
+  tr:hover td { 
+    background: #FFCCD2; 
+  }
+  td.text-left { 
+    text-align: left; 
+  }
+  td.text-right { 
+    text-align: right; 
+  }
+  .highlight td { 
+    background: #ffeb3b !important; 
+  }
+
+  /* Control Panels */
+  .controls-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 15px auto;
+    width: 100%;
+    max-width: 1000px;
+    padding: 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .import-config {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    gap: 20px;
+  }
+  .import-panel, .col-panel {
+    flex: 1;
+    min-width: 300px;
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    text-align: left;
+  }
+  .import-panel h3, .col-panel h3 {
+    margin-top: 0;
+    color: #007BFF;
+  }
+
+  /* Form Elements */
+  input[type="text"], input[type="number"], select, button { 
+    padding: 8px; 
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
+    font-size: 16px;
+    vertical-align: middle;
+  }
+  input[type="text"]:focus, input[type="number"]:focus, select:focus, button:focus {
+    outline: none;
+    border-color: #007BFF;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  }
+  #rowsPerPage, #pageInput { 
+    width: 60px; 
+    text-align: center; 
+  }
+  button {
+    background: #4CAF50; 
+    color: white; 
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s ease;
+  }
+  button:hover:not([disabled]) {
+    background: #45a049;
+  }
+  button[disabled] { 
+    background: #ccc; 
+    cursor: not-allowed; 
+  }
+  #analyzeBtn {
+    background: #FFD700;
+    color: #333;
+    font-weight: bold;
+  }
+  #analyzeBtn:hover:not([disabled]) {
+    background: #FFC400;
+  }
+
+  /* Pagination and Info */
+  .pagination {
+    margin-top: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+  }
+  #totalRecords { 
+    margin-top: 10px; 
+    font-weight: bold;
+    color: #555;
+  }
+  #messages, #geminiResponse { 
+    margin-top: 10px; 
+    color: #333; 
+    white-space: pre-line; 
+    text-align: left; 
+    width: 100%; 
+    max-width: 1000px;
+    margin-left: auto; 
+    margin-right: auto;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #f0f0f0;
+  }
+  #geminiResponse {
+    background: #E8F5E9; /* Softer green for AI response */
+    border-left: 5px solid #4CAF50;
+    padding: 15px;
+    font-family: 'Segoe UI', 'Roboto', sans-serif;
+  }
+  .hint { 
+    color:#666; 
+    font-size: 0.9em; 
+    margin-top: 5px;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    body {
+      padding: 10px;
+    }
+    .import-config {
+      flex-direction: column;
+    }
+    .import-panel, .col-panel {
+      min-width: unset;
+      width: 100%;
+    }
+    .controls {
+      flex-direction: column;
+      gap: 10px;
+      align-items: stretch;
+    }
+    .controls-panel {
+      padding: 10px;
+    }
+    .pagination button, .pagination input, .pagination span {
+      flex-basis: auto;
+      width: auto;
+    }
+    .pagination {
+      gap: 5px;
+    }
+  }
+
+  /* Table Container */
+  .table-container {
+    max-height: 70vh; /* Use viewport height for better mobile scrolling */
+    overflow-y: auto;
+    width: 100%;
+    margin: 0 auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+</style>
+</head>
+<body>
+  <h2>百變金剛：智慧版 tinytable</h2>
+
+  <div class="controls-panel">
+    <!-- 匯入檔案 + 自訂欄位 (左右並排) -->
+    <div class="import-config" id="importConfig">
+      <!-- 左邊：匯入檔案 -->
+      <div class="import-panel">
+        <h3>匯入檔案</h3>
+        <label>CSV / Excel:</label>
+        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls">
+        <div style="margin:8px 0;">
+          <label><input type="checkbox" id="hasHeader" checked> 第一列是標題</label>
+        </div>
+        <button id="applyBtn" onclick="applyColumnsAndLoad()" disabled>套用欄位並載入資料</button>
+        <div class="hint">步驟：選檔 → 確認/修改欄位 → 套用載入</div>
+      </div>
+
+      <!-- 右邊：欄位自訂 -->
+      <div class="col-panel">
+        <h3>欄位設定</h3>
+        <div style="margin-bottom:6px;">
+          <label>欄位數量:</label>
+          <select id="colCount" onchange="generateColumnInputs()">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+            <option value="7" selected>7</option><option value="8">8</option><option value="9">9</option>
+            <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+          </select>
+        </div>
+        <div id="colConfig"></div>
+      </div>
+    </div>
+
+    <!-- 搜尋控制 -->
+    <div class="controls">
+      <select id="searchField">
+        <option value="all">全部欄位</option>
+      </select>
+      <input type="text" id="searchInput" placeholder="搜尋關鍵字" oninput="searchTable()">
+      <label>每頁顯示:</label>
+      <select id="rowsPerPage" onchange="changeRowsPerPage()">
+        <option value="5">5</option>
+        <option value="10" selected>10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+    </div>
+    
+    <!-- 匯出網頁按鈕和新增的 Gemini 分析按鈕 -->
+    <div style="text-align: right; display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+      <button id="analyzeBtn" disabled>✨ 智慧分析資料 ✨</button>
+      <button id="exportBtn">匯出網頁（單一檔案）</button>
+    </div>
+  </div>
+
+  <!-- 資料表 -->
+  <div class="table-container">
+    <table id="dataTable">
+      <thead><tr></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- 分頁 -->
+  <div class="pagination">
+    <button onclick="goToFirstPage()">頁首</button>
+    <button onclick="changePage(-1)">上一頁</button>
+    <button onclick="changePage(1)">下一頁</button>
+    <button onclick="goToLastPage()">頁尾</button>
+    <span>跳至</span>
+    <input type="number" id="pageInput" min="1" value="1">
+    <button onclick="jumpToPage()">Go</button>
+  </div>
+
+  <div id="totalRecords">總筆數: 0</div>
+  <div id="messages"></div>
+  <!-- 新增用於顯示 Gemini 回應的區塊 -->
+  <div id="geminiResponse" style="display: none;"></div>
+
+<!-- 引入 SheetJS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+let tableConfig = { columns: [] };
+let tableData = [];
+let filteredData = [];
+let currentPage = 1, rowsPerPage = 10;
+let currentSortColumn = null, currentSortDirection = "asc";
+let highlightedRow = null;
+let importedRows = [];
+let suggestedColumns = [];
+
+/* === 欄位自訂 === */
+function generateColumnInputs() {
+  const count = parseInt(document.getElementById("colCount").value);
+  const colConfigDiv = document.getElementById("colConfig");
+  colConfigDiv.innerHTML = "";
+
+  for (let i = 0; i < count; i++) {
+    const div = document.createElement("div");
+    div.style.marginBottom = "6px";
+    div.innerHTML = `
+      <label>欄位${i+1} 名稱:</label>
+      <input type="text" id="colName${i}" value="">
+      <select id="colType${i}">
+        <option value="text">文字</option>
+        <option value="number:0">數字(0位)</option>
+        <option value="number:2">數字(2位)</option>
+        <option value="number:3">數字(3位)</option>
+      </select>
+    `;
+    colConfigDiv.appendChild(div);
+  }
+  if (suggestedColumns.length) {
+    const n = Math.min(count, suggestedColumns.length);
+    for (let i = 0; i < n; i++) {
+      document.getElementById(`colName${i}`).value = suggestedColumns[i].label || `欄位${i+1}`;
+      document.getElementById(`colType${i}`).value = suggestedColumns[i].type || "text";
+    }
+  }
+}
+
+/* === 自動建議欄位 === */
+function buildSuggestedColumns(rows) {
+  if (!rows.length) return [];
+  const headers = rows[0] || [];
+  const sampleRows = rows.slice(1, 6);
+  const result = [];
+  const count = headers.length || (sampleRows[0] ? sampleRows[0].length : 0);
+  for (let idx = 0; idx < count; idx++) {
+    const rawName = (headers[idx] ?? "").toString().trim();
+    const name = rawName || `欄位${idx+1}`;
+    const values = sampleRows.map(r => (r && r[idx] != null) ? String(r[idx]) : "").filter(v => v !== "");
+    let numericCount = values.filter(v => !isNaN(parseFloat(v.replace(/,/g,"")))).length;
+    const type = (values.length && numericCount >= Math.ceil(values.length*0.6)) ? "number:2" : "text";
+    result.push({ key: `col${idx}`, label: name, type });
+  }
+  return result;
+}
+
+/* === 匯入檔案 === */
+function importFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === "csv") importCSV(file);
+  else if (ext === "xlsx" || ext === "xls") importExcel(file);
+  else document.getElementById("messages").innerText = "不支援的檔案格式";
+}
+function importCSV(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    let text="", buffer=e.target.result;
+    try {
+      text = new TextDecoder("utf-8").decode(buffer);
+    } catch (e) {
+      // 如果 UTF-8 解碼失敗，嘗試 Big5 編碼
+      text = new TextDecoder("big5").decode(buffer);
+    }
+    const rows=parseCSV(text); afterRowsImported(rows,"CSV");
+  };
+  reader.readAsArrayBuffer(file);
+}
+function importExcel(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const data=new Uint8Array(e.target.result);
+    const workbook=XLSX.read(data,{type:'array'});
+    const rows=XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]],{header:1,raw:false});
+    afterRowsImported(rows,"Excel");
+  };
+  reader.readAsArrayBuffer(file);
+}
+function afterRowsImported(rows,kind) {
+  importedRows=rows||[]; tableData=[]; filteredData=[]; renderTable();
+  if (!importedRows.length) { document.getElementById("messages").innerText=`${kind} 無內容`; return; }
+  suggestedColumns=buildSuggestedColumns(importedRows);
+  document.getElementById("colCount").value=suggestedColumns.length||1;
+  generateColumnInputs();
+  document.getElementById("applyBtn").disabled=false;
+  const firstFew=importedRows.slice(0,Math.min(6,importedRows.length));
+  document.getElementById("messages").innerText=
+    `已載入 ${kind}：總列數 ${importedRows.length}\n`+
+    `前幾列預覽：\n`+firstFew.map(r=>r.join(" | ")).join("\n");
+}
+function applyColumnsAndLoad() {
+  const count=parseInt(document.getElementById("colCount").value);
+  const columns=[]; for(let i=0;i<count;i++){const name=document.getElementById(`colName${i}`).value.trim();const type=document.getElementById(`colType${i}`).value||"text";if(!name)continue;columns.push({key:`col${i}`,label:name,type});}
+  if(!columns.length){document.getElementById("messages").innerText="請至少設定一個欄位";return;}
+  tableConfig.columns=columns;
+  const startRow=document.getElementById("hasHeader").checked?1:0;
+  const newData=[]; for(let r=startRow;r<importedRows.length;r++){let cols=importedRows[r]||[];if(cols.join("").trim()==="")continue;while(cols.length<columns.length)cols.push("");if(cols.length>columns.length)cols=cols.slice(0,columns.length);
+    const rowObj={};columns.forEach((col,idx)=>{let val=cols[idx]??"";if(col.type.startsWith("number")){const d=parseInt(col.type.split(":")[1])||0;const num=parseFloat(String(val).replace(/,/g,""));val=isNaN(num)?(0).toFixed(d):num.toFixed(d);}rowObj[col.key]=val;});
+    newData.push(rowObj);}
+  tableData=newData;filteredData=[...tableData];currentPage=1;
+  const searchField=document.getElementById("searchField");searchField.innerHTML=`<option value="all">全部欄位</option>`;columns.forEach(col=>{const o=document.createElement("option");o.value=col.key;o.textContent=col.label;searchField.appendChild(o);});
+  renderTable();
+  document.getElementById("messages").innerText=`已載入資料列：${newData.length}`;
+  // 載入資料後啟用智慧分析按鈕
+  document.getElementById("analyzeBtn").disabled = false;
+}
+/* CSV 解析 */
+function parseCSV(text){const rows=[];let row=[],field="",inQuotes=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(inQuotes&&text[i+1]==='"'){field+='"';i++;}else{inQuotes=!inQuotes;}}else if(c===','&&!inQuotes){row.push(field);field="";}else if((c==='\n'||c==='\r')&&!inQuotes){row.push(field);field="";if(row.length>1||(row.length===1&&row[0].trim()!==""))rows.push(row);row=[];if(c==='\r'&&text[i+1]==='\n')i++;}else{field+=c;}}if(field.length>0||row.length>0){row.push(field);if(row.length>1||(row.length===1&&row[0].trim()!==""))rows.push(row);}return rows.map(r=>r.map(v=>(v??"").toString().trim()));}
+/* 表格渲染 */
+function renderTableHeader(){const thead=document.querySelector("#dataTable thead tr");thead.innerHTML="";tableConfig.columns.forEach((col,index)=>{const th=document.createElement("th");th.textContent=col.label;if(currentSortColumn===index)th.textContent+=currentSortDirection==="asc"?" ▲":" ▼";th.onclick=()=>sortTable(index);thead.appendChild(th);});}
+function renderTable(){renderTableHeader();const tbody=document.querySelector("#dataTable tbody");tbody.innerHTML="";const start=(currentPage-1)*rowsPerPage;const pageData=filteredData.slice(start,start+rowsPerPage);if(pageData.length===0){const tr=document.createElement("tr");const td=document.createElement("td");td.colSpan=tableConfig.columns.length||1;td.textContent="目前沒有資料";tr.appendChild(td);tbody.appendChild(tr);}else{pageData.forEach(row=>{const tr=document.createElement("tr");tableConfig.columns.forEach(col=>{const td=document.createElement("td");td.textContent=row[col.key];td.classList.add(col.type.startsWith("number")?"text-right":"text-left");tr.appendChild(td);});tr.onclick=()=>highlightRow(tr);tbody.appendChild(tr);});}document.getElementById("totalRecords").innerText=`總筆數: ${filteredData.length} | 第 ${currentPage} / ${Math.max(1,Math.ceil(filteredData.length/rowsPerPage)||1)} 頁`;document.getElementById("pageInput").value=currentPage;}
+function highlightRow(row){if(highlightedRow)highlightedRow.classList.remove("highlight");row.classList.add("highlight");highlightedRow=row;}
+function changePage(delta){const maxPage=Math.ceil(filteredData.length/rowsPerPage)||1;currentPage=Math.min(Math.max(1,currentPage+delta),maxPage);renderTable();}
+function changeRowsPerPage(){rowsPerPage=parseInt(document.getElementById("rowsPerPage").value,10)||10;currentPage=1;renderTable();}
+function goToFirstPage(){currentPage=1;renderTable();}
+function goToLastPage(){currentPage=Math.ceil(filteredData.length/rowsPerPage)||1;renderTable();}
+function jumpToPage(){const maxPage=Math.ceil(filteredData.length/rowsPerPage)||1;let page=parseInt(document.getElementById("pageInput").value,10);if(isNaN(page)||page<1)page=1;if(page>maxPage)page=maxPage;currentPage=page;renderTable();}
+function sortTable(columnIndex){const key=tableConfig.columns[columnIndex]?.key;if(!key)return;if(currentSortColumn===columnIndex){currentSortDirection=currentSortDirection==="asc"?"desc":"asc";}else{currentSortColumn=columnIndex;currentSortDirection="asc";}filteredData.sort((a,b)=>{let valA=(a[key]??"").toString().trim(),valB=(b[key]??"").toString().trim();let numA=parseFloat(valA),numB=parseFloat(valB);if(!isNaN(numA)&&!isNaN(numB)){return currentSortDirection==="asc"?numA-numB:numB-numA;}return currentSortDirection==="asc"?valA.localeCompare(valB):valB.localeCompare(a);});currentPage=1;renderTable();}
+function searchTable(){const field=document.getElementById("searchField").value;const terms=document.getElementById("searchInput").value.toLowerCase().split(" ").filter(Boolean);filteredData=tableData.filter(row=>{return terms.every(term=>{if(field==="all"){return Object.values(row).some(v=>(v??"").toString().toLowerCase().includes(term));}return(row[field]??"").toString().toLowerCase().includes(term);});});currentPage=1;renderTable();}
+
+/* === 新增的 Gemini 智慧分析功能 === */
+async function analyzeTableWithGemini() {
+  const geminiResponseDiv = document.getElementById("geminiResponse");
+  const analyzeBtn = document.getElementById("analyzeBtn");
+
+  geminiResponseDiv.style.display = "none";
+  geminiResponseDiv.innerHTML = "";
+  analyzeBtn.disabled = true;
+  analyzeBtn.textContent = "分析中...";
+  document.getElementById("messages").innerText = "正在分析資料，請稍候...";
+
+  if (filteredData.length === 0) {
+    document.getElementById("messages").innerText = "目前沒有資料可供分析。";
+    analyzeBtn.disabled = false;
+    analyzeBtn.textContent = "✨ 智慧分析資料 ✨";
+    return;
+  }
+
+  // 將當前過濾後的資料轉換成文字格式以發送給 Gemini
+  const headers = tableConfig.columns.map(col => col.label).join(", ");
+  const rows = filteredData.map(row => {
+    return tableConfig.columns.map(col => row[col.key]).join(", ");
+  }).join("\n");
+  const fullTableText = `表格標題：${headers}\n表格資料：\n${rows}`;
+
+  const prompt = `請以中文繁體，針對這份表格資料提供一份簡潔的分析摘要。請重點分析資料中的趨勢、異常值、或有趣的模式，並提出一些可能的見解。請勿提及「此資料來自表格」等字眼。\n\n表格內容：\n${fullTableText}`;
+  
+  let retryCount = 0;
+  const maxRetries = 3;
+
+  while(retryCount < maxRetries) {
+      try {
+          const chatHistory = [];
+          chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+          const payload = { contents: chatHistory };
+          const apiKey = "";
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+          const response = await fetch(apiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+              throw new Error(`API response error: ${response.status} ${response.statusText}`);
+          }
+          const result = await response.json();
+          const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+          if (text) {
+              geminiResponseDiv.innerHTML = "<h4>✨ 智慧分析結果 ✨</h4>" + text.replace(/\n/g, '<br>');
+              geminiResponseDiv.style.display = "block";
+              document.getElementById("messages").innerText = "分析完成。";
+          } else {
+              document.getElementById("messages").innerText = "無法取得有效的分析結果。請稍後再試。";
+          }
+          break; // 成功，跳出迴圈
+      } catch (error) {
+          console.error("Gemini API call failed:", error);
+          retryCount++;
+          if (retryCount < maxRetries) {
+              const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff
+              document.getElementById("messages").innerText = `分析失敗，正在重試... (${retryCount}/${maxRetries})`;
+              await new Promise(res => setTimeout(res, delay));
+          } else {
+              document.getElementById("messages").innerText = "分析失敗。請檢查您的網路或稍後再試。";
+          }
+      }
+  }
+
+  analyzeBtn.disabled = false;
+  analyzeBtn.textContent = "✨ 智慧分析資料 ✨";
+}
+
+
+/* === 匯出功能 === */
+async function exportPage() {
+    // 建立一個僅包含必要內容的新 HTML 結構
+    const newDoc = document.implementation.createHTMLDocument("資料表");
+    
+    // 複製樣式
+    const style = newDoc.createElement('style');
+    style.textContent = document.querySelector('style').textContent;
+    newDoc.head.appendChild(style);
+
+    // 複製主體內容
+    const bodyContent = `
+        <body>
+            <h2>資料表</h2>
+            <div class="controls-panel">
+                <div class="controls">
+                    <select id="searchField">
+                        ${document.getElementById('searchField').innerHTML}
+                    </select>
+                    <input type="text" id="searchInput" placeholder="搜尋關鍵字" oninput="searchTable()">
+                    <label>每頁顯示:</label>
+                    <select id="rowsPerPage" onchange="changeRowsPerPage()">
+                        ${document.getElementById('rowsPerPage').innerHTML}
+                    </select>
+                </div>
+            </div>
+            <div class="table-container">
+                <table id="dataTable">
+                    <thead><tr></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <button onclick="goToFirstPage()">頁首</button>
+                <button onclick="changePage(-1)">上一頁</button>
+                <button onclick="changePage(1)">下一頁</button>
+                <button onclick="goToLastPage()">頁尾</button>
+                <span>跳至</span>
+                <input type="number" id="pageInput" min="1" value="1">
+                <button onclick="jumpToPage()">Go</button>
+            </div>
+            <div id="totalRecords">總筆數: 0</div>
+            <div id="messages"></div>
+        </body>
+    `;
+    newDoc.body.innerHTML = bodyContent;
+
+    // 將當前的資料狀態序列化，並嵌入到新腳本中
+    const script = newDoc.createElement('script');
+    
+    // 取得所有必要的程式碼
+    const scriptContent = document.querySelector('script:not([src])').textContent;
+
+    // 創建一個新的、自包含的腳本
+    const exportedScript = `
+        // 匯出資料狀態
+        let tableConfig = ${JSON.stringify(tableConfig)};
+        let tableData = ${JSON.stringify(tableData)};
+        let filteredData = ${JSON.stringify(filteredData)};
+        let currentPage = 1;
+        let rowsPerPage = ${rowsPerPage};
+        let currentSortColumn = ${JSON.stringify(currentSortColumn)};
+        let currentSortDirection = ${JSON.stringify(currentSortDirection)};
+        
+        // 匯出版本不需要這些變數
+        let importedRows = [];
+        let suggestedColumns = [];
+        let highlightedRow = null;
+
+        // 將所有必要的函式都複製過來
+        function renderTableHeader(){const thead=document.querySelector("#dataTable thead tr");thead.innerHTML="";tableConfig.columns.forEach((col,index)=>{const th=document.createElement("th");th.textContent=col.label;if(currentSortColumn===index)th.textContent+=currentSortDirection==="asc"?" ▲":" ▼";th.onclick=()=>sortTable(index);thead.appendChild(th);});}
+        function renderTable(){renderTableHeader();const tbody=document.querySelector("#dataTable tbody");tbody.innerHTML="";const start=(currentPage-1)*rowsPerPage;const pageData=filteredData.slice(start,start+rowsPerPage);if(pageData.length===0){const tr=document.createElement("tr");const td=document.createElement("td");td.colSpan=tableConfig.columns.length||1;td.textContent="目前沒有資料";tr.appendChild(td);tbody.appendChild(tr);}else{pageData.forEach(row=>{const tr=document.createElement("tr");tableConfig.columns.forEach(col=>{const td=document.createElement("td");td.textContent=row[col.key];td.classList.add(col.type.startsWith("number")?"text-right":"text-left");tr.appendChild(td);});tr.onclick=()=>highlightRow(tr);tbody.appendChild(tr);});}document.getElementById("totalRecords").innerText=\`總筆數: \${filteredData.length} | 第 \${currentPage} / \${Math.max(1,Math.ceil(filteredData.length/rowsPerPage)||1)} 頁\`;document.getElementById("pageInput").value=currentPage;}
+        function highlightRow(row){if(highlightedRow)highlightedRow.classList.remove("highlight");row.classList.add("highlight");highlightedRow=row;}
+        function changePage(delta){const maxPage=Math.ceil(filteredData.length/rowsPerPage)||1;currentPage=Math.min(Math.max(1,currentPage+delta),maxPage);renderTable();}
+        function changeRowsPerPage(){rowsPerPage=parseInt(document.getElementById("rowsPerPage").value,10)||10;currentPage=1;renderTable();}
+        function goToFirstPage(){currentPage=1;renderTable();}
+        function goToLastPage(){currentPage=Math.ceil(filteredData.length/rowsPerPage)||1;renderTable();}
+        function jumpToPage(){const maxPage=Math.ceil(filteredData.length/rowsPerPage)||1;let page=parseInt(document.getElementById("pageInput").value,10);if(isNaN(page)||page<1)page=1;if(page>maxPage)page=maxPage;currentPage=page;renderTable();}
+        function sortTable(columnIndex){const key=tableConfig.columns[columnIndex]?.key;if(!key)return;if(currentSortColumn===columnIndex){currentSortDirection=currentSortDirection==="asc"?"desc":"asc";}else{currentSortColumn=columnIndex;currentSortDirection="asc";}filteredData.sort((a,b)=>{let valA=(a[key]??"").toString().trim(),valB=(b[key]??"").toString().trim();let numA=parseFloat(valA),numB=parseFloat(valB);if(!isNaN(numA)&&!isNaN(numB)){return currentSortDirection==="asc"?numA-numB:numB-numA;}return currentSortDirection==="asc"?valA.localeCompare(valB):valB.localeCompare(a);});currentPage=1;renderTable();}
+        function searchTable(){const field=document.getElementById("searchField").value;const terms=document.getElementById("searchInput").value.toLowerCase().split(" ").filter(Boolean);filteredData=tableData.filter(row=>{return terms.every(term=>{if(field==="all"){return Object.values(row).some(v=>(v??"").toString().toLowerCase().includes(term));}return(row[field]??"").toString().toLowerCase().includes(term);});});currentPage=1;renderTable();}
+
+        // 載入後自動渲染表格
+        window.onload = function() {
+            renderTable();
+            document.getElementById("messages").innerText = "此為離線版網頁，功能僅限瀏覽、搜尋與排序。";
+        };
+    `;
+    script.textContent = exportedScript;
+    newDoc.body.appendChild(script);
+
+    const fullHtml = `<!DOCTYPE html>\n` + newDoc.documentElement.outerHTML;
+    
+    // 建立 Blob 物件以供下載
+    const blob = new Blob([fullHtml], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    
+    // 模擬點擊下載連結
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tinytable_standalone.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    document.getElementById("messages").innerText = "網頁已匯出為 tinytable_standalone.html，可供離線使用。";
+}
+
+// 首次載入頁面時自動生成欄位輸入框
+window.onload = function() {
+  generateColumnInputs();
+  document.getElementById("fileInput").addEventListener("change", importFile);
+  document.getElementById("exportBtn").addEventListener("click", exportPage);
+  document.getElementById("analyzeBtn").addEventListener("click", analyzeTableWithGemini);
+};
+</script>
+</body>
+</html>
