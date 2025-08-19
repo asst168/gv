@@ -365,20 +365,37 @@ function importFile(event) {
   else if (ext === "xlsx" || ext === "xls") importExcel(file);
   else document.getElementById("messages").innerText = "不支援的檔案格式";
 }
+
+/* === 優化後的 CSV 匯入函式 === */
 function importCSV(file) {
   const reader = new FileReader();
   reader.onload = (e) => {
-    let text="", buffer=e.target.result;
+    let text = null;
+    let buffer = e.target.result;
+    
+    // 優先嘗試用 UTF-8 解碼，這是最常見的 CSV 編碼
     try {
-      text = new TextDecoder("utf-8").decode(buffer);
+      text = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
     } catch (e) {
-      // 如果 UTF-8 解碼失敗，嘗試 Big5 編碼
-      text = new TextDecoder("big5").decode(buffer);
+      // UTF-8 解碼失敗，很可能是 Big5 編碼
+      try {
+        text = new TextDecoder("big5", { fatal: true }).decode(buffer);
+      } catch (e) {
+        document.getElementById("messages").innerText = "無法解析檔案編碼，請確認檔案為 UTF-8 或 Big5。";
+        return;
+      }
     }
-    const rows=parseCSV(text); afterRowsImported(rows,"CSV");
+    
+    if (text) {
+      const rows = parseCSV(text);
+      afterRowsImported(rows, "CSV");
+    } else {
+      document.getElementById("messages").innerText = "無法讀取檔案內容。";
+    }
   };
   reader.readAsArrayBuffer(file);
 }
+
 function importExcel(file) {
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -509,7 +526,7 @@ async function analyzeTableWithGemini() {
 /* === 匯出功能 === */
 async function exportPage() {
     // 建立一個僅包含必要內容的新 HTML 結構
-    const newDoc = document.implementation.createHTMLDocument("資料表");
+    const newDoc = document.implementation.createHTMLDocument("匯出資料表");
     
     // 複製樣式
     const style = newDoc.createElement('style');
@@ -519,7 +536,7 @@ async function exportPage() {
     // 複製主體內容
     const bodyContent = `
         <body>
-            <h2>資料表</h2>
+            <h2>匯出資料表</h2>
             <div class="controls-panel">
                 <div class="controls">
                     <select id="searchField">
