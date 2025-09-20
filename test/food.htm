@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>午晚餐-料理食譜</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+  :root {
+    --primary: #007bff;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --info: #17a2b8;
+    --light: #f8f9fa;
+    --dark: #343a40;
+  }
+  body {
+    font-family: 'Noto Sans TC', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    margin: 0;
+    background-color: var(--light);
+    color: var(--dark);
+  }
+  .bg-primary-custom {
+    background-color: var(--primary);
+    color: #fff;
+  }
+  .nav-link-custom {
+    color: #fff;
+    font-weight: 500;
+  }
+  .container-main {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 1rem;
+  }
+  .search-box {
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid #ced4da;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+  }
+  #cardsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  .card-name {
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+  }
+  .card-name:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    transform: translateY(-0.25rem);
+  }
+  .modal-dialog .modal-title {
+    color: var(--primary);
+  }
+  .modal-dialog .meta {
+    font-size: 0.9rem;
+    color: var(--secondary);
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 0.5rem;
+  }
+  .modal-dialog .tip {
+    background-color: #f1f7fe;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    border-left: 4px solid var(--primary);
+  }
+  .list-group-item .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+  #backTop {
+    display: none;
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 99;
+    cursor: pointer;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    text-align: center;
+    line-height: 2.5rem;
+    font-size: 1.5rem;
+    transition: background-color 0.2s;
+  }
+  #backTop:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+  @media (max-width: 768px) {
+    h2 {
+      font-size: 1.5rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg bg-primary-custom text-white sticky-top shadow-sm">
+  <div class="container-fluid">
+    <a class="navbar-brand text-white fw-bold" href="food.htm">美味食譜</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link nav-link-custom" href="#catalog">食譜目錄</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-link-custom" href="#file-control">檔案管理</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-link-custom" href="#menu">我的菜單</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="container-main" id="file-control">
+    <h2 class="fw-bold text-dark">食譜檔案管理</h2>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="bg-white p-4 rounded-3 shadow-sm d-flex flex-column gap-3 h-100">
+                <div>
+                    <h5 class="fw-bold">從 JSON 檔案匯入/新增食譜</h5>
+                    <p class="text-muted">匯入**多個**食譜將覆蓋現有食譜；匯入**單一**食譜則以新增方式加入。</p>
+                </div>
+                <div class="mt-auto">
+                    <label for="importFile" class="form-label mb-2">選擇檔案</label>
+                    <input type="file" class="form-control" id="importFile" accept=".json">
+                    <button class="btn btn-danger mt-3 w-100" id="clearAllBtn"><i class="bi bi-x-circle"></i> 清空所有食譜</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="bg-white p-4 rounded-3 shadow-sm d-flex flex-column gap-3 h-100">
+                <div>
+                    <h5 class="fw-bold">匯出食譜備份</h5>
+                    <p class="text-muted">將所有食譜匯出為 JSON 檔案，以供備份或分享。</p>
+                </div>
+                <div class="mt-auto">
+                    <button class="btn btn-primary mt-3 w-100" id="exportBtn"><i class="bi bi-file-arrow-down"></i> 匯出食譜為 JSON</button>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <div class="container-main" id="catalog">
+    <div class="d-flex flex-wrap gap-3 mb-4 align-items-center justify-content-between">
+      <div class="input-group search-box" style="flex-grow: 1;">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+        <input id="searchBox" class="form-control" placeholder="搜尋菜名、食材或鍋具（範例：麻婆、牛肉）">
+      </div>
+    </div>
+    <div class="mb-4">
+      <h2 class="fw-bold text-dark">食譜目錄</h2>
+    </div>
+    <div class="d-flex flex-wrap gap-2 mb-4" id="categoryButtons"></div>
+
+    <div id="cardsGrid"></div>
+  </div>
+
+  <div class="container-main" id="menu">
+    <div class="row">
+      <div class="col-md-6 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h2 class="fw-bold text-dark">午餐</h2>
+          <button class="btn btn-sm btn-outline-secondary" id="clearLunch">清空</button>
+        </div>
+        <div class="list-group" id="lunchList"></div>
+      </div>
+      <div class="col-md-6 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h2 class="fw-bold text-dark">晚餐</h2>
+          <button class="btn btn-sm btn-outline-secondary" id="clearDinner">清空</button>
+        </div>
+        <div class="list-group" id="dinnerList"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="modal fade" id="recipeModal" tabindex="-1" aria-labelledby="recipeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold" id="modalTitle"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+        <button type="button" class="btn btn-outline-primary" id="addLunchBtn">加入午餐</button>
+        <button type="button" class="btn btn-outline-primary" id="addDinnerBtn">加入晚餐</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="backTop" title="回到頂端">
+  <i class="bi bi-chevron-up"></i>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* ===================== 全域變數與初始化 ===================== */
+let recipes = [];
+let filteredRecipes = [];
+
+const cardsGrid = document.getElementById('cardsGrid');
+const recipeModal = new bootstrap.Modal(document.getElementById('recipeModal'));
+const modalTitle = document.getElementById('modalTitle');
+const modalBody = document.getElementById('modalBody');
+const addLunchBtn = document.getElementById('addLunchBtn');
+const addDinnerBtn = document.getElementById('addDinnerBtn');
+const lunchList = document.getElementById('lunchList');
+const dinnerList = document.getElementById('dinnerList');
+const searchBox = document.getElementById('searchBox');
+const backTopBtn = document.getElementById('backTop');
+const clearAllBtn = document.getElementById('clearAllBtn');
+const categoryButtons = document.getElementById('categoryButtons');
+
+let activeRecipe = null;
+
+/* ===================== 食譜卡片顯示與移除功能 ===================== */
+function displayRecipes(recipeList) {
+  cardsGrid.innerHTML = '';
+  recipeList.forEach(recipe => {
+    const card = document.createElement('div');
+    card.className = 'card-name shadow-sm';
+    card.dataset.id = recipe.id;
+    card.dataset.catName = recipe.catName;
+    card.innerHTML = `
+      <h5 class="fw-bold mb-0">${recipe.title}</h5>
+      <small class="text-muted mt-1 d-block">${recipe.servings} / ${recipe.time}</small>
+      <button class="btn btn-sm btn-danger position-absolute bottom-0 end-0 m-2" style="z-index:10;">
+          <i class="bi bi-trash"></i>
+      </button>
+    `;
+
+    const removeBtn = card.querySelector('.btn-danger');
+    removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (confirm(`確定要移除食譜「${recipe.title}」嗎？`)) {
+            removeRecipe(recipe.id);
+        }
+    });
+
+    card.addEventListener('click', () => {
+      showRecipeModal(recipe);
+    });
+    cardsGrid.appendChild(card);
+  });
+}
+
+function removeRecipe(recipeId) {
+    const recipeIndex = recipes.findIndex(r => r.id === recipeId);
+    if (recipeIndex > -1) {
+        recipes.splice(recipeIndex, 1);
+        
+        const cardToRemove = cardsGrid.querySelector(`[data-id="${recipeId}"]`);
+        if (cardToRemove) {
+            cardToRemove.remove();
+        }
+        
+        localStorage.setItem('recipes', JSON.stringify(recipes));
+        // 更新分類按鈕
+        generateCategories();
+    }
+}
+
+function showRecipeModal(recipe) {
+  activeRecipe = recipe;
+  modalTitle.textContent = recipe.title;
+
+  const ingredientsList = (recipe.ingredients || []).map(item => `<li>${item}</li>`).join('');
+  const stepsList = (recipe.steps || []).map(step => `<li>${step}</li>`).join('');
+
+  modalBody.innerHTML = `
+    <div class="meta mb-3">
+      <span>${recipe.servings || '未知'}</span>
+      <span class="mx-2">·</span>
+      <span>${recipe.time || '未知'}</span>
+    </div>
+    <div class="mb-3">
+      <h6>食材：</h6>
+      <ul>${ingredientsList}</ul>
+    </div>
+    <div class="mb-3">
+      <h6>步驟：</h6>
+      <ol>${stepsList}</ol>
+    </div>
+    ${recipe.tip ? `<div class="tip mb-3"><strong>小撇步：</strong>${recipe.tip}</div>` : ''}
+    ${recipe.cookware ? `<div class="meta"><strong>適用鍋具：</strong>${recipe.cookware}</div>` : ''}
+  `;
+
+  recipeModal.show();
+}
+
+addLunchBtn.addEventListener('click', () => addToList(activeRecipe, lunchList));
+addDinnerBtn.addEventListener('click', () => addToList(activeRecipe, dinnerList));
+
+function addToList(recipe, listElement) {
+  if (!recipe || !listElement) return;
+
+  const existingItem = listElement.querySelector(`[data-id="${recipe.id}"]`);
+  if (existingItem) {
+    alert('此食譜已在清單中。');
+    return;
+  }
+
+  const item = document.createElement('div');
+  item.className = 'list-group-item d-flex justify-content-between align-items-center bg-white';
+  item.dataset.id = recipe.id;
+  item.innerHTML = `
+    <span class="text-truncate">${recipe.title}</span>
+    <div class="btn-group">
+      <button class="btn btn-sm btn-info text-white btn-view" type="button"><i class="bi bi-eye"></i> 查看</button>
+      <button class="btn btn-sm btn-danger btn-remove" type="button"><i class="bi bi-trash"></i> 移除</button>
+    </div>
+  `;
+  listElement.appendChild(item);
+
+  const viewBtn = item.querySelector('.btn-view');
+  viewBtn.addEventListener('click', () => {
+    showRecipeModal(recipe);
+  });
+
+  const removeBtn = item.querySelector('.btn-remove');
+  removeBtn.addEventListener('click', () => {
+    item.remove();
+  });
+}
+
+document.getElementById('clearLunch').addEventListener('click', () => {
+  lunchList.innerHTML = '';
+});
+
+document.getElementById('clearDinner').addEventListener('click', () => {
+  dinnerList.innerHTML = '';
+});
+
+/* ===================== 分類目錄與篩選功能 ===================== */
+function generateCategories() {
+    const categories = ['全部'];
+    recipes.forEach(recipe => {
+        if (recipe.catName && !categories.includes(recipe.catName)) {
+            categories.push(recipe.catName);
+        }
+    });
+
+    categoryButtons.innerHTML = '';
+    categories.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-outline-primary';
+        btn.textContent = cat;
+        btn.dataset.category = cat;
+        categoryButtons.appendChild(btn);
+
+        btn.addEventListener('click', () => {
+            filterByCategory(cat);
+            // 移除所有按鈕的 active 樣式
+            document.querySelectorAll('#categoryButtons .btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            // 為當前點擊的按鈕添加 active 樣式
+            btn.classList.add('active');
+            // 清空搜尋框內容
+            searchBox.value = '';
+        });
+    });
+    // 預設選中「全部」
+    if (categoryButtons.firstElementChild) {
+        categoryButtons.firstElementChild.classList.add('active');
+    }
+}
+
+function filterByCategory(category) {
+    if (category === '全部') {
+        filteredRecipes = [...recipes];
+    } else {
+        filteredRecipes = recipes.filter(recipe => recipe.catName === category);
+    }
+    displayRecipes(filteredRecipes);
+}
+
+/* ===================== 檔案匯入匯出功能 ===================== */
+const importFile = document.getElementById('importFile');
+const exportBtn = document.getElementById('exportBtn');
+
+importFile.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            const importedData = JSON.parse(event.target.result);
+
+            if (Array.isArray(importedData)) {
+                // 匯入多筆食譜：覆蓋現有食譜
+                recipes = importedData;
+                alert(`成功匯入 ${importedData.length} 筆食譜，並已覆蓋現有清單！`);
+            } else if (typeof importedData === 'object' && importedData !== null) {
+                // 匯入單一食譜：新增至現有清單
+                if (importedData.id && importedData.title) {
+                    recipes.push(importedData);
+                    alert(`食譜 "${importedData.title}" 已成功新增！`);
+                } else {
+                    alert('JSON 格式錯誤，請確保檔案內容為有效的單一食譜物件，且包含 id 和 title。');
+                }
+            } else {
+                alert('JSON 格式錯誤，請確保檔案內容為食譜陣列或單一食譜物件。');
+            }
+
+            // 更新食譜列表和分類
+            displayRecipes(recipes);
+            localStorage.setItem('recipes', JSON.stringify(recipes));
+            generateCategories();
+            // 清空檔案選擇欄位，方便下次操作
+            importFile.value = '';
+
+        } catch (error) {
+            alert('無法解析檔案內容，請確認是否為有效的 JSON 格式。');
+            console.error('JSON parsing error:', error);
+        }
+    };
+    reader.onerror = () => {
+        alert('讀取檔案時發生錯誤。');
+    };
+    reader.readAsText(file);
+});
+
+
+exportBtn.addEventListener('click', () => {
+    if (recipes.length === 0) {
+        alert('沒有食譜可以匯出。');
+        return;
+    }
+    const jsonStr = JSON.stringify(recipes, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '食譜備份.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+
+clearAllBtn.addEventListener('click', () => {
+    if (confirm('確定要清空所有食譜嗎？此操作無法復原！')) {
+        recipes = [];
+        displayRecipes(recipes);
+        localStorage.removeItem('recipes');
+        generateCategories();
+        alert('所有食譜已清除！');
+    }
+});
+
+/* ===================== 搜尋功能 ===================== */
+searchBox.addEventListener('input', function(){
+  const q = this.value.trim().toLowerCase();
+  // 先確保所有卡片可見
+  document.querySelectorAll('#cardsGrid .card-name').forEach(card=>{
+      card.style.display = 'block';
+  });
+  // 移除分類按鈕 active 樣式
+  document.querySelectorAll('#categoryButtons .btn').forEach(b => {
+      b.classList.remove('active');
+  });
+
+  const currentList = q ? recipes : filteredRecipes;
+
+  currentList.forEach(r => {
+      const card = document.querySelector(`#cardsGrid [data-id="${r.id}"]`);
+      if (!card) return;
+
+      const hay = (r.title + ' ' + (r.ingredients || []).join(' ') + ' ' + (r.cookware || '') + ' ' + (r.catName || '')).toLowerCase();
+      if(!q || hay.includes(q)) {
+          card.style.display = 'block';
+      } else {
+          card.style.display = 'none';
+      }
+  });
+});
+
+/* ===================== 回到頂端按鈕 ===================== */
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 200) {
+    backTopBtn.style.display = 'block';
+  } else {
+    backTopBtn.style.display = 'none';
+  }
+});
+backTopBtn.addEventListener('click', () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+/* ===================== 頁面初始化 ===================== */
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const storedRecipes = localStorage.getItem('recipes');
+        if (storedRecipes) {
+            recipes = JSON.parse(storedRecipes);
+            filteredRecipes = [...recipes];
+            displayRecipes(filteredRecipes);
+            generateCategories();
+            console.log('從 localStorage 成功載入食譜。');
+            return;
+        }
+
+        const response = await fetch('recipes.json');
+        if (!response.ok) {
+            throw new Error(`無法載入 recipes.json 檔案。請確認檔案是否存在且與 food.htm 位於同一個資料夾。`);
+        }
+        recipes = await response.json();
+        filteredRecipes = [...recipes];
+        localStorage.setItem('recipes', JSON.stringify(recipes));
+        displayRecipes(filteredRecipes);
+        generateCategories();
+        console.log('從 recipes.json 檔案成功載入食譜。');
+    } catch (error) {
+        alert(error.message);
+        console.error(error);
+    }
+});
+</script>
+</body>
+</html>
