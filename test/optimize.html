@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT維護清單</title>
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --secondary-color: #f8f9fa;
+            --accent-color: #34a853;
+            --text-color: #3c4043;
+            --border-color: #dadce0;
+        }
+        body {
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        .category-title {
+            background: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-top: 30px;
+            display: inline-block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 15px;
+        }
+        th {
+            background-color: #e8f0fe;
+            color: var(--primary-color);
+            font-weight: bold;
+            text-align: left;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+        }
+        td {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        .tool-name {
+            font-weight: bold;
+            color: #d93025; /* 軟體名稱強調色 */
+        }
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #eee;
+            margin-left: 5px;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 14px;
+            color: #70757a;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        @media (max-width: 600px) {
+            table, thead, tbody, th, td, tr { display: block; }
+            th { position: absolute; top: -9999px; left: -9999px; }
+            tr { border: 1px solid #ccc; margin-bottom: 10px; }
+            td { border: none; position: relative; padding-left: 40%; }
+            td:before { position: absolute; left: 10px; width: 35%; font-weight: bold; }
+            td:nth-of-type(1):before { content: "維修項目"; }
+            td:nth-of-type(2):before { content: "專業工具"; }
+            td:nth-of-type(3):before { content: "服務價值"; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>IT維護清單</h1>
+    <h2 class="category-title">一、 硬體與穩定性檢測</h2>
+    <table>
+        <thead>
+            <tr>
+                <th width="20%">維修項目</th>
+                <th width="30%">專業工具</th>
+                <th width="50%">服務價值</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>硬體健康檢查</td>
+                <td><span class="tool-name">Hard Disk Sentinel</span></td>
+                <td>精準預判硬碟壽命，防止寶貴資料因壞軌突然丟失。</td>
+            </tr>
+            <tr>
+                <td>效能讀寫測試</td>
+                <td><span class="tool-name">TxBench / CDM</span></td>
+                <td>確保硬碟運行於標稱速度，排除傳輸瓶頸。</td>
+            </tr>
+            <tr>
+                <td>當機原因診斷</td>
+                <td><span class="tool-name">BlueScreenView</span></td>
+                <td>分析藍屏記錄，找出衝突驅動程式或硬體老化根源。</td>
+            </tr>
+            <tr>
+                <td>容量佔用分析</td>
+                <td><span class="tool-name">WizTree / TreeSize</span></td>
+                <td>視覺化掃描磁碟，徹底揪出佔用空間的無用大檔。</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 class="category-title">二、 系統深度清理與優化</h2>
+    <table>
+        <thead>
+            <tr>
+                <th width="20%">維修項目</th>
+                <th width="30%">專業工具</th>
+                <th width="50%">服務價值</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>效能全速調教</td>
+                <td><span class="tool-name">Wise Care 365</span></td>
+                <td>深度清理註冊表與殘留垃圾，讓開機反應如新。</td>
+            </tr>
+            <tr>
+                <td>隱私與防護</td>
+                <td><span class="tool-name">Privacy Eraser / AdwCleaner</span></td>
+                <td>移除惡意廣告軟體、首頁綁架與網路追蹤痕跡。</td>
+            </tr>
+            <tr>
+                <td>系統瘦身設定</td>
+                <td><span class="tool-name">PowerCfg / Sophia Script</span></td>
+                <td>關閉休眠與 Windows 冗餘服務，大幅釋放 C 槽可用空間。</td>
+            </tr>
+            <tr>
+                <td>開機管理優化</td>
+                <td><span class="tool-name">Autoruns / Startup Manager</span></td>
+                <td>精簡啟動項，消除開機後電腦發呆轉圈的情況。</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 class="category-title">三、 安全防禦與災難恢復</h2>
+    <table>
+        <thead>
+            <tr>
+                <th width="20%">維修項目</th>
+                <th width="30%">專業工具</th>
+                <th width="50%">服務價值</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>自動化備份</td>
+                <td><span class="tool-name">SyncBackFree</span></td>
+                <td>建立自動備份排程，確保重要文件具備多重保險。</td>
+            </tr>
+            <tr>
+                <td>系統還原機制</td>
+                <td><span class="tool-name">Windows Restore (10%)</span></td>
+                <td>預先配置系統還原點，故障時可免重灌快速修復。</td>
+            </tr>
+            <tr>
+                <td>軟體純淨更新</td>
+                <td><span class="tool-name">Ninite / Patch My PC</span></td>
+                <td>批次安裝並更新常用軟體，避開垃圾廣告捆綁。</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>© 2026 IT 職人專業電腦維修 | 您最值得信賴的技術夥伴</p>
+    </div>
+</div>
+
+</body>
+</html>
