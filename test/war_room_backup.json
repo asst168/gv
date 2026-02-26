@@ -1,0 +1,14 @@
+[
+  {
+    "cat": "客戶",
+    "title": "唯軒 (KK) 病毒案",
+    "advice": "持續監控 wscript.exe 與奇怪的隱藏檔。",
+    "status": "urgent"
+  },
+  {
+    "cat": "理財",
+    "title": "月配息基金佈局",
+    "advice": "落實「穩定重於高息」策略。",
+    "status": "stable"
+  }
+]
