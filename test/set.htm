@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Windows 11 工具箱：設定面板 + 快捷鍵指南</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  <style>
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: linear-gradient(to right, #e3f2fd, #fce4ec);
+      margin: 0;
+      padding: 20px 16px 120px;
+      color: #222;
+      min-height: 100vh;
+    }
+    h1 {
+      text-align: center;
+      margin: 1em 0 0.5em;
+      font-size: 2.4rem;
+      color: #1a1a1a;
+    }
+    .tabs {
+      text-align: center;
+      margin: 1.5rem 0 1rem;
+    }
+    .tab-btn {
+      padding: 12px 32px;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+      background: #e0e0e0;
+      margin: 0 6px;
+      transition: all 0.3s;
+    }
+    .tab-btn.active {
+      background: #1976d2;
+      color: white;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .search-container {
+      text-align: center;
+      margin: 1rem 0 2.5rem;
+    }
+    #searchInput {
+      padding: 14px 22px;
+      width: 90%;
+      max-width: 520px;
+      border: 1px solid #bbb;
+      border-radius: 999px;
+      font-size: 1.1rem;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    }
+    #searchInput:focus {
+      outline: none;
+      border-color: #1976d2;
+      box-shadow: 0 0 0 4px rgba(25,118,210,0.2);
+    }
+
+    .section {
+      max-width: 1150px;
+      margin: 0 auto 4rem;
+    }
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 2.2rem 0 1.2rem;
+      padding-left: 16px;
+      border-left: 6px solid #444;
+      color: #111;
+    }
+
+    /* 設定面板樣式 */
+    .button-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 18px;
+    }
+    .grid-item-btn {
+      padding: 16px 20px;
+      font-size: 1.05rem;
+      border: none;
+      border-radius: 14px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      text-align: center;
+      white-space: normal;
+    }
+    .grid-item-btn:hover {
+      transform: translateY(-5px) scale(1.03);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.25);
+    }
+    .grid-item-btn i {
+      font-size: 1.45em;
+      transition: all 0.3s;
+    }
+    .grid-item-btn:hover i {
+      transform: scale(1.2) rotate(10deg);
+    }
+
+    .system { background: #1976d2; }
+    .network { background: #0097a7; }
+    .personal { background: #8e24aa; }
+    .device { background: #2e7d32; }
+    .account { background: #e65100; }
+    .time { background: #5e35b1; }
+    .privacy { background: #c2185b; }
+    .apps { background: #455a64; }
+    .other { background: #6d4c41; }
+
+    /* 快捷鍵樣式 */
+    .shortcut-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+    }
+    .shortcut-item {
+      background: white;
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+      transition: all 0.25s;
+    }
+    .shortcut-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+    }
+    .shortcut-key {
+      font-family: Consolas, monospace;
+      background: #f0f4f8;
+      padding: 5px 10px;
+      border-radius: 6px;
+      color: #d63384;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    /* 回到頂部 */
+    #back-to-top {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: white;
+      font-size: 2.2rem;
+      border: 4px solid rgba(255,255,255,0.55);
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.4s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    #back-to-top.show { opacity: 1; visibility: visible; }
+    #back-to-top:hover { transform: scale(1.2); box-shadow: 0 14px 32px rgba(0,0,0,0.5); }
+    #back-to-top i { transition: transform 0.35s; }
+    #back-to-top:hover i { transform: translateY(-8px); }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 2rem; }
+      .tabs { margin: 1rem 0; }
+      .tab-btn { padding: 10px 20px; font-size: 1rem; margin: 0 3px; }
+      .button-container, .shortcut-list { grid-template-columns: 1fr; gap: 14px; }
+      .grid-item-btn, .shortcut-item { min-height: 68px; font-size: 1rem; }
+      #back-to-top { width: 58px; height: 58px; font-size: 1.9rem; bottom: 30px; right: 30px; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Windows 11 工具箱：設定面板 + 快捷鍵指南</h1>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="settings">設定面板</button>
+  <button class="tab-btn" data-tab="shortcuts">快捷按鍵</button>
+</div>
+
+<div class="search-container">
+  <input type="text" id="searchInput" placeholder="搜尋（設定項目 / 快捷鍵描述）...">
+</div>
+
+<div id="settings" class="tab-content active">
+<div class="section">
+  <div class="section-title">系統</div>
+  <div class="button-container">
+    <button class="grid-item-btn system" onclick="location='ms-settings:'"><i class="fas fa-cog"></i> 設定首頁</button>
+    <button class="grid-item-btn system" onclick="location='ms-settings:about'"><i class="fas fa-info-circle"></i> 關於本機</button>
+    <button class="grid-item-btn system" onclick="location='ms-settings:display'"><i class="fas fa-desktop"></i> 顯示</button>
+    <button class="grid-item-btn system" onclick="location='ms-settings:nightlight'"><i class="fas fa-moon"></i> 夜間模式</button>
+    <button class="grid-item-btn system" onclick="location='ms-settings:powersleep'"><i class="fas fa-battery-half"></i> 電源與睡眠</button>
+    <button class="grid-item-btn system" onclick="location='ms-settings:batterysaver'"><i class="fas fa-bolt"></i> 電池節電器</button>
+    <button class="grid-item-btn system" onclick="location='ms-settings:sound'"><i class="fas fa-volume-up"></i> 聲音</button>
+    <button class="grid-item-btn system" onclick="location='ms-settings:notifications'"><i class="fas fa-bell"></i> 通知</button>
+    <button class="grid-item-btn system" onclick="location='ms-settings:multitasking'"><i class="fas fa-columns"></i> 多工處理</button>
+    <button class="grid-item-btn system" onclick="location='ms-settings:clipboard'"><i class="fas fa-clipboard"></i> 剪貼簿</button>
+    <button class="grid-item-btn system" onclick="location='ms-settings:storage'"><i class="fas fa-hdd"></i> 儲存空間</button>
+    <button class="grid-item-btn system" onclick="location='ms-settings:activation'"><i class="fas fa-key"></i> 啟用</button>
+    <button class="grid-item-btn system" onclick="location='ms-settings:remotedesktop'"><i class="fas fa-desktop-alt"></i> 遠端桌面</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">網路與網際網路</div>
+  <div class="button-container">
+    <button class="grid-item-btn network" onclick="location='ms-settings:network'"><i class="fas fa-network-wired"></i> 網路總覽</button>
+    <button class="grid-item-btn network" onclick="location='ms-settings:network-status'"><i class="fas fa-signal"></i> 網路狀態</button>
+    <button class="grid-item-btn network" onclick="location='ms-settings:network-wifi'"><i class="fas fa-wifi"></i> Wi-Fi</button>
+    <button class="grid-item-btn network" onclick="location='ms-settings:network-ethernet'"><i class="fas fa-ethernet"></i> 乙太網路</button>
+    <button class="grid-item-btn network" onclick="location='ms-settings:network-proxy'"><i class="fas fa-user-secret"></i> Proxy</button>
+    <button class="grid-item-btn network" onclick="location='ms-settings:network-mobilehotspot'"><i class="fas fa-mobile-alt"></i> 行動熱點</button>
+    <button class="grid-item-btn network" onclick="location='ms-settings:network-cellular'"><i class="fas fa-sim-card"></i> 行動網路</button>
+    <button class="grid-item-btn network" onclick="location='ms-settings:network-vpn'"><i class="fas fa-lock"></i> VPN</button>
+    <button class="grid-item-btn network" onclick="location='ms-settings:network-airplanemode'"><i class="fas fa-plane"></i> 飛航模式</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">藍牙與裝置</div>
+  <div class="button-container">
+    <button class="grid-item-btn device" onclick="location='ms-settings:bluetooth'"><i class="fas fa-bluetooth-b"></i> 藍牙與裝置</button>
+    <button class="grid-item-btn device" onclick="location='ms-settings:printers'"><i class="fas fa-print"></i> 印表機與掃描器</button>
+    <button class="grid-item-btn device" onclick="location='ms-settings:mouse'"><i class="fas fa-mouse-pointer"></i> 滑鼠</button>
+    <button class="grid-item-btn device" onclick="location='ms-settings:touchpad'"><i class="fas fa-hand-pointer"></i> 觸控板</button>
+    <button class="grid-item-btn device" onclick="location='ms-settings:pen'"><i class="fas fa-pen"></i> 筆與 Windows Ink</button>
+    <button class="grid-item-btn device" onclick="location='ms-settings:autoplay'"><i class="fas fa-play"></i> 自動播放</button>
+    <button class="grid-item-btn device" onclick="location='ms-settings:usb'"><i class="fas fa-usb"></i> USB</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">個人化</div>
+  <div class="button-container">
+    <button class="grid-item-btn personal" onclick="location='ms-settings:personalization'"><i class="fas fa-user-edit"></i> 個人化總覽</button>
+    <button class="grid-item-btn personal" onclick="location='ms-settings:personalization-background'"><i class="fas fa-image"></i> 背景</button>
+    <button class="grid-item-btn personal" onclick="location='ms-settings:colors'"><i class="fas fa-palette"></i> 顏色</button>
+    <button class="grid-item-btn personal" onclick="location='ms-settings:themes'"><i class="fas fa-magic"></i> 主題</button>
+    <button class="grid-item-btn personal" onclick="location='ms-settings:lockscreen'"><i class="fas fa-lock"></i> 鎖定畫面</button>
+    <button class="grid-item-btn personal" onclick="location='ms-settings:fonts'"><i class="fas fa-font"></i> 字型</button>
+    <button class="grid-item-btn personal" onclick="location='ms-settings:taskbar'"><i class="fas fa-tasks"></i> 工作列</button>
+    <button class="grid-item-btn personal" onclick="location='ms-settings:personalization-start'"><i class="fas fa-th-large"></i> 開始功能表</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">應用程式</div>
+  <div class="button-container">
+    <button class="grid-item-btn apps" onclick="location='ms-settings:appsfeatures'"><i class="fas fa-th-large"></i> 已安裝應用程式</button>
+    <button class="grid-item-btn apps" onclick="location='ms-settings:defaultapps'"><i class="fas fa-mouse-pointer"></i> 預設應用程式</button>
+    <button class="grid-item-btn apps" onclick="location='ms-settings:optionalfeatures'"><i class="fas fa-puzzle-piece"></i> 選用功能</button>
+    <button class="grid-item-btn apps" onclick="location='ms-settings:startupapps'"><i class="fas fa-rocket"></i> 啟動應用程式</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">帳戶</div>
+  <div class="button-container">
+    <button class="grid-item-btn account" onclick="location='ms-settings:yourinfo'"><i class="fas fa-user"></i> 您的資訊</button>
+    <button class="grid-item-btn account" onclick="location='ms-settings:signinoptions'"><i class="fas fa-key"></i> 登入選項</button>
+    <button class="grid-item-btn account" onclick="location='ms-settings:otherusers'"><i class="fas fa-users"></i> 其他使用者</button>
+    <button class="grid-item-btn account" onclick="location='ms-settings:family-group'"><i class="fas fa-users-cog"></i> 家庭群組</button>
+    <button class="grid-item-btn account" onclick="location='ms-settings:workplace'"><i class="fas fa-briefcase"></i> 公司或學校帳戶</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">時間與語言</div>
+  <div class="button-container">
+    <button class="grid-item-btn time" onclick="location='ms-settings:dateandtime'"><i class="fas fa-clock"></i> 日期與時間</button>
+    <button class="grid-item-btn time" onclick="location='ms-settings:regionlanguage'"><i class="fas fa-globe-asia"></i> 語言與地區</button>
+    <button class="grid-item-btn time" onclick="location='ms-settings:keyboard'"><i class="fas fa-keyboard"></i> 鍵盤</button>
+    <button class="grid-item-btn time" onclick="location='ms-settings:speech'"><i class="fas fa-microphone"></i> 語音</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">隱私權與安全性</div>
+  <div class="button-container">
+    <button class="grid-item-btn privacy" onclick="location='ms-settings:privacy'"><i class="fas fa-user-shield"></i> 隱私權總覽</button>
+    <button class="grid-item-btn privacy" onclick="location='ms-settings:privacy-general'"><i class="fas fa-shield-alt"></i> 一般</button>
+    <button class="grid-item-btn privacy" onclick="location='ms-settings:privacy-location'"><i class="fas fa-map-marker-alt"></i> 位置</button>
+    <button class="grid-item-btn privacy" onclick="location='ms-settings:privacy-camera'"><i class="fas fa-video"></i> 相機</button>
+    <button class="grid-item-btn privacy" onclick="location='ms-settings:privacy-microphone'"><i class="fas fa-microphone-slash"></i> 麥克風</button>
+    <button class="grid-item-btn privacy" onclick="location='ms-settings:windowsdefender'"><i class="fas fa-shield-virus"></i> Windows 安全性</button>
+    <button class="grid-item-btn privacy" onclick="location='ms-settings:windowsupdate'"><i class="fas fa-sync"></i> Windows Update</button>
+    <button class="grid-item-btn privacy" onclick="location='ms-settings:troubleshoot'"><i class="fas fa-tools"></i> 疑難排解</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">無障礙 / 其他</div>
+  <div class="button-container">
+    <button class="grid-item-btn other" onclick="location='ms-settings:easeofaccess-display'"><i class="fas fa-eye"></i> 放大鏡與顯示</button>
+    <button class="grid-item-btn other" onclick="location='ms-settings:easeofaccess-mousepointer'"><i class="fas fa-mouse-pointer"></i> 滑鼠指標</button>
+    <button class="grid-item-btn other" onclick="location='ms-settings:gaming-gamebar'"><i class="fas fa-gamepad"></i> 遊戲列</button>
+    <button class="grid-item-btn other" onclick="location='ms-settings:project'"><i class="fas fa-expand-arrows-alt"></i> 投影</button>
+  </div>
+</div>
+</div>
+
+<div id="shortcuts" class="tab-content">
+  <div class="section">
+    <div class="section-title">最常用基礎快捷鍵</div>
+    <div class="shortcut-list">
+      <div class="shortcut-item"><span class="shortcut-key">Ctrl + C</span> / Ctrl + Insert → 複製</div>
+      <div class="shortcut-item"><span class="shortcut-key">Ctrl + V</span> / Shift + Insert → 貼上</div>
+      <div class="shortcut-item"><span class="shortcut-key">Ctrl + X</span> → 剪下</div>
+      <div class="shortcut-item"><span class="shortcut-key">Ctrl + Z</span> → 復原</div>
+      <div class="shortcut-item"><span class="shortcut-key">Ctrl + A</span> → 全選</div>
+      <div class="shortcut-item"><span class="shortcut-key">Alt + Tab</span> → 切換視窗</div>
+      <div class="shortcut-item"><span class="shortcut-key">Alt + F4</span> → 關閉視窗</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + L</span> → 鎖定電腦</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + D</span> → 顯示/隱藏桌面</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Windows 鍵組合（核心功能）</div>
+    <div class="shortcut-list">
+      <div class="shortcut-item"><span class="shortcut-key">Win</span> → 開啟/關閉開始功能表</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + E</span> → 檔案總管</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + I</span> → 設定</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + A</span> → 快速設定</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + N</span> → 通知中心</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + W</span> → 小工具 (Widgets)</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + C</span> → Copilot (AI 助理)</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + S / Q</span> → 搜尋</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + Tab</span> → 工作檢視 / 虛擬桌面</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + Shift + S</span> → 區域截圖</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + . / ;</span> → 表情符號面板</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + V</span> → 剪貼簿歷史</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + K</span> → 投射 / 連接無線顯示器</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">視窗與 Snap 佈局</div>
+    <div class="shortcut-list">
+      <div class="shortcut-item"><span class="shortcut-key">Win + Z</span> → Snap 佈局建議</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + 左/右</span> → 貼靠左/右半屏</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + 上</span> → 最大化</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + 下</span> → 最小化 / 還原</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + Shift + 左/右</span> → 移到另一螢幕</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">檔案總管與文字編輯</div>
+    <div class="shortcut-list">
+      <div class="shortcut-item"><span class="shortcut-key">Alt + D / Ctrl + L</span> → 選取網址列</div>
+      <div class="shortcut-item"><span class="shortcut-key">F2</span> → 重新命名</div>
+      <div class="shortcut-item"><span class="shortcut-key">Ctrl + Shift + N</span> → 新資料夾</div>
+      <div class="shortcut-item"><span class="shortcut-key">Ctrl + Backspace</span> → 刪除左邊一個字</div>
+      <div class="shortcut-item"><span class="shortcut-key">Ctrl + 左右方向鍵</span> → 跳單字</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">無障礙與其他</div>
+    <div class="shortcut-list">
+      <div class="shortcut-item"><span class="shortcut-key">Win + +</span> → 開啟放大鏡</div>
+      <div class="shortcut-item"><span class="shortcut-key">Ctrl + Shift + Esc</span> → 工作管理員</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + Pause/Break</span> → 系統資訊</div>
+      <div class="shortcut-item"><span class="shortcut-key">Win + PrtScn</span> → 全螢幕截圖並儲存</div>
+    </div>
+  </div>
+</div>
+
+<button id="back-to-top"><i class="fas fa-chevron-up"></i></button>
+
+<script>
+  // Tab 切換
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      
+      // 切換分頁時重置搜尋
+      searchInput.value = '';
+      resetDisplay();
+    });
+  });
+
+  const searchInput = document.getElementById('searchInput');
+
+  // 重置顯示狀態
+  function resetDisplay() {
+    const activeTab = document.querySelector('.tab-content.active');
+    activeTab.querySelectorAll('.shortcut-item, .grid-item-btn, .section').forEach(el => {
+      el.style.display = '';
+    });
+  }
+
+  // 統一搜尋功能邏輯
+  searchInput.addEventListener('input', function() {
+    const term = this.value.trim().toLowerCase();
+    const activeTab = document.querySelector('.tab-content.active');
+    if (!activeTab) return;
+
+    // 1. 過濾項目（排除標籤按鈕）
+    const items = activeTab.querySelectorAll('.shortcut-item, .grid-item-btn');
+    items.forEach(item => {
+      const text = item.textContent.toLowerCase();
+      item.style.display = (term === '' || text.includes(term)) ? '' : 'none';
+    });
+
+    // 2. 處理分類區塊的連動隱藏
+    activeTab.querySelectorAll('.section').forEach(sec => {
+      // 檢查該區塊內是否還有「非隱藏」的內容項目
+      const visibleItems = sec.querySelectorAll('.shortcut-item:not([style*="display: none"]), .grid-item-btn:not([style*="display: none"])');
+      
+      if (term === '' || visibleItems.length > 0) {
+        sec.style.display = '';
+      } else {
+        sec.style.display = 'none';
+      }
+    });
+  });
+
+  // 回到頂部功能
+  const backToTop = document.getElementById('back-to-top');
+  window.addEventListener('scroll', () => {
+    backToTop.classList.toggle('show', window.scrollY > 400);
+  });
+  backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+</script>
+
+</body>
+</html>
