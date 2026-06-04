@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>本地多媒體播放中心</title>
+    <style>
+        :root {
+            --bg:        #13110F;
+            --surface:   #1E1B17;
+            --panel:     #171410;
+            --border:    rgba(212,168,67,0.18);
+            --gold:      #D4A843;
+            --gold-dim:  #B8902E;
+            --gold-deep: #7A5E1A;
+            --cream:     #F2E8DA;
+            --muted:     #9B8A78;
+            --faint:     #C4A882;
+            --red:       #E05454;
+            --red-dark:  #C43A3A;
+            --orange:    #E8943A;
+            --orange-dk: #C57830;
+            --playing-bg: rgba(212,168,67,0.12);
+        }
+
+        body, button, tr {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%; overflow: hidden; margin: 0; padding: 0;
+        }
+
+        body {
+            background-color: var(--bg); color: var(--cream);
+            font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
+            display: flex; flex-direction: column; box-sizing: border-box;
+        }
+
+        .container {
+            flex: 1; display: flex; flex-direction: column; min-height: 0;
+            background: var(--surface); padding: 14px 18px 10px; box-sizing: border-box; overflow: hidden;
+        }
+
+        .header-section {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 10px; gap: 12px; flex-shrink: 0;
+        }
+
+        .dir-config-box {
+            display: flex; align-items: center; gap: 8px; flex: 1; max-width: 850px; flex-wrap: wrap;
+        }
+
+        .file-label {
+            padding: 6px 14px; font-size: 13px; font-weight: bold;
+            background: rgba(212,168,67,0.15); border: 1px solid var(--gold);
+            color: var(--gold); border-radius: 6px; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; gap: 5px; white-space: nowrap;
+            box-shadow: 0 0 8px rgba(212,168,67,0.1);
+        }
+        .file-label:hover { background: var(--gold); color: var(--bg); }
+        #local-dir-picker { display: none; }
+
+        .header-badge {
+            font-size: 12px; color: var(--muted); background: rgba(212,168,67,0.08);
+            border: 1px solid var(--gold-deep); border-radius: 20px; padding: 2px 10px; white-space: nowrap;
+        }
+
+        .main-layout {
+            display: grid; grid-template-columns: 1fr 320px; gap: 14px; flex: 1; min-height: 0;
+        }
+
+        .player-column { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+
+        .viewer-box {
+            width: 100%; flex: 1; min-height: 0; background: #000000;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 6px; overflow: hidden; border: 1px solid var(--border); position: relative; cursor: pointer;
+        }
+
+        #radio-video { width: 100%; height: 100%; object-fit: contain; display: none; background: #000000; }
+
+        .click-hint {
+            position: absolute; top: 14px; left: 14px; background: rgba(212,168,67,0.15);
+            border: 1px solid rgba(212,168,67,0.35); color: var(--gold); padding: 6px 13px;
+            border-radius: 8px; font-size: 13px; font-weight: bold; z-index: 5; backdrop-filter: blur(4px); pointer-events: none;
+        }
+
+        .glass-controls {
+            position: relative; z-index: 2; width: 100%; background: var(--panel);
+            border: 1px solid var(--border); border-radius: 6px; padding: 0 12px; height: 36px;
+            box-sizing: border-box; display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+        }
+
+        .progress-row { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+
+        .time-text {
+            font-size: 10px; font-weight: bold; color: var(--faint); min-width: 36px;
+            text-align: center; font-variant-numeric: tabular-nums; flex-shrink: 0;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none; appearance: none; background: rgba(255,255,255,0.13); border-radius: 4px; outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 11px; height: 11px; border-radius: 50%; cursor: pointer; transition: transform 0.1s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.35); }
+        input[type="range"]::-moz-range-thumb { width: 11px; height: 11px; border: none; border-radius: 50%; cursor: pointer; }
+
+        .progress-bar { flex: 1; height: 4px; cursor: pointer; }
+        .progress-bar::-webkit-slider-thumb { background: var(--gold); }
+        .progress-bar::-moz-range-thumb     { background: var(--gold); }
+
+        .volume-row { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+        .volume-icon { font-size: 13px; color: var(--gold); cursor: pointer; user-select: none; line-height: 1; }
+        .volume-bar  { width: 55px; height: 3px; cursor: pointer; }
+        .volume-bar::-webkit-slider-thumb { background: var(--faint); }
+        .volume-bar::-moz-range-thumb     { background: var(--faint); }
+        .volume-txt  { font-size: 10px; font-weight: bold; color: var(--faint); min-width: 26px; font-variant-numeric: tabular-nums; }
+
+        .opacity-row { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--muted); flex-shrink: 0; }
+        .opacity-bar { width: 46px; height: 3px; cursor: pointer; }
+        .opacity-bar::-webkit-slider-thumb { background: var(--cream); }
+        .opacity-bar::-moz-range-thumb     { background: var(--cream); }
+        .opacity-txt { font-size: 10px; font-weight: bold; color: var(--cream); min-width: 26px; font-variant-numeric: tabular-nums; }
+
+        .ctrl-sep { width: 1px; height: 14px; background: rgba(212,168,67,0.2); flex-shrink: 0; }
+
+        .viewer-box:fullscreen, .viewer-box:-webkit-full-screen { width: 100vw !important; height: 100vh !important; border: none; border-radius: 0; }
+        .fullscreen-exit-btn {
+            display: none; position: absolute; top: 16px; right: 16px; background: rgba(19,17,15,0.85); color: var(--cream);
+            border: 1px solid var(--border); border-radius: 50%; width: 40px; height: 40px; align-items: center; justify-content: center;
+            z-index: 9999; font-size: 18px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.5); transition: background 0.2s;
+        }
+        .viewer-box:fullscreen .fullscreen-exit-btn, .viewer-box:-webkit-full-screen .fullscreen-exit-btn { display: flex; }
+        .viewer-box:fullscreen .click-hint, .viewer-box:-webkit-full-screen .click-hint { display: none; }
+
+        .status-bar {
+            display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted);
+            background: var(--panel); padding: 9px 14px; border-radius: 6px; border: 1px solid var(--border); gap: 8px; flex-shrink: 0;
+        }
+        .status-title { display: flex; align-items: center; gap: 8px; overflow: hidden; white-space: nowrap; flex: 1; min-width: 0; }
+        .status-title span#playing-title { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+        .status-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+        .visualizer { display: inline-flex; align-items: flex-end; gap: 3px; height: 18px; width: 22px; opacity: 0; transition: opacity 0.3s; flex-shrink: 0; }
+        .visualizer.active { opacity: 1; }
+        .visualizer .bar { width: 3px; height: 100%; background: var(--gold); transform-origin: bottom; border-radius: 1px; transform: scaleY(0.15); }
+        .visualizer.active .bar { animation: bounce 1s ease-in-out infinite alternate; }
+        .visualizer .bar:nth-child(2) { animation-delay: 0.15s; animation-duration: 0.7s; }
+        .visualizer .bar:nth-child(3) { animation-delay: 0.3s;  animation-duration: 1.1s; }
+        .visualizer .bar:nth-child(4) { animation-delay: 0.45s; animation-duration: 0.9s; }
+        @keyframes bounce { 0% { transform: scaleY(0.15); } 100% { transform: scaleY(1); } }
+
+        .sidebar-column {
+            display: flex; flex-direction: column; gap: 10px; background: var(--panel); padding: 14px;
+            border-radius: 6px; border: 1px solid var(--border); min-height: 0; overflow: hidden;
+        }
+
+        .btn-group-three { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; }
+
+        button {
+            background: #2A2420; color: var(--cream); border: 1px solid var(--border); padding: 10px 12px; cursor: pointer;
+            border-radius: 6px; font-size: 13px; font-weight: 600; font-family: "Microsoft JhengHei", sans-serif; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 5px;
+        }
+        button:hover { background: #3A2E26; border-color: rgba(212,168,67,0.4); }
+        button.btn-play-active { background: var(--red); border-color: var(--red-dark); color: #fff; }
+        button.btn-play-active:hover { background: var(--red-dark); }
+        button.btn-mode-single { background: var(--orange); border-color: var(--orange-dk); color: var(--bg); }
+        button.btn-mode-single:hover { background: var(--orange-dk); }
+
+        .search-box { position: relative; }
+        .search-box input {
+            width: 100%; background: #1E1B17; border: 1px solid var(--border); color: var(--cream);
+            padding: 9px 10px 9px 34px; border-radius: 6px; font-size: 13px; font-family: "Microsoft JhengHei", sans-serif;
+            box-sizing: border-box; transition: border-color 0.2s;
+        }
+        .search-box input:focus { outline: none; border-color: var(--gold); }
+        .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; }
+
+        /* ✨ 類型篩選器 */
+        .type-tabs { display: flex; gap: 4px; flex-shrink: 0; }
+        .type-tab {
+            flex: 1; padding: 5px 0; font-size: 11px; font-weight: 600;
+            background: rgba(212,168,67,0.06); border: 1px solid var(--border);
+            color: var(--muted); border-radius: 4px; cursor: pointer; transition: all 0.15s;
+            font-family: "Microsoft JhengHei", sans-serif;
+        }
+        .type-tab.active { background: rgba(212,168,67,0.18); border-color: var(--gold); color: var(--gold); }
+        .type-tab:hover:not(.active) { border-color: var(--gold-dim); color: var(--faint); }
+
+        .table-wrapper {
+            flex: 1; min-height: 0; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; background: #1A1713;
+        }
+        .table-wrapper::-webkit-scrollbar { width: 5px; }
+        .table-wrapper::-webkit-scrollbar-thumb { background: var(--gold-deep); border-radius: 3px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { padding: 9px 10px; text-align: left; border-bottom: 1px solid rgba(212,168,67,0.1); }
+        th { background-color: var(--panel); position: sticky; top: 0; z-index: 1; color: var(--muted); font-weight: 600; }
+        tr { cursor: pointer; transition: background-color 0.15s; }
+        tr:hover { background-color: rgba(212,168,67,0.07); }
+        tr.playing { background-color: var(--playing-bg) !important; font-weight: 600; border-left: 3px solid var(--gold); color: var(--gold); }
+
+        /* ✨ 子目錄路徑標籤 */
+        .song-path { font-size: 10px; color: var(--muted); margin-bottom: 2px; line-height: 1.3; }
+        tr.playing .song-path { color: var(--gold-dim); }
+
+        @media (max-width: 950px) {
+            .container { padding: 10px 12px 20px; overflow-y: auto; }
+            .header-section { flex-direction: column; align-items: stretch; gap: 8px; }
+            .main-layout { display: block; gap: 15px; }
+            .viewer-box { flex: none; aspect-ratio: 16 / 9; max-height: 40vh; border-radius: 12px; margin-bottom: 10px; }
+            .sidebar-column { overflow: visible; background: transparent; border: none; padding: 0; }
+            .table-wrapper { max-height: 40vh; flex: none; border-radius: 12px; }
+            .click-hint { display: none !important; }
+            .glass-controls { height: 44px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header-section">
+        <div class="dir-config-box">
+            <button id="directory-picker-btn" class="file-label" onclick="selectDirectoryWithPicker()">
+                📁 授權並鎖定媒體資料夾 (支援自動記住)
+            </button>
+            <label for="local-dir-picker" id="legacy-picker-label" class="file-label" style="display: none; background: rgba(212,168,67,0.08); border-color: var(--gold-deep); color: var(--muted);">
+                📂 傳統單次載入
+            </label>
+            <input type="file" id="local-dir-picker" webkitdirectory directory multiple onchange="handleLegacyFiles(this.files)">
+            <button id="btn-restore-dir" class="file-label" style="display: none; background: rgba(232,148,58,0.15); border-color: var(--orange); color: var(--orange);" onclick="restoreStoredDirectory()">
+                🔄 一鍵重連上次資料夾
+            </button>
+            <span id="folder-name-display" style="font-size:13px; color:var(--gold); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family: monospace;">預設路徑：當前網頁所在資料夾</span>
+        </div>
+        <span class="header-badge" id="status-banner">📡 點擊左側按鈕一鍵授權</span>
+    </div>
+
+    <div class="main-layout">
+
+        <div class="player-column">
+            <div class="viewer-box" id="main-panel">
+                <video id="radio-video" playsinline></video>
+                <button class="fullscreen-exit-btn" onclick="event.stopPropagation(); toggleFullscreen();">✕</button>
+                <div class="click-hint">🖼️ 點擊畫面 › 全螢幕</div>
+            </div>
+
+            <div class="glass-controls" onclick="event.stopPropagation();">
+                <div class="progress-row">
+                    <span class="time-text" id="current-time">00:00</span>
+                    <input type="range" class="progress-bar" id="progress-bar" min="0" max="100" value="0">
+                    <span class="time-text" id="total-time">00:00</span>
+                </div>
+                <div class="ctrl-sep"></div>
+                <div class="volume-row">
+                    <!-- ✨ 點擊圖示切換靜音 -->
+                    <span class="volume-icon" id="volume-icon" onclick="toggleMute()">🔊</span>
+                    <input type="range" class="volume-bar" id="volume-bar" min="0" max="100" value="80">
+                    <span class="volume-txt" id="volume-txt">80%</span>
+                </div>
+                <div class="ctrl-sep"></div>
+                <div class="opacity-row">
+                    <span>🖼️</span>
+                    <input type="range" class="opacity-bar" id="opacity-bar" min="0" max="100" value="100">
+                    <span class="opacity-txt" id="opacity-txt">100%</span>
+                </div>
+            </div>
+
+            <div class="status-bar">
+                <div class="status-title">
+                    <span style="font-weight:600;color:var(--gold);flex-shrink:0;">正在播放：</span>
+                    <span id="playing-title">無</span>
+                    <div class="visualizer" id="visualizer"><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span></div>
+                </div>
+                <div class="status-right"><span id="song-count" style="font-weight:600;color:var(--faint);">0 / 0</span></div>
+            </div>
+        </div>
+
+        <div class="sidebar-column">
+            <div class="btn-group-three">
+                <button onclick="playPrev()">⏮</button>
+                <button id="btn-play" onclick="handlePlayBtn()">▶ 播放</button>
+                <button onclick="playNext()">⏭</button>
+            </div>
+            <div class="btn-group-three">
+                <button onclick="handlePause()">⏸</button>
+                <button id="btn-mode" onclick="togglePlayMode()">🎲 隨機循環</button>
+                <button onclick="handleStop()">⏹</button>
+            </div>
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-input" placeholder="搜尋影音檔名..." oninput="filterSongs()">
+            </div>
+            <!-- ✨ 類型篩選分頁 -->
+            <div class="type-tabs">
+                <button class="type-tab active" onclick="setTypeFilter('all',   this)">全部</button>
+                <button class="type-tab"        onclick="setTypeFilter('audio', this)">🎵音樂</button>
+                <button class="type-tab"        onclick="setTypeFilter('video', this)">🎬影片</button>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead><tr><th style="width:100%;">本地多媒體清單</th></tr></thead>
+                    <tbody id="song-table-body">
+                        <tr><td style="color:var(--muted);text-align:center;padding:20px;">請點擊左上方按鈕進行授權</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<audio id="radio-player"></audio>
+
+<script>
+    let allSongs = [], filteredSongs = [], currentIndex = -1;
+    let isDraggingProgress = false, activeCore = null;
+    let filterType  = 'all'; // ✨ 類型篩選狀態
+    let mutedVolume = 0;     // ✨ 靜音前的音量
+
+    let currentVolume  = parseFloat(localStorage.getItem('radio_volume')  ?? '0.8');
+    let currentOpacity = parseFloat(localStorage.getItem('radio_opacity') ?? '1.0');
+    let playMode       = localStorage.getItem('radio_playMode') ?? 'random';
+
+    const audioCore     = document.getElementById('radio-player');
+    const videoCore     = document.getElementById('radio-video');
+    const playingTitle  = document.getElementById('playing-title');
+    const songCount     = document.getElementById('song-count');
+    const statusBanner  = document.getElementById('status-banner');
+    const btnPlay       = document.getElementById('btn-play');
+    const btnMode       = document.getElementById('btn-mode');
+    const progressBar   = document.getElementById('progress-bar');
+    const curTimeEl     = document.getElementById('current-time');
+    const totTimeEl     = document.getElementById('total-time');
+    const volumeBar     = document.getElementById('volume-bar');
+    const volumeTxt     = document.getElementById('volume-txt');
+    const volumeIcon    = document.getElementById('volume-icon');
+    const opacityBar    = document.getElementById('opacity-bar');
+    const opacityTxt    = document.getElementById('opacity-txt');
+    const visualizer    = document.getElementById('visualizer');
+    const songTableBody = document.getElementById('song-table-body');
+    const folderDisplay = document.getElementById('folder-name-display');
+
+    const videoRegex = /\.(mp4|webm|mkv|mov|ogg|ogv|avi|wmv)$/i;
+    const audioRegex = /\.(mp3|wav|m4a|flac|aac|opus)$/i;
+
+    activeCore = audioCore;
+
+    // --- IndexedDB 儲存資料夾控制權 ---
+    const DB_NAME    = 'LocalMediaCenterDB';
+    const STORE_NAME = 'FolderHandles';
+    const KEY_NAME   = 'last_user_folder';
+
+    function getDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, 1);
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
+            };
+            request.onsuccess = (e) => resolve(e.target.result);
+            request.onerror   = (e) => reject(e.target.error);
+        });
+    }
+
+    async function saveStoredHandle(handle) {
+        try {
+            const db = await getDB();
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            tx.objectStore(STORE_NAME).put(handle, KEY_NAME);
+            await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+        } catch (err) { console.error("儲存資料夾控制權失敗:", err); }
+    }
+
+    async function getStoredHandle() {
+        try {
+            const db  = await getDB();
+            const tx  = db.transaction(STORE_NAME, 'readonly');
+            const req = tx.objectStore(STORE_NAME).get(KEY_NAME);
+            return new Promise((res) => { req.onsuccess = () => res(req.result); req.onerror = () => res(null); });
+        } catch (err) { console.error("讀取儲存資料夾失敗:", err); return null; }
+    }
+
+    // ✨ 清理：只釋放已建立的 blob URL（lazy 模式下部分 file 為 null）
+    function clearCurrentSongs() {
+        allSongs.forEach(song => {
+            if (song.file && song.file.startsWith('blob:')) URL.revokeObjectURL(song.file);
+        });
+        allSongs = []; filteredSongs = []; currentIndex = -1;
+    }
+
+    // --- File System Access API ---
+    async function selectDirectoryWithPicker() {
+        if (typeof window.showDirectoryPicker !== 'function') {
+            alert('您的瀏覽器不支援現代資料夾存取 API，請使用傳統單次載入模式。'); return;
+        }
+        try {
+            const handle = await window.showDirectoryPicker({ mode: 'read' });
+            await saveStoredHandle(handle);
+            await loadFromDirectoryHandle(handle);
+        } catch (err) {
+            if (err.name !== 'AbortError') { console.error(err); alert('選取資料夾時發生錯誤：' + err.message); }
+        }
+    }
+
+    async function restoreStoredDirectory() {
+        const handle = await getStoredHandle();
+        if (!handle) { alert('找不到上次的資料夾存取紀錄！'); return; }
+        await loadFromDirectoryHandle(handle);
+    }
+
+    async function loadFromDirectoryHandle(dirHandle) {
+        statusBanner.textContent = '⚡ 正在確認授權...';
+        const opt = { mode: 'read' };
+        try {
+            if ((await dirHandle.queryPermission(opt)) !== 'granted') {
+                if ((await dirHandle.requestPermission(opt)) !== 'granted') {
+                    statusBanner.textContent = '❌ 資料夾授權遭拒'; return;
+                }
+            }
+
+            statusBanner.textContent = '🔍 正在遞迴掃描媒體檔案...';
+            const files = [];
+            let scanCount = 0;
+
+            async function scanDirectory(handle, currentPath = '') {
+                for await (const entry of handle.values()) {
+                    if (entry.kind === 'file') {
+                        try {
+                            const file = await entry.getFile();
+                            files.push({ file, name: entry.name, path: currentPath + entry.name });
+                            scanCount++;
+                            // ✨ 每 50 個更新一次狀態，提供掃描回饋
+                            if (scanCount % 50 === 0) {
+                                statusBanner.textContent = `🔍 掃描中... 已找到 ${scanCount} 個檔案`;
+                            }
+                        } catch (e) { console.error("讀取檔案失敗:", entry.name, e); }
+                    } else if (entry.kind === 'directory') {
+                        await scanDirectory(entry, currentPath + entry.name + '/');
+                    }
+                }
+            }
+
+            await scanDirectory(dirHandle);
+            processFileObjects(files, dirHandle.name);
+
+            const btnRestore = document.getElementById('btn-restore-dir');
+            if (btnRestore) btnRestore.textContent = `🔄 一鍵重連上次資料夾 (${dirHandle.name})`;
+        } catch (err) {
+            console.error(err); statusBanner.textContent = '❌ 還原資料夾發生錯誤';
+        }
+    }
+
+    function handleLegacyFiles(files) {
+        if (files.length === 0) return;
+        let folderName = '';
+        if (files[0] && files[0].webkitRelativePath) folderName = files[0].webkitRelativePath.split('/')[0];
+        const fileList = [];
+        for (let i = 0; i < files.length; i++) {
+            fileList.push({ file: files[i], name: files[i].name, path: files[i].webkitRelativePath || files[i].name });
+        }
+        processFileObjects(fileList, folderName);
+    }
+
+    // ✨ LAZY URL 版本：掃描時只存 File 物件，播放時才建立 blob URL
+    function processFileObjects(fileList, folderName) {
+        audioCore.pause(); videoCore.pause();
+        clearCurrentSongs();
+        if (folderName) folderDisplay.textContent = `📁 當前目錄：./${folderName}`;
+
+        const songsParsed = [];
+        for (let i = 0; i < fileList.length; i++) {
+            const item     = fileList[i];
+            const filename = item.name;
+            const isVideo  = videoRegex.test(filename);
+            const isAudio  = audioRegex.test(filename);
+            if (!isVideo && !isAudio) continue;
+
+            const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
+            let singer = '本機媒體', title = nameWithoutExt;
+            if (nameWithoutExt.includes(' - ')) {
+                const parts = nameWithoutExt.split(' - ');
+                singer = parts[0].trim(); title = parts.slice(1).join(' - ').trim();
+            }
+            songsParsed.push({
+                singer, title,
+                fileObj: item.file,  // ✨ 儲存原始 File 物件
+                file:    null,        // ✨ 播放時才建立 blob URL
+                filename, type: isVideo ? 'video' : 'audio',
+                path: item.path || filename
+            });
+        }
+
+        if (songsParsed.length === 0) {
+            alert('沒有檢測到可播放的影音檔案！');
+            statusBanner.textContent = '⚠️ 載入失敗'; return;
+        }
+
+        // ✨ numeric: true 確保數字排序正確 (1,2,10 而非 1,10,2)
+        songsParsed.sort((a, b) => a.path.localeCompare(b.path, 'zh-Hant', { numeric: true, sensitivity: 'base' }));
+
+        allSongs      = songsParsed;
+        filteredSongs = [...allSongs];
+        currentIndex  = -1;
+
+        renderTable();
+        statusBanner.textContent = `📡 成功載入 ${allSongs.length} 個影音檔案`;
+        updateSongCount();
+        if (allSongs.length > 0) playingTitle.textContent = allSongs[0].filename;
+    }
+
+    function renderTable() {
+        const frag = document.createDocumentFragment();
+        if (filteredSongs.length === 0) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td style="color:var(--muted);text-align:center;padding:20px;">無相符影音</td>`;
+            frag.appendChild(tr); songTableBody.innerHTML = ''; songTableBody.appendChild(frag); return;
+        }
+        filteredSongs.forEach((song, i) => {
+            const tr = document.createElement('tr'); tr.id = 'row-' + i;
+            if (i === currentIndex) tr.classList.add('playing');
+            tr.onclick = () => playSong(i);
+            // ✨ 顯示子資料夾路徑（遞迴掃描定位輔助）
+            const pathDir = song.path.includes('/') ? song.path.split('/').slice(0, -1).join('/') : '';
+            const icon    = song.type === 'video' ? '🎬 ' : '🎵 ';
+            tr.innerHTML  = `<td style="word-break:break-all;">
+                ${pathDir ? `<div class="song-path">📂 ${pathDir}</div>` : ''}
+                ${icon}${song.filename}
+            </td>`;
+            frag.appendChild(tr);
+        });
+        songTableBody.innerHTML = ''; songTableBody.appendChild(frag);
+    }
+
+    // ✨ 類型篩選
+    function setTypeFilter(type, el) {
+        filterType = type;
+        document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        filterSongs();
+    }
+
+    function filterSongs() {
+        const q    = document.getElementById('search-input').value.trim().toLowerCase();
+        const prev = currentIndex !== -1 ? filteredSongs[currentIndex] : null;
+        filteredSongs = allSongs.filter(s => {
+            const matchText = (s.singer + s.title + s.filename).toLowerCase().includes(q);
+            const matchType = filterType === 'all' || s.type === filterType;
+            return matchText && matchType;
+        });
+        // ✨ 用 path 作 identity（lazy URL 下 file 可能為 null）
+        currentIndex = prev ? filteredSongs.findIndex(s => s.path === prev.path) : -1;
+        renderTable(); updateSongCount();
+    }
+
+    function updateSongCount() {
+        songCount.textContent = filteredSongs.length > 0 ? `🎞️ ${currentIndex + 1} / ${filteredSongs.length}` : '0 / 0';
+    }
+
+    // ✨ 播放時才建立 ObjectURL (Lazy URL)
+    function playSong(index) {
+        if (!filteredSongs.length || index < 0 || index >= filteredSongs.length) return;
+        audioCore.pause(); videoCore.pause();
+        const prevRow = document.getElementById('row-' + currentIndex);
+        if (prevRow) prevRow.classList.remove('playing');
+        currentIndex = index;
+        const activeRow = document.getElementById('row-' + currentIndex);
+        if (activeRow) { activeRow.classList.add('playing'); activeRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+
+        const song    = filteredSongs[currentIndex];
+        const isVideo = (song.type === 'video');
+
+        if (isVideo) { activeCore = videoCore; videoCore.style.display = 'block';      visualizer.style.display = 'none'; }
+        else          { activeCore = audioCore; videoCore.style.display = 'none';       visualizer.style.display = 'inline-flex'; }
+
+        // ✨ Lazy URL：首次播放才建立
+        if (!song.file) song.file = URL.createObjectURL(song.fileObj);
+
+        activeCore.src = song.file; activeCore.volume = currentVolume;
+        activeCore.play().then(() => {
+            btnPlay.classList.add('btn-play-active'); btnPlay.textContent = '⏸ 播放中';
+            if (!isVideo) visualizer.classList.add('active');
+            statusBanner.textContent = isVideo ? '📡 播放本地影片' : '📡 播放本地音樂';
+        }).catch(() => {});
+
+        playingTitle.textContent = song.filename; updateSongCount();
+    }
+
+    function playRandom()  { if (!filteredSongs.length) return; playSong(Math.floor(Math.random() * filteredSongs.length)); }
+    function playPrev()    { if (!filteredSongs.length) return; playSong((currentIndex - 1 + filteredSongs.length) % filteredSongs.length); }
+    function playNext()    { if (!filteredSongs.length) return; if (playMode === 'random') { playRandom(); } else { playSong((currentIndex + 1) % filteredSongs.length); } }
+    function handlePlayBtn()  { if (currentIndex === -1) { playRandom(); } else { activeCore.play().catch(() => {}); } }
+    function handlePause()    { activeCore.pause(); }
+    function handleStop()     { activeCore.pause(); activeCore.currentTime = 0; }
+    function handleSongEnded() { if (playMode === 'single') { activeCore.currentTime = 0; activeCore.play().catch(() => {}); } else { playNext(); } }
+
+    function togglePlayMode() {
+        if (playMode === 'random') { playMode = 'single'; btnMode.textContent = '🔂 單曲重複'; btnMode.classList.add('btn-mode-single'); }
+        else { playMode = 'random'; btnMode.textContent = '🎲 隨機循環'; btnMode.classList.remove('btn-mode-single'); }
+        localStorage.setItem('radio_playMode', playMode);
+    }
+
+    // ✨ 靜音切換（音量圖示點擊 / M 鍵）
+    function toggleMute() {
+        if (currentVolume > 0) { mutedVolume = currentVolume; syncVolume(0); }
+        else { syncVolume(mutedVolume > 0 ? mutedVolume : 0.8); }
+    }
+
+    function syncVolume(vol) {
+        if (vol < 0) vol = 0; if (vol > 1) vol = 1; currentVolume = vol;
+        audioCore.volume = currentVolume; videoCore.volume = currentVolume;
+        const pct = Math.round(currentVolume * 100);
+        if (volumeBar) volumeBar.value = pct;
+        if (volumeTxt) volumeTxt.textContent = `${pct}%`;
+        if (volumeIcon) volumeIcon.textContent = currentVolume === 0 ? '🔇' : currentVolume < 0.4 ? '🔉' : '🔊';
+        localStorage.setItem('radio_volume', currentVolume);
+    }
+
+    function formatTime(s) {
+        if (isNaN(s)) return '00:00';
+        return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+    }
+
+    [audioCore, videoCore].forEach(core => {
+        core.addEventListener('timeupdate',     () => { if (core !== activeCore || !core.duration || isDraggingProgress) return; progressBar.value = (core.currentTime / core.duration) * 100; curTimeEl.textContent = formatTime(core.currentTime); });
+        core.addEventListener('loadedmetadata', () => { if (core !== activeCore) return; totTimeEl.textContent = formatTime(core.duration); });
+        core.addEventListener('play',           () => { if (core !== activeCore) return; btnPlay.classList.add('btn-play-active'); btnPlay.textContent = '⏸ 播放中'; if (core === audioCore) visualizer.classList.add('active'); });
+        core.addEventListener('pause',          () => { if (core !== activeCore) return; btnPlay.classList.remove('btn-play-active'); btnPlay.textContent = '▶ 播放'; visualizer.classList.remove('active'); });
+        core.addEventListener('ended',          () => { if (core !== activeCore) return; handleSongEnded(); });
+    });
+
+    progressBar.addEventListener('input', () => {
+        if (activeCore.duration) { activeCore.currentTime = (progressBar.value / 100) * activeCore.duration; curTimeEl.textContent = formatTime(activeCore.currentTime); }
+    });
+    // ✨ 修正 isDraggingProgress — 原本宣告了但從未設為 true
+    progressBar.addEventListener('pointerdown',   () => { isDraggingProgress = true; });
+    progressBar.addEventListener('pointerup',     () => { isDraggingProgress = false; });
+    progressBar.addEventListener('pointercancel', () => { isDraggingProgress = false; });
+
+    volumeBar.addEventListener('input', () => syncVolume(volumeBar.value / 100));
+    opacityBar.addEventListener('input', () => {
+        currentOpacity = opacityBar.value / 100; opacityTxt.textContent = `${opacityBar.value}%`;
+        videoCore.style.opacity = currentOpacity; localStorage.setItem('radio_opacity', currentOpacity);
+    });
+
+    document.getElementById('main-panel').addEventListener('click', e => { if (!e.target.closest('.fullscreen-exit-btn')) toggleFullscreen(); });
+    function toggleFullscreen() {
+        const box = document.getElementById('main-panel');
+        const isFS = document.fullscreenElement || document.webkitFullscreenElement;
+        if (!isFS) { (box.requestFullscreen || box.webkitRequestFullscreen)?.call(box); }
+        else { document.exitFullscreen?.() || document.webkitExitFullscreen?.(); }
+    }
+
+    document.addEventListener('keydown', e => {
+        if (['INPUT', 'BUTTON'].includes(e.target.tagName)) return;
+        switch (e.code) {
+            case 'Space':      e.preventDefault(); activeCore.paused ? (currentIndex === -1 ? playRandom() : activeCore.play()) : activeCore.pause(); break;
+            case 'ArrowRight': e.preventDefault(); playNext(); break;
+            case 'ArrowLeft':  e.preventDefault(); playPrev(); break;
+            case 'ArrowUp':    e.preventDefault(); syncVolume(currentVolume + 0.05); break;
+            case 'ArrowDown':  e.preventDefault(); syncVolume(currentVolume - 0.05); break;
+            case 'KeyF': case 'F': e.preventDefault(); toggleFullscreen(); break;
+            case 'KeyM': case 'M': e.preventDefault(); toggleMute(); break; // ✨ M 鍵靜音
+        }
+    });
+
+    window.onload = async () => {
+        syncVolume(currentVolume);
+        if (opacityBar) {
+            opacityBar.value = Math.round(currentOpacity * 100);
+            opacityTxt.textContent = `${opacityBar.value}%`;
+            videoCore.style.opacity = currentOpacity;
+        }
+        if (playMode === 'single') { btnMode.textContent = '🔂 單曲重複'; btnMode.classList.add('btn-mode-single'); }
+
+        const hasDirectoryPicker = typeof window.showDirectoryPicker === 'function';
+        const pickerBtn   = document.getElementById('directory-picker-btn');
+        const legacyLabel = document.getElementById('legacy-picker-label');
+        const btnRestore  = document.getElementById('btn-restore-dir');
+
+        if (hasDirectoryPicker) {
+            pickerBtn.style.display   = 'flex';
+            legacyLabel.style.display = 'flex';
+            const storedHandle = await getStoredHandle();
+            if (storedHandle) {
+                btnRestore.style.display = 'flex';
+                btnRestore.textContent   = `🔄 一鍵重連上次資料夾 (${storedHandle.name})`;
+                statusBanner.textContent = `📂 偵測到上次授權的「${storedHandle.name}」資料夾，請點擊一鍵還原`;
+            } else {
+                statusBanner.textContent = '📡 點擊左側選擇媒體資料夾';
+            }
+        } else {
+            pickerBtn.style.display   = 'none';
+            legacyLabel.style.display = 'flex';
+            legacyLabel.innerHTML     = '📁 授權並載入媒體資料夾';
+            legacyLabel.style.background   = 'rgba(212,168,67,0.15)';
+            legacyLabel.style.borderColor  = 'var(--gold)';
+            legacyLabel.style.color        = 'var(--gold)';
+            statusBanner.textContent = '📡 點擊選擇媒體資料夾 (當前瀏覽器不支援自動還原)';
+        }
+    };
+</script>
+</body>
+</html>
