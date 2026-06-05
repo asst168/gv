@@ -18,8 +18,15 @@
             --faint:     #C4A882;
             --red:       #E05454;
             --red-dark:  #C43A3A;
+            
+            /* 🎨 萬種風情四色燈號定義 */
             --orange:    #E8943A;
             --orange-dk: #C57830;
+            --blue:      #3A86FF;
+            --blue-dk:   #2266D6;
+            --green:     #38B000;
+            --green-dk:  #2A8500;
+            
             --playing-bg: rgba(212,168,67,0.12);
         }
 
@@ -169,8 +176,16 @@
         button:hover { background: #3A2E26; border-color: rgba(212,168,67,0.4); }
         button.btn-play-active { background: var(--red); border-color: var(--red-dark); color: #fff; }
         button.btn-play-active:hover { background: var(--red-dark); }
-        button.btn-mode-single { background: var(--orange); border-color: var(--orange-dk); color: var(--bg); }
-        button.btn-mode-single:hover { background: var(--orange-dk); }
+        
+        /* 🎨 模式按鈕專屬風情燈號樣式 */
+        button.btn-mode-single { background: var(--orange) !important; border-color: var(--orange-dk) !important; color: var(--bg) !important; }
+        button.btn-mode-single:hover { background: var(--orange-dk) !important; }
+
+        button.btn-mode-random { background: var(--blue) !important; border-color: var(--blue-dk) !important; color: #fff !important; }
+        button.btn-mode-random:hover { background: var(--blue-dk) !important; }
+
+        button.btn-mode-list { background: var(--green) !important; border-color: var(--green-dk) !important; color: #fff !important; }
+        button.btn-mode-list:hover { background: var(--green-dk) !important; }
 
         .search-box { position: relative; }
         .search-box input {
@@ -259,7 +274,6 @@
                 </div>
                 <div class="ctrl-sep"></div>
                 <div class="volume-row">
-                    <!-- ✨ 點擊圖示切換靜音 -->
                     <span class="volume-icon" id="volume-icon" onclick="toggleMute()">🔊</span>
                     <input type="range" class="volume-bar" id="volume-bar" min="0" max="100" value="80">
                     <span class="volume-txt" id="volume-txt">80%</span>
@@ -290,14 +304,13 @@
             </div>
             <div class="btn-group-three">
                 <button onclick="handlePause()">⏸</button>
-                <button id="btn-mode" onclick="togglePlayMode()">🎲 隨機循環</button>
+                <button id="btn-mode" onclick="togglePlayMode()">🛑 播完即停</button>
                 <button onclick="handleStop()">⏹</button>
             </div>
             <div class="search-box">
                 <span class="search-icon">🔍</span>
                 <input type="text" id="search-input" placeholder="搜尋影音檔名..." oninput="filterSongs()">
             </div>
-            <!-- ✨ 類型篩選分頁 -->
             <div class="type-tabs">
                 <button class="type-tab active" onclick="setTypeFilter('all',   this)">全部</button>
                 <button class="type-tab"        onclick="setTypeFilter('audio', this)">🎵音樂</button>
@@ -326,7 +339,7 @@
 
     let currentVolume  = parseFloat(localStorage.getItem('radio_volume')  ?? '0.8');
     let currentOpacity = parseFloat(localStorage.getItem('radio_opacity') ?? '1.0');
-    let playMode       = localStorage.getItem('radio_playMode') ?? 'random';
+    let playMode       = localStorage.getItem('radio_playMode') ?? 'stop';
 
     const audioCore     = document.getElementById('radio-player');
     const videoCore     = document.getElementById('radio-video');
@@ -598,12 +611,46 @@
     function handlePlayBtn()  { if (currentIndex === -1) { playRandom(); } else { activeCore.play().catch(() => {}); } }
     function handlePause()    { activeCore.pause(); }
     function handleStop()     { activeCore.pause(); activeCore.currentTime = 0; }
-    function handleSongEnded() { if (playMode === 'single') { activeCore.currentTime = 0; activeCore.play().catch(() => {}); } else { playNext(); } }
+
+    function handleSongEnded() { 
+        if (playMode === 'stop') {
+            handleStop();
+            statusBanner.textContent = '🛑 播放完畢（播完即停）';
+        } else if (playMode === 'single') { 
+            activeCore.currentTime = 0; 
+            activeCore.play().catch(() => {}); 
+        } else if (playMode === 'random') {
+            playRandom();
+        } else if (playMode === 'list') {
+            playNext(); 
+        }
+    }
+
+    // 🎨 動態切換四段風情燈號與文字
+    function updatePlayModeUI() {
+        btnMode.classList.remove('btn-mode-single', 'btn-mode-random', 'btn-mode-list'); 
+        if (playMode === 'stop') {
+            btnMode.textContent = '🛑 播完即停';
+        } else if (playMode === 'single') {
+            btnMode.textContent = '🔂 單曲循環';
+            btnMode.classList.add('btn-mode-single');
+        } else if (playMode === 'random') {
+            btnMode.textContent = '🎲 隨機循環';
+            btnMode.classList.add('btn-mode-random');
+        } else if (playMode === 'list') {
+            btnMode.textContent = '🔁 順序循環';
+            btnMode.classList.add('btn-mode-list');
+        }
+        localStorage.setItem('radio_playMode', playMode);
+    }
 
     function togglePlayMode() {
-        if (playMode === 'random') { playMode = 'single'; btnMode.textContent = '🔂 單曲重複'; btnMode.classList.add('btn-mode-single'); }
-        else { playMode = 'random'; btnMode.textContent = '🎲 隨機循環'; btnMode.classList.remove('btn-mode-single'); }
-        localStorage.setItem('radio_playMode', playMode);
+        if (playMode === 'stop') playMode = 'single';
+        else if (playMode === 'single') playMode = 'random';
+        else if (playMode === 'random') playMode = 'list';
+        else playMode = 'stop';
+        
+        updatePlayModeUI();
     }
 
     // ✨ 靜音切換（音量圖示點擊 / M 鍵）
@@ -677,7 +724,8 @@
             opacityTxt.textContent = `${opacityBar.value}%`;
             videoCore.style.opacity = currentOpacity;
         }
-        if (playMode === 'single') { btnMode.textContent = '🔂 單曲重複'; btnMode.classList.add('btn-mode-single'); }
+        
+        updatePlayModeUI();
 
         const hasDirectoryPicker = typeof window.showDirectoryPicker === 'function';
         const pickerBtn   = document.getElementById('directory-picker-btn');
