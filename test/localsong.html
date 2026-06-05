@@ -88,6 +88,17 @@
 
         #radio-video { width: 100%; height: 100%; object-fit: contain; display: none; background: #000000; }
 
+        #cover-art {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: contain; display: none; pointer-events: none;
+        }
+
+        #audio-placeholder {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 88px; opacity: 0.13; display: none;
+            user-select: none; pointer-events: none; line-height: 1;
+        }
+
         .click-hint {
             position: absolute; top: 14px; left: 14px; background: rgba(212,168,67,0.15);
             border: 1px solid rgba(212,168,67,0.35); color: var(--gold); padding: 6px 13px;
@@ -224,6 +235,24 @@
         .song-path { font-size: 10px; color: var(--muted); margin-bottom: 2px; line-height: 1.3; }
         tr.playing .song-path { color: var(--gold-dim); }
 
+        /* 🖼️ 圖片網格 */
+        .image-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+            gap: 8px; padding: 10px;
+        }
+        .image-thumb {
+            cursor: pointer; border-radius: 6px; overflow: hidden;
+            border: 2px solid transparent; transition: border-color 0.15s, transform 0.12s;
+            background: var(--panel);
+        }
+        .image-thumb:hover  { border-color: var(--gold-dim); transform: scale(1.04); }
+        .image-thumb.active { border-color: var(--gold); box-shadow: 0 0 10px rgba(212,168,67,0.45); }
+        .image-thumb img    { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+        .thumb-name {
+            font-size: 9px; color: var(--muted); padding: 3px 4px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center;
+        }
+
         @media (max-width: 950px) {
             .container { padding: 10px 12px 20px; overflow-y: auto; }
             .header-section { flex-direction: column; align-items: stretch; gap: 8px; }
@@ -243,14 +272,14 @@
     <div class="header-section">
         <div class="dir-config-box">
             <button id="directory-picker-btn" class="file-label" onclick="selectDirectoryWithPicker()">
-                📁 授權並鎖定媒體資料夾 (支援自動記住)
+                📁授權並鎖定媒體資料夾 (支援自動記住)
             </button>
             <label for="local-dir-picker" id="legacy-picker-label" class="file-label" style="display: none; background: rgba(212,168,67,0.08); border-color: var(--gold-deep); color: var(--muted);">
-                📂 傳統單次載入
+                📂傳統單次載入
             </label>
             <input type="file" id="local-dir-picker" webkitdirectory directory multiple onchange="handleLegacyFiles(this.files)">
             <button id="btn-restore-dir" class="file-label" style="display: none; background: rgba(232,148,58,0.15); border-color: var(--orange); color: var(--orange);" onclick="restoreStoredDirectory()">
-                🔄 一鍵重連上次資料夾
+                🔄一鍵重連上次資料夾
             </button>
             <span id="folder-name-display" style="font-size:13px; color:var(--gold); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family: monospace;">預設路徑：當前網頁所在資料夾</span>
         </div>
@@ -262,8 +291,10 @@
         <div class="player-column">
             <div class="viewer-box" id="main-panel">
                 <video id="radio-video" playsinline></video>
+                <img id="cover-art" alt="封面">
+                <div id="audio-placeholder">♪</div>
                 <button class="fullscreen-exit-btn" onclick="event.stopPropagation(); toggleFullscreen();">✕</button>
-                <div class="click-hint">🖼️ 點擊畫面 › 全螢幕</div>
+                <div class="click-hint">雙擊畫面 › 全螢幕</div>
             </div>
 
             <div class="glass-controls" onclick="event.stopPropagation();">
@@ -299,30 +330,32 @@
         <div class="sidebar-column">
             <div class="btn-group-three">
                 <button onclick="playPrev()">⏮</button>
-                <button id="btn-play" onclick="handlePlayBtn()">▶ 播放</button>
+                <button id="btn-play" onclick="handlePlayBtn()">▶播放</button>
                 <button onclick="playNext()">⏭</button>
             </div>
             <div class="btn-group-three">
                 <button onclick="handlePause()">⏸</button>
-                <button id="btn-mode" onclick="togglePlayMode()">🛑 播完即停</button>
+                <button id="btn-mode" onclick="togglePlayMode()">🛑播完即停</button>
                 <button onclick="handleStop()">⏹</button>
             </div>
             <div class="search-box">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="search-input" placeholder="搜尋影音檔名..." oninput="filterSongs()">
+                <input type="text" id="search-input" placeholder="搜尋影音檔名...">
             </div>
             <div class="type-tabs">
                 <button class="type-tab active" onclick="setTypeFilter('all',   this)">全部</button>
                 <button class="type-tab"        onclick="setTypeFilter('audio', this)">🎵音樂</button>
                 <button class="type-tab"        onclick="setTypeFilter('video', this)">🎬影片</button>
+                <button class="type-tab"        onclick="setTypeFilter('image', this)">🖼️圖片</button>
             </div>
             <div class="table-wrapper">
-                <table>
+                <table id="media-table">
                     <thead><tr><th style="width:100%;">本地多媒體清單</th></tr></thead>
                     <tbody id="song-table-body">
                         <tr><td style="color:var(--muted);text-align:center;padding:20px;">請點擊左上方按鈕進行授權</td></tr>
                     </tbody>
                 </table>
+                <div id="image-grid" class="image-grid" style="display:none;"></div>
             </div>
         </div>
 
@@ -333,6 +366,7 @@
 
 <script>
     let allSongs = [], filteredSongs = [], currentIndex = -1;
+    let allImages = [], filteredImages = [], currentImageIndex = -1, imageBlobUrls = [];
     let isDraggingProgress = false, activeCore = null;
     let filterType  = 'all'; // ✨ 類型篩選狀態
     let mutedVolume = 0;     // ✨ 靜音前的音量
@@ -362,8 +396,20 @@
 
     const videoRegex = /\.(mp4|webm|mkv|mov|ogg|ogv|avi|wmv)$/i;
     const audioRegex = /\.(mp3|wav|m4a|flac|aac|opus)$/i;
+    const imageRegex = /\.(jpg|jpeg|png|webp|gif)$/i;
+
+    let imageMap = {};  // key: path 去副檔名小寫, value: File 物件
 
     activeCore = audioCore;
+
+    // --- 防抖搜尋優化 ---
+    let searchTimeout;
+    document.getElementById('search-input').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            filterSongs();
+        }, 300); // 停頓 300 毫秒後才執行搜尋，保護效能
+    });
 
     // --- IndexedDB 儲存資料夾控制權 ---
     const DB_NAME    = 'LocalMediaCenterDB';
@@ -400,12 +446,19 @@
         } catch (err) { console.error("讀取儲存資料夾失敗:", err); return null; }
     }
 
-    // ✨ 清理：只釋放已建立的 blob URL（lazy 模式下部分 file 為 null）
     function clearCurrentSongs() {
         allSongs.forEach(song => {
             if (song.file && song.file.startsWith('blob:')) URL.revokeObjectURL(song.file);
         });
         allSongs = []; filteredSongs = []; currentIndex = -1;
+        // 清理圖片
+        imageBlobUrls.forEach(u => URL.revokeObjectURL(u));
+        imageBlobUrls = []; allImages = []; filteredImages = []; currentImageIndex = -1;
+        document.getElementById('image-grid').innerHTML = '';
+        // 清理封面圖 map 與現有封面
+        imageMap = {};
+        const ca = document.getElementById('cover-art');
+        if (ca && ca._blobUrl) { URL.revokeObjectURL(ca._blobUrl); ca._blobUrl = null; ca.src = ''; }
     }
 
     // --- File System Access API ---
@@ -464,7 +517,7 @@
             processFileObjects(files, dirHandle.name);
 
             const btnRestore = document.getElementById('btn-restore-dir');
-            if (btnRestore) btnRestore.textContent = `🔄 一鍵重連上次資料夾 (${dirHandle.name})`;
+            if (btnRestore) btnRestore.textContent = `🔄一鍵重連上次資料夾 (${dirHandle.name})`;
         } catch (err) {
             console.error(err); statusBanner.textContent = '❌ 還原資料夾發生錯誤';
         }
@@ -485,7 +538,7 @@
     function processFileObjects(fileList, folderName) {
         audioCore.pause(); videoCore.pause();
         clearCurrentSongs();
-        if (folderName) folderDisplay.textContent = `📁 當前目錄：./${folderName}`;
+        if (folderName) folderDisplay.textContent = `📁當前目錄：./${folderName}`;
 
         const songsParsed = [];
         for (let i = 0; i < fileList.length; i++) {
@@ -493,6 +546,16 @@
             const filename = item.name;
             const isVideo  = videoRegex.test(filename);
             const isAudio  = audioRegex.test(filename);
+            const isImage  = imageRegex.test(filename);
+
+            // ✨ 收集圖片檔案到 imageMap
+            if (isImage) {
+                const pathNoExt = (item.path || filename).replace(/\.[^/.]+$/, '').toLowerCase();
+                imageMap[pathNoExt] = item.file;
+                allImages.push({ fileObj: item.file, filename, path: item.path || filename });
+                continue;
+            }
+
             if (!isVideo && !isAudio) continue;
 
             const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
@@ -503,43 +566,71 @@
             }
             songsParsed.push({
                 singer, title,
-                fileObj: item.file,  // ✨ 儲存原始 File 物件
-                file:    null,        // ✨ 播放時才建立 blob URL
+                fileObj: item.file, 
+                file:    null,      
                 filename, type: isVideo ? 'video' : 'audio',
                 path: item.path || filename
             });
         }
 
-        if (songsParsed.length === 0) {
-            alert('沒有檢測到可播放的影音檔案！');
+        if (songsParsed.length === 0 && allImages.length === 0) {
+            alert('沒有檢測到可播放的影音或圖片檔案！');
             statusBanner.textContent = '⚠️ 載入失敗'; return;
         }
 
-        // ✨ numeric: true 確保數字排序正確 (1,2,10 而非 1,10,2)
+        // ✨ numeric: true 確保數字排序正確
         songsParsed.sort((a, b) => a.path.localeCompare(b.path, 'zh-Hant', { numeric: true, sensitivity: 'base' }));
+        allImages.sort((a, b) => a.path.localeCompare(b.path, 'zh-Hant', { numeric: true, sensitivity: 'base' }));
+        filteredImages = [...allImages];
 
         allSongs      = songsParsed;
         filteredSongs = [...allSongs];
         currentIndex  = -1;
 
         renderTable();
-        statusBanner.textContent = `📡 成功載入 ${allSongs.length} 個影音檔案`;
+        const totalInfo = [allSongs.length ? `${allSongs.length} 個影音` : '', allImages.length ? `${allImages.length} 張圖片` : ''].filter(Boolean).join('、');
+        statusBanner.textContent = `📡 成功載入 ${totalInfo}`;
         updateSongCount();
         if (allSongs.length > 0) playingTitle.textContent = allSongs[0].filename;
     }
 
+    // --- 優化版：全部標籤下同時顯示表格與圖片網格 ---
     function renderTable() {
+        const mediaTable = document.getElementById('media-table');
+        const imageGrid  = document.getElementById('image-grid');
+
+        if (filterType === 'image') {
+            mediaTable.style.display = 'none';
+            imageGrid.style.display  = '';
+            renderImageGrid();
+            return;
+        }
+        
+        mediaTable.style.display = '';
+        // 🌟 如果是「全部」，不隱藏圖片網格，並觸發圖片渲染
+        imageGrid.style.display  = filterType === 'all' ? '' : 'none';
+        if (filterType === 'all') renderImageGrid();
+
         const frag = document.createDocumentFragment();
         if (filteredSongs.length === 0) {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td style="color:var(--muted);text-align:center;padding:20px;">無相符影音</td>`;
+            if (allImages.length > 0 && filterType !== 'all') {
+                tr.innerHTML = `<td style="color:var(--muted);text-align:center;padding:20px;line-height:1.8;">
+                    無影音檔案<br>
+                    <span style="font-size:11px;">此資料夾有 <span style="color:var(--gold);font-weight:bold;">${allImages.length}</span> 張圖片，請切換至
+                    <span style="color:var(--gold);cursor:pointer;text-decoration:underline;"
+                          onclick="document.querySelector('.type-tab:last-child').click()">🖼️ 圖片</span> 頁籤瀏覽</span>
+                </td>`;
+            } else {
+                tr.innerHTML = `<td style="color:var(--muted);text-align:center;padding:20px;">無相符影音</td>`;
+            }
             frag.appendChild(tr); songTableBody.innerHTML = ''; songTableBody.appendChild(frag); return;
         }
+        
         filteredSongs.forEach((song, i) => {
             const tr = document.createElement('tr'); tr.id = 'row-' + i;
             if (i === currentIndex) tr.classList.add('playing');
             tr.onclick = () => playSong(i);
-            // ✨ 顯示子資料夾路徑（遞迴掃描定位輔助）
             const pathDir = song.path.includes('/') ? song.path.split('/').slice(0, -1).join('/') : '';
             const icon    = song.type === 'video' ? '🎬 ' : '🎵 ';
             tr.innerHTML  = `<td style="word-break:break-all;">
@@ -551,32 +642,121 @@
         songTableBody.innerHTML = ''; songTableBody.appendChild(frag);
     }
 
-    // ✨ 類型篩選
     function setTypeFilter(type, el) {
         filterType = type;
         document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
         el.classList.add('active');
+        const searchEl = document.getElementById('search-input');
+        searchEl.placeholder = type === 'image' ? '搜尋圖片檔名...' : '搜尋影音檔名...';
         filterSongs();
     }
 
+    // --- 優化版：全部標籤下同時過濾影音與圖片 ---
     function filterSongs() {
-        const q    = document.getElementById('search-input').value.trim().toLowerCase();
+        const q = document.getElementById('search-input').value.trim().toLowerCase();
+
+        if (filterType === 'image' || filterType === 'all') {
+            filteredImages = allImages.filter(img => img.filename.toLowerCase().includes(q));
+            if (filterType === 'image') currentImageIndex = -1;
+        }
+
+        if (filterType === 'image') {
+            renderTable(); updateSongCount(); return;
+        }
+
         const prev = currentIndex !== -1 ? filteredSongs[currentIndex] : null;
         filteredSongs = allSongs.filter(s => {
             const matchText = (s.singer + s.title + s.filename).toLowerCase().includes(q);
             const matchType = filterType === 'all' || s.type === filterType;
             return matchText && matchType;
         });
-        // ✨ 用 path 作 identity（lazy URL 下 file 可能為 null）
+        
         currentIndex = prev ? filteredSongs.findIndex(s => s.path === prev.path) : -1;
         renderTable(); updateSongCount();
     }
 
+    // --- 優化版：動態組合計數文字 ---
     function updateSongCount() {
-        songCount.textContent = filteredSongs.length > 0 ? `🎞️ ${currentIndex + 1} / ${filteredSongs.length}` : '0 / 0';
+        let txt = '';
+        if (filterType !== 'image') {
+            txt += filteredSongs.length > 0 ? `🎞️ ${currentIndex + 1} / ${filteredSongs.length}` : '🎞️ 0 / 0';
+        }
+        if (filterType === 'all') txt += ' ｜ ';
+        if (filterType === 'image' || filterType === 'all') {
+            let imgIdx = currentImageIndex >= 0 ? currentImageIndex + 1 : 0;
+            txt += filteredImages.length > 0 ? `🖼️ ${imgIdx} / ${filteredImages.length}` : '🖼️ 0 / 0';
+        }
+        songCount.textContent = txt;
     }
 
-    // ✨ 播放時才建立 ObjectURL (Lazy URL)
+    // 🖼️ 圖片網格渲染
+    function renderImageGrid() {
+        imageBlobUrls.forEach(u => URL.revokeObjectURL(u));
+        imageBlobUrls = [];
+
+        const grid = document.getElementById('image-grid');
+        grid.innerHTML = '';
+
+        if (filteredImages.length === 0) {
+            grid.innerHTML = `<div style="grid-column:1/-1;color:var(--muted);text-align:center;padding:20px;">無圖片檔案</div>`;
+            return;
+        }
+
+        filteredImages.forEach((img, i) => {
+            const blobUrl = URL.createObjectURL(img.fileObj);
+            imageBlobUrls.push(blobUrl);
+
+            const div = document.createElement('div');
+            div.className = 'image-thumb' + (i === currentImageIndex ? ' active' : '');
+            div.innerHTML = `<img src="${blobUrl}" alt="${img.filename}" loading="lazy"><div class="thumb-name">${img.filename}</div>`;
+            div.onclick   = () => showImage(i);
+            grid.appendChild(div);
+        });
+    }
+
+    // 🖼️ 顯示圖片
+    function showImage(index) {
+        if (!filteredImages.length || index < 0 || index >= filteredImages.length) return;
+        currentImageIndex = index;
+        audioCore.pause(); videoCore.pause();
+
+        const coverArtEl    = document.getElementById('cover-art');
+        const placeholderEl = document.getElementById('audio-placeholder');
+        videoCore.style.display     = 'none';
+        placeholderEl.style.display = 'none';
+        visualizer.style.display    = 'none';
+        visualizer.classList.remove('active');
+        btnPlay.classList.remove('btn-play-active'); btnPlay.textContent = '▶ 播放';
+
+        if (coverArtEl._blobUrl) URL.revokeObjectURL(coverArtEl._blobUrl);
+        coverArtEl._blobUrl      = URL.createObjectURL(filteredImages[index].fileObj);
+        coverArtEl.src           = coverArtEl._blobUrl;
+        coverArtEl.style.display = 'block';
+
+        playingTitle.textContent = filteredImages[index].filename;
+        statusBanner.textContent = `🖼️ 瀏覽圖片`;
+
+        document.querySelectorAll('.image-thumb').forEach((el, i) => el.classList.toggle('active', i === index));
+        updateSongCount();
+        const activeThumb = document.querySelector('.image-thumb.active');
+        if (activeThumb) activeThumb.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
+    // ✨ 封面圖查找
+    function findCoverArt(song) {
+        const pathNoExt = song.path.replace(/\.[^/.]+$/, '').toLowerCase();
+        if (imageMap[pathNoExt]) return imageMap[pathNoExt];
+
+        const dir = song.path.includes('/') ? song.path.split('/').slice(0, -1).join('/').toLowerCase() : '';
+        const commonNames = ['cover', 'folder', 'album', 'artwork', 'front', 'thumb'];
+        for (const name of commonNames) {
+            const key = dir ? `${dir}/${name}` : name;
+            if (imageMap[key]) return imageMap[key];
+        }
+        return null;
+    }
+
+    // ✨ 播放
     function playSong(index) {
         if (!filteredSongs.length || index < 0 || index >= filteredSongs.length) return;
         audioCore.pause(); videoCore.pause();
@@ -589,33 +769,62 @@
         const song    = filteredSongs[currentIndex];
         const isVideo = (song.type === 'video');
 
-        if (isVideo) { activeCore = videoCore; videoCore.style.display = 'block';      visualizer.style.display = 'none'; }
-        else          { activeCore = audioCore; videoCore.style.display = 'none';       visualizer.style.display = 'inline-flex'; }
+        const coverArtEl    = document.getElementById('cover-art');
+        const placeholderEl = document.getElementById('audio-placeholder');
 
-        // ✨ Lazy URL：首次播放才建立
+        if (isVideo) {
+            activeCore = videoCore;
+            videoCore.style.display   = 'block';
+            coverArtEl.style.display  = 'none';
+            placeholderEl.style.display = 'none';
+            visualizer.style.display  = 'none';
+        } else {
+            activeCore = audioCore;
+            videoCore.style.display   = 'none';
+            visualizer.style.display  = 'inline-flex';
+            const imgFile = findCoverArt(song);
+            if (imgFile) {
+                if (coverArtEl._blobUrl) URL.revokeObjectURL(coverArtEl._blobUrl);
+                coverArtEl._blobUrl     = URL.createObjectURL(imgFile);
+                coverArtEl.src          = coverArtEl._blobUrl;
+                coverArtEl.style.display = 'block';
+                placeholderEl.style.display = 'none';
+            } else {
+                coverArtEl.style.display    = 'none';
+                placeholderEl.style.display = 'block';
+            }
+        }
+
+        // ✨ Lazy URL
         if (!song.file) song.file = URL.createObjectURL(song.fileObj);
 
         activeCore.src = song.file; activeCore.volume = currentVolume;
         activeCore.play().then(() => {
-            btnPlay.classList.add('btn-play-active'); btnPlay.textContent = '⏸ 播放中';
+            btnPlay.classList.add('btn-play-active'); btnPlay.textContent = '⏸播放中';
             if (!isVideo) visualizer.classList.add('active');
-            statusBanner.textContent = isVideo ? '📡 播放本地影片' : '📡 播放本地音樂';
+            statusBanner.textContent = isVideo ? '📡播放本地影片' : '📡播放本地音樂';
         }).catch(() => {});
 
         playingTitle.textContent = song.filename; updateSongCount();
     }
 
     function playRandom()  { if (!filteredSongs.length) return; playSong(Math.floor(Math.random() * filteredSongs.length)); }
-    function playPrev()    { if (!filteredSongs.length) return; playSong((currentIndex - 1 + filteredSongs.length) % filteredSongs.length); }
-    function playNext()    { if (!filteredSongs.length) return; if (playMode === 'random') { playRandom(); } else { playSong((currentIndex + 1) % filteredSongs.length); } }
-    function handlePlayBtn()  { if (currentIndex === -1) { playRandom(); } else { activeCore.play().catch(() => {}); } }
+    function playPrev()    {
+        if (filterType === 'image') { if (!filteredImages.length) return; showImage((currentImageIndex - 1 + filteredImages.length) % filteredImages.length); return; }
+        if (!filteredSongs.length) return; playSong((currentIndex - 1 + filteredSongs.length) % filteredSongs.length);
+    }
+    function playNext()    {
+        if (filterType === 'image') { if (!filteredImages.length) return; showImage((currentImageIndex + 1) % filteredImages.length); return; }
+        if (!filteredSongs.length) return; if (playMode === 'random') { playRandom(); } else { playSong((currentIndex + 1) % filteredSongs.length); }
+    }
+    function handlePlayBtn()  { if (filterType === 'image') return; if (currentIndex === -1) { playRandom(); } else { activeCore.play().catch(() => {}); } }
     function handlePause()    { activeCore.pause(); }
     function handleStop()     { activeCore.pause(); activeCore.currentTime = 0; }
 
     function handleSongEnded() { 
         if (playMode === 'stop') {
             handleStop();
-            statusBanner.textContent = '🛑 播放完畢（播完即停）';
+            statusBanner.textContent = '🛑播放完畢（播完即停）';
         } else if (playMode === 'single') { 
             activeCore.currentTime = 0; 
             activeCore.play().catch(() => {}); 
@@ -626,19 +835,19 @@
         }
     }
 
-    // 🎨 動態切換四段風情燈號與文字
+    // 🎨 動態切換模式
     function updatePlayModeUI() {
         btnMode.classList.remove('btn-mode-single', 'btn-mode-random', 'btn-mode-list'); 
         if (playMode === 'stop') {
-            btnMode.textContent = '🛑 播完即停';
+            btnMode.textContent = '🛑播完即停';
         } else if (playMode === 'single') {
-            btnMode.textContent = '🔂 單曲循環';
+            btnMode.textContent = '🔂單曲循環';
             btnMode.classList.add('btn-mode-single');
         } else if (playMode === 'random') {
-            btnMode.textContent = '🎲 隨機循環';
+            btnMode.textContent = '🎲隨機循環';
             btnMode.classList.add('btn-mode-random');
         } else if (playMode === 'list') {
-            btnMode.textContent = '🔁 順序循環';
+            btnMode.textContent = '🔁順序循環';
             btnMode.classList.add('btn-mode-list');
         }
         localStorage.setItem('radio_playMode', playMode);
@@ -653,7 +862,7 @@
         updatePlayModeUI();
     }
 
-    // ✨ 靜音切換（音量圖示點擊 / M 鍵）
+    // ✨ 靜音切換
     function toggleMute() {
         if (currentVolume > 0) { mutedVolume = currentVolume; syncVolume(0); }
         else { syncVolume(mutedVolume > 0 ? mutedVolume : 0.8); }
@@ -674,18 +883,25 @@
         return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
     }
 
+    // --- 優化版：新增錯誤監聽 (Error Handling) ---
     [audioCore, videoCore].forEach(core => {
         core.addEventListener('timeupdate',     () => { if (core !== activeCore || !core.duration || isDraggingProgress) return; progressBar.value = (core.currentTime / core.duration) * 100; curTimeEl.textContent = formatTime(core.currentTime); });
         core.addEventListener('loadedmetadata', () => { if (core !== activeCore) return; totTimeEl.textContent = formatTime(core.duration); });
         core.addEventListener('play',           () => { if (core !== activeCore) return; btnPlay.classList.add('btn-play-active'); btnPlay.textContent = '⏸ 播放中'; if (core === audioCore) visualizer.classList.add('active'); });
         core.addEventListener('pause',          () => { if (core !== activeCore) return; btnPlay.classList.remove('btn-play-active'); btnPlay.textContent = '▶ 播放'; visualizer.classList.remove('active'); });
         core.addEventListener('ended',          () => { if (core !== activeCore) return; handleSongEnded(); });
+        
+        // 🌟 破檔自動跳過
+        core.addEventListener('error', () => {
+            if (core !== activeCore) return;
+            statusBanner.textContent = '⚠️ 檔案無法播放，自動跳過...';
+            setTimeout(() => playNext(), 1500); 
+        });
     });
 
     progressBar.addEventListener('input', () => {
         if (activeCore.duration) { activeCore.currentTime = (progressBar.value / 100) * activeCore.duration; curTimeEl.textContent = formatTime(activeCore.currentTime); }
     });
-    // ✨ 修正 isDraggingProgress — 原本宣告了但從未設為 true
     progressBar.addEventListener('pointerdown',   () => { isDraggingProgress = true; });
     progressBar.addEventListener('pointerup',     () => { isDraggingProgress = false; });
     progressBar.addEventListener('pointercancel', () => { isDraggingProgress = false; });
@@ -696,7 +912,30 @@
         videoCore.style.opacity = currentOpacity; localStorage.setItem('radio_opacity', currentOpacity);
     });
 
-    document.getElementById('main-panel').addEventListener('click', e => { if (!e.target.closest('.fullscreen-exit-btn')) toggleFullscreen(); });
+    // --- 優化版：單擊播放/暫停，雙擊全螢幕 ---
+    let clickTimer = null;
+    document.getElementById('main-panel').addEventListener('click', e => { 
+        if (e.target.closest('.fullscreen-exit-btn')) {
+            toggleFullscreen();
+            return;
+        }
+        
+        if (clickTimer === null) {
+            clickTimer = setTimeout(() => {
+                // 確定有音訊且不是在載入空字串
+                if (activeCore && activeCore.src !== '' && !activeCore.src.endsWith(window.location.pathname)) {
+                     if (activeCore.paused) activeCore.play().catch(() => {});
+                     else activeCore.pause();
+                }
+                clickTimer = null;
+            }, 250); 
+        } else {
+            clearTimeout(clickTimer);
+            clickTimer = null;
+            toggleFullscreen();
+        }
+    });
+
     function toggleFullscreen() {
         const box = document.getElementById('main-panel');
         const isFS = document.fullscreenElement || document.webkitFullscreenElement;
@@ -713,7 +952,7 @@
             case 'ArrowUp':    e.preventDefault(); syncVolume(currentVolume + 0.05); break;
             case 'ArrowDown':  e.preventDefault(); syncVolume(currentVolume - 0.05); break;
             case 'KeyF': case 'F': e.preventDefault(); toggleFullscreen(); break;
-            case 'KeyM': case 'M': e.preventDefault(); toggleMute(); break; // ✨ M 鍵靜音
+            case 'KeyM': case 'M': e.preventDefault(); toggleMute(); break;
         }
     });
 
@@ -738,19 +977,19 @@
             const storedHandle = await getStoredHandle();
             if (storedHandle) {
                 btnRestore.style.display = 'flex';
-                btnRestore.textContent   = `🔄 一鍵重連上次資料夾 (${storedHandle.name})`;
-                statusBanner.textContent = `📂 偵測到上次授權的「${storedHandle.name}」資料夾，請點擊一鍵還原`;
+                btnRestore.textContent   = `🔄一鍵重連上次資料夾 (${storedHandle.name})`;
+                statusBanner.textContent = `📂偵測到上次授權的「${storedHandle.name}」資料夾，請點擊一鍵還原`;
             } else {
                 statusBanner.textContent = '📡 點擊左側選擇媒體資料夾';
             }
         } else {
             pickerBtn.style.display   = 'none';
             legacyLabel.style.display = 'flex';
-            legacyLabel.innerHTML     = '📁 授權並載入媒體資料夾';
+            legacyLabel.innerHTML     = '📁授權並載入媒體資料夾';
             legacyLabel.style.background   = 'rgba(212,168,67,0.15)';
             legacyLabel.style.borderColor  = 'var(--gold)';
             legacyLabel.style.color        = 'var(--gold)';
-            statusBanner.textContent = '📡 點擊選擇媒體資料夾 (當前瀏覽器不支援自動還原)';
+            statusBanner.textContent = '📡點擊選擇媒體資料夾 (當前瀏覽器不支援自動還原)';
         }
     };
 </script>
