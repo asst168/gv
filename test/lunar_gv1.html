@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>梅山玉虛宮 每日擇日</title>
+<script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
+<style>
+  :root {
+    --gold:      #D4A843;
+    --gold-lt:   #F0C860;
+    --gold-dk:   #8C6A1A;
+    --bg:        #0F0D0A;
+    --bg-card:   #17140E;
+    --green-lt:  #5dca85;
+    --green-bg:  rgba(39,174,96,0.07);
+    --green-bd:  rgba(39,174,96,0.30);
+    --red-lt:    #E07060;
+    --red-bg:    rgba(192,57,43,0.07);
+    --red-bd:    rgba(192,57,43,0.30);
+    --text:      #E4D8C0;
+    --muted:     #9A8060;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Microsoft JhengHei', '微軟正黑體', 'PingFang TC', sans-serif;
+    background: radial-gradient(ellipse at 50% 30%, #1e180a 0%, var(--bg) 65%);
+    min-height: 100vh;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 20px 12px 40px;
+  }
+  .wrapper { width: 100%; max-width: 720px; }
+
+  /* ══ 控制列：兩排結構 ══ */
+  .ctrl-bar { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .ctrl-row1 {
+    display: flex; align-items: center;
+    justify-content: center; gap: 6px; flex-wrap: nowrap;
+  }
+  .ctrl-row2 {
+    display: flex; align-items: center;
+    justify-content: center; gap: 8px;
+  }
+  .ctrl-label {
+    color: var(--gold); font-size: 0.95em;
+    letter-spacing: 0.05em; user-select: none; white-space: nowrap;
+  }
+  input[type="number"] {
+    background: rgba(212,168,67,0.07);
+    border: 1px solid var(--gold-dk);
+    color: var(--text); font-family: inherit;
+    font-size: 1em; text-align: center;
+    padding: 8px 4px; outline: none;
+    min-height: 44px;
+    -moz-appearance: textfield;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  input[type="number"]:focus {
+    border-color: var(--gold); background: rgba(212,168,67,0.13);
+  }
+  input::-webkit-inner-spin-button,
+  input::-webkit-outer-spin-button { opacity: 1; }
+  #inp-y { width: 72px; }
+  #inp-m { width: 50px; }
+  #inp-d { width: 50px; }
+
+  .btn {
+    font-family: inherit; cursor: pointer;
+    letter-spacing: 0.15em; transition: opacity 0.18s; border: none;
+    min-height: 44px; display: inline-flex;
+    align-items: center; justify-content: center; padding: 0 14px;
+  }
+  .btn:active { opacity: 0.6; }
+  .btn-nav {
+    background: transparent;
+    border: 1px solid var(--gold-dk) !important;
+    color: var(--muted); font-size: 1em;
+    min-width: 44px; padding: 0 10px;
+  }
+  .btn-query {
+    background: linear-gradient(135deg, var(--gold-dk), #A07820);
+    border: 1px solid var(--gold) !important;
+    color: var(--gold-lt); font-size: 1em;
+    padding: 0 28px; flex: 1; max-width: 180px;
+  }
+  .btn-today {
+    background: transparent;
+    border: 1px solid rgba(212,168,67,0.3) !important;
+    color: var(--muted); font-size: 0.9em; padding: 0 18px;
+  }
+
+  /* ══ 外框 ══ */
+  .frame-outer {
+    border: 2px solid var(--gold-dk); padding: 5px; background: var(--bg-card);
+    box-shadow: 0 0 40px rgba(212,168,67,0.12), 0 20px 60px rgba(0,0,0,0.6);
+  }
+  .frame-inner {
+    border: 1px solid rgba(212,168,67,0.35);
+    padding: 28px 24px 24px; position: relative;
+  }
+  .frame-inner::before, .frame-inner::after,
+  .corner-bl, .corner-br {
+    content: ''; position: absolute;
+    width: 16px; height: 16px;
+    border-color: var(--gold-dk); border-style: solid;
+  }
+  .frame-inner::before { top: 6px; left: 6px;  border-width: 2px 0 0 2px; }
+  .frame-inner::after  { top: 6px; right: 6px; border-width: 2px 2px 0 0; }
+  .corner-bl { bottom: 6px; left: 6px;  border-width: 0 0 2px 2px; }
+  .corner-br { bottom: 6px; right: 6px; border-width: 0 2px 2px 0; }
+
+  /* ══ 標題（clamp 自動縮放） ══ */
+  .header { text-align: center; margin-bottom: 4px; }
+  .temple-name {
+    font-size: clamp(1.3em, 5.5vw, 2.4em);
+    font-weight: 900; color: var(--gold); opacity: 0.9;
+    letter-spacing: clamp(0.25em, 1.8vw, 0.8em);
+    text-indent:    clamp(0.25em, 1.8vw, 0.8em);
+    margin-bottom: 4px; line-height: 1.2;
+    text-shadow: 0 0 20px rgba(212,168,67,0.45), 0 2px 4px rgba(0,0,0,0.5);
+  }
+  .page-title {
+    font-size: clamp(1.1em, 4.5vw, 2.0em);
+    font-weight: 400; color: var(--gold);
+    letter-spacing: clamp(0.25em, 1.8vw, 0.9em);
+    text-indent:    clamp(0.25em, 1.8vw, 0.9em);
+    line-height: 1.2;
+    text-shadow: 0 0 20px rgba(212,168,67,0.45), 0 2px 4px rgba(0,0,0,0.5);
+  }
+
+  /* 分隔線 */
+  .divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(to right, transparent, var(--gold-dk), transparent);
+  }
+  .divider span { color: var(--gold); font-size: 1.05em; opacity: 0.8; }
+
+  /* ══ 日期區（民國年獨立一行） ══ */
+  .date-block {
+    background: rgba(212,168,67,0.05);
+    border: 1px solid rgba(212,168,67,0.15);
+    padding: 14px 16px; margin-bottom: 12px; text-align: center;
+  }
+  .date-solar-main {
+    font-size: clamp(1.1em, 4.5vw, 1.55em);
+    color: var(--text); letter-spacing: 0.04em; margin-bottom: 5px;
+  }
+  .date-sub {
+    font-size: clamp(0.78em, 3vw, 0.9em);
+    color: var(--muted); letter-spacing: 0.15em; margin-bottom: 8px;
+  }
+  .weekday-tag {
+    display: inline-block; margin-left: 10px;
+    padding: 1px 8px; border: 1px solid rgba(212,168,67,0.3); font-size: 0.95em;
+  }
+  .date-lunar {
+    font-size: clamp(0.9em, 3.5vw, 1.05em);
+    color: var(--gold); letter-spacing: 0.35em; text-indent: 0.35em;
+  }
+
+  /* 沖煞 */
+  .chong-sha {
+    text-align: center; color: var(--muted);
+    font-size: clamp(0.82em, 3vw, 0.92em);
+    letter-spacing: 0.25em; padding: 8px 0; margin-bottom: 18px;
+    border-top: 1px dashed rgba(154,128,96,0.25);
+    border-bottom: 1px dashed rgba(154,128,96,0.25);
+  }
+  .chong-sha em { font-style: normal; color: #c09060; }
+
+  /* ══ 宜忌（手機自動單欄） ══ */
+  .yi-ji { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 22px; }
+  .section { padding: 14px 12px; display: flex; flex-direction: column; gap: 12px; }
+  .section.yi { background: var(--green-bg); border: 1px solid var(--green-bd); }
+  .section.ji { background: var(--red-bg);   border: 1px solid var(--red-bd); }
+  .section-head {
+    font-size: clamp(1.1em, 4vw, 1.45em); font-weight: bold;
+    text-align: center; padding-bottom: 8px;
+    letter-spacing: 0.5em; text-indent: 0.5em;
+  }
+  .yi .section-head { color: var(--green-lt); border-bottom: 1px solid var(--green-bd); }
+  .ji .section-head { color: var(--red-lt);   border-bottom: 1px solid var(--red-bd); }
+
+  .tags { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .tags li {
+    padding: 4px 10px; font-size: clamp(0.78em, 2.8vw, 0.88em);
+    letter-spacing: 0.04em; cursor: default; transition: opacity 0.2s;
+  }
+  .tags li:active { opacity: 0.6; }
+  .yi .tags li { background: rgba(39,174,96,0.12); color: var(--green-lt); border: 1px solid rgba(39,174,96,0.22); }
+  .ji .tags li { background: rgba(192,57,43,0.12); color: var(--red-lt);   border: 1px solid rgba(192,57,43,0.22); }
+
+  /* 頁尾 */
+  .footer {
+    text-align: center; color: var(--gold-dk);
+    font-size: clamp(0.72em, 2.5vw, 0.82em);
+    letter-spacing: 0.4em; text-indent: 0.4em;
+    padding-top: 14px; border-top: 1px solid rgba(140,106,26,0.35); opacity: 0.85;
+  }
+  .err-msg { text-align: center; color: var(--red-lt); padding: 24px; letter-spacing: 0.1em; }
+
+  /* ══ 手機斷點 ≤ 480px ══ */
+  @media (max-width: 480px) {
+    body { padding: 12px 8px 32px; }
+    .frame-inner { padding: 20px 12px 18px; }
+    .yi-ji { grid-template-columns: 1fr; gap: 10px; }
+    #inp-y { width: 66px; }
+    #inp-m, #inp-d { width: 46px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- 控制列：第一排輸入框 + 第二排功能鍵 -->
+  <div class="ctrl-bar">
+    <div class="ctrl-row1">
+      <button class="btn btn-nav" id="btn-prev">&#9664;</button>
+      <input type="number" id="inp-y" min="1" max="9999" placeholder="年">
+      <span class="ctrl-label">年</span>
+      <input type="number" id="inp-m" min="1" max="12" placeholder="月">
+      <span class="ctrl-label">月</span>
+      <input type="number" id="inp-d" min="1" max="31" placeholder="日">
+      <span class="ctrl-label">日</span>
+      <button class="btn btn-nav" id="btn-next">&#9654;</button>
+    </div>
+    <div class="ctrl-row2">
+      <button class="btn btn-query" id="btn-q">查&#12288;詢</button>
+      <button class="btn btn-today" id="btn-td">今日</button>
+    </div>
+  </div>
+
+  <!-- 主框 -->
+  <div class="frame-outer">
+    <div class="frame-inner">
+      <div class="corner-bl"></div>
+      <div class="corner-br"></div>
+
+      <div class="header">
+        <div class="temple-name">梅山玉虛宮</div>
+        <div class="page-title">每日擇日</div>
+      </div>
+
+      <div class="divider"><span>✦</span></div>
+
+      <div id="result"></div>
+
+      <div class="footer">願神明保佑 &ensp; 諸事順遂 &ensp; 平安吉祥</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── 繁簡映射 ─────────────────────────────────────────
+const PHRASE_MAP = {
+  '开市':'開市','纳财':'納財','栽种':'栽種','安床':'安床',
+  '拆卸':'拆卸','修造':'修造','动土':'動土','上梁':'上樑',
+  '入殓':'入殮','安葬':'安葬','破土':'破土','除服':'除服',
+  '成服':'成服','嫁娶':'嫁娶','出火':'出火','伐木':'伐木',
+  '祭祀':'祭祀','入宅':'入宅','移徙':'移徙','纳畜':'納畜',
+  '探病':'探病','祈福':'祈福','求嗣':'求嗣','冠笄':'冠笄',
+  '开光':'開光','出行':'出行','解除':'解除','理发':'理髮',
+  '会亲友':'會親友','牧养':'牧養','造桥':'造橋','词讼':'詞訟',
+  '安门':'安門','作灶':'作灶','开池':'開池','开厕':'開廁',
+  '结网':'結網','放水':'放水','经络':'經絡','交易':'交易',
+  '立券':'立券','开仓':'開倉','扫舍':'掃舍','挂匾':'掛匾',
+  '竖柱':'豎柱','合帐':'合帳','问名':'問名','订婚':'訂婚',
+  '纳婿':'納婿','安机器':'安機器','破屋坏垣':'破屋壞垣',
+  '整手足甲':'整手足甲','沐浴':'沐浴','裁衣':'裁衣',
+  '塞穴':'塞穴','捕捉':'捕捉','畋猎':'畋獵',
+  '开渠':'開渠','开路':'開路','修坟':'修墳','立碑':'立碑',
+  '启钻':'啟鑽','谢土':'謝土','开基':'開基','定磉':'定磉',
+  '架马':'架馬','穿井':'穿井','问卜':'問卜','求医':'求醫',
+  '治病':'治病','针灸':'針灸',
+};
+const CHAR_MAP = {
+  '东':'東','开':'開','纳':'納','动':'動','结':'結',
+  '经':'經','会':'會','亲':'親','养':'養','桥':'橋',
+  '词':'詞','门':'門','厕':'廁','网':'網','络':'絡',
+  '龙':'龍','马':'馬','鸡':'雞','猪':'豬','扫':'掃',
+  '挂':'掛','竖':'豎','帐':'帳','仓':'倉','问':'問',
+  '订':'訂','机':'機','头':'頭','鱼':'魚','损':'損',
+  '导':'導','础':'礎','坏':'壞','猎':'獵',
+  '坟':'墳','钻':'鑽','医':'醫','针':'針','灸':'灸',
+  '补':'補','缝':'縫','织':'織','绣':'繡','纫':'紉',
+  '炉':'爐','灶':'灶',
+};
+const SHA_MAP       = {'东':'東','西':'西','南':'南','北':'北'};
+const SHENGXIAO_MAP = {'鸡':'雞','龙':'龍','马':'馬','猪':'豬'};
+const WEEKDAYS      = ['一','二','三','四','五','六','日'];
+
+function toTrad(list) {
+  return list.map(s => PHRASE_MAP[s] ?? [...s].map(c => CHAR_MAP[c]??c).join(''));
+}
+function shaTrad(s)  { return [...s].map(c => SHA_MAP[c]??c).join(''); }
+function sxTrad(s)   { return SHENGXIAO_MAP[s] ?? s; }
+
+function weekdayStr(y, m, d) {
+  const dt = new Date(0);
+  dt.setFullYear(y, m - 1, d);
+  return WEEKDAYS[(dt.getDay() + 6) % 7];
+}
+function minguoStr(y) {
+  const r = y - 1911;
+  return r > 0 ? '民國 ' + r + ' 年' : r === 0 ? '民國元年' : '民前 ' + (-r) + ' 年';
+}
+
+function render(y, m, d) {
+  const el = document.getElementById('result');
+  try {
+    const solar = Solar.fromYmd(y, m, d);
+    const lunar = solar.getLunar();
+    const yi    = toTrad(lunar.getDayYi());
+    const ji    = toTrad(lunar.getDayJi());
+    const yiHtml = yi.map(t=>'<li>'+t+'</li>').join('') || '<li>（無）</li>';
+    const jiHtml = ji.map(t=>'<li>'+t+'</li>').join('') || '<li>（無）</li>';
+
+    el.innerHTML =
+      '<div class="date-block">' +
+        '<div class="date-solar-main">' + y + ' 年 ' + m + ' 月 ' + d + ' 日</div>' +
+        '<div class="date-sub">' +
+          minguoStr(y) +
+          '<span class="weekday-tag">週' + weekdayStr(y,m,d) + '</span>' +
+        '</div>' +
+        '<div class="date-lunar">' +
+          lunar.getYearInGanZhi() + '年 &ensp; ' +
+          lunar.getMonthInChinese() + '月 &ensp; ' +
+          lunar.getDayInChinese() +
+        '</div>' +
+      '</div>' +
+      '<div class="chong-sha">沖 <em>' + sxTrad(lunar.getChong()) + '</em> &emsp;｜&emsp; 煞 <em>' + shaTrad(lunar.getSha()) + '</em></div>' +
+      '<div class="yi-ji">' +
+        '<div class="section yi"><div class="section-head">宜</div><ul class="tags">' + yiHtml + '</ul></div>' +
+        '<div class="section ji"><div class="section-head">忌</div><ul class="tags">' + jiHtml + '</ul></div>' +
+      '</div>';
+  } catch(e) {
+    el.innerHTML = '<div class="err-msg">⚠ 查詢失敗：' + e.message + '</div>';
+  }
+}
+
+const $y = () => document.getElementById('inp-y');
+const $m = () => document.getElementById('inp-m');
+const $d = () => document.getElementById('inp-d');
+
+function getYMD() {
+  return { y: parseInt($y().value), m: parseInt($m().value), d: parseInt($d().value) };
+}
+function setYMD(y, m, d) { $y().value=y; $m().value=m; $d().value=d; }
+
+function query() {
+  const {y,m,d} = getYMD();
+  if (!y||!m||!d||m<1||m>12||d<1||d>31) {
+    document.getElementById('result').innerHTML = '<div class="err-msg">請輸入有效的年、月、日</div>';
+    return;
+  }
+  render(y, m, d);
+}
+
+function setToday() {
+  const t = new Date();
+  setYMD(t.getFullYear(), t.getMonth()+1, t.getDate());
+  query();
+}
+
+function shiftDay(delta) {
+  const {y,m,d} = getYMD();
+  if (!y||!m||!d) return;
+  const dt = new Date(0);
+  dt.setFullYear(y, m-1, d+delta);
+  setYMD(dt.getFullYear(), dt.getMonth()+1, dt.getDate());
+  query();
+}
+
+document.getElementById('btn-q').addEventListener('click', query);
+document.getElementById('btn-td').addEventListener('click', setToday);
+document.getElementById('btn-prev').addEventListener('click', function(){ shiftDay(-1); });
+document.getElementById('btn-next').addEventListener('click', function(){ shiftDay(1); });
+document.addEventListener('keydown', function(e){ if(e.key==='Enter') query(); });
+
+/* ── 手機左右滑動換日 ── */
+var _tx = null;
+document.addEventListener('touchstart', function(e){ _tx = e.touches[0].clientX; }, {passive:true});
+document.addEventListener('touchend', function(e) {
+  if (_tx === null) return;
+  var dx = e.changedTouches[0].clientX - _tx;
+  _tx = null;
+  if (Math.abs(dx) < 50) return;
+  shiftDay(dx < 0 ? 1 : -1);
+}, {passive:true});
+
+window.addEventListener('load', setToday);
+</script>
+</body>
+</html>
