@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <!-- 🔑 手機優化第一槍：缺這行就白搭 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>老媽專用日曆</title>
+    <style>
+        :root {
+            --bg-color: #fcfbf7;
+            --month-color: #d32f2f;
+            --day-color: #003380;
+            --week-bg: #ff8f00;
+            --week-text: #003380;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            /* 安全區域內距：適配瀏海、Home 鍵橫條 */
+            padding:
+                env(safe-area-inset-top,   0px)
+                env(safe-area-inset-right,  0px)
+                env(safe-area-inset-bottom, 0px)
+                env(safe-area-inset-left,   0px);
+            height: 100vh;
+            height: 100dvh; /* 動態視口：排除瀏覽器位址列佔用 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--bg-color);
+            font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
+            overflow: hidden;
+            position: relative;
+            /* 觸控優化 */
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* 月份 (左上角裝飾) */
+        .month-text {
+            position: absolute;
+            top: max(2vh, env(safe-area-inset-top, 2vh));
+            left: max(3vw, env(safe-area-inset-left, 3vw));
+            /* clamp：手機用 vw 限制 10月/11月/12月 三字組不溢出；桌機維持 20vh */
+            font-size: clamp(30px, 18vw, 20vh);
+            font-weight: 900;
+            color: var(--month-color);
+            -webkit-text-stroke: clamp(2px, 1vw, 8px) var(--month-color);
+            line-height: 1;
+            text-shadow: 4px 4px 0px rgba(0,0,0,0.12);
+            z-index: 10;
+        }
+
+        /* 大數字 (主角) */
+        .big-number {
+            /* min()：手機 vw 管寬度（兩位數不溢出），桌機 vh 管高度維持震撼感 */
+            font-size: min(72vh, 72vw);
+            font-weight: 900;
+            color: var(--day-color);
+            -webkit-text-stroke: clamp(8px, 2.5vw, 25px) var(--day-color);
+            line-height: 0.85;
+            letter-spacing: -2vw;
+            text-shadow: 8px 8px 0px rgba(0,0,0,0.12);
+        }
+
+        /* 星期 (底部標籤) */
+        .week-text {
+            /* 三個中文字 + padding，min() 確保不爆寬 */
+            font-size: min(22vh, 30vw);
+            font-weight: 900;
+            color: var(--week-text);
+            -webkit-text-stroke: clamp(2px, 1vw, 6px) var(--week-text);
+            background-color: var(--week-bg);
+            padding: clamp(6px, 1.5vh, 2vh) clamp(10px, 4vw, 5vw);
+            border-radius: clamp(6px, 2.5vw, 5vh);
+            line-height: 1;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.22);
+            margin-top: 2vh;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+    <div class="month-text" id="month-date">-- 月</div>
+    <div class="big-number"  id="big-day">--</div>
+    <div class="week-text"   id="week-day">星期-</div>
+
+    <script>
+        function refresh() {
+            const now  = new Date();
+            const days = ["星期日","星期一","星期二","星期三","星期四","星期五","星期六"];
+            document.getElementById('month-date').innerText = `${now.getMonth() + 1} 月`;
+            document.getElementById('big-day').innerText    = now.getDate();
+            document.getElementById('week-day').innerText   = days[now.getDay()];
+        }
+
+        // 點擊 + 觸控都能手動更新
+        document.body.addEventListener('click',      refresh);
+        document.body.addEventListener('touchstart', refresh, { passive: true });
+
+        refresh();
+        setInterval(refresh, 60000);
+    </script>
+</body>
+</html>
