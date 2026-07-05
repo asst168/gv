@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>郵遞區號查詢</title>
+    <style>
+        body { font-family: 'Microsoft JhengHei', Arial, sans-serif; padding: 20px; max-width: 1100px; margin: auto; background-color: #f1f3f5; color: #333;}
+        .container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #1a252f; margin-top: 0; margin-bottom: 25px;}
+
+        /* 頂部整合控制列：搜尋 + 門牌 + 狀態 + 按鈕 全部塞同一列 */
+        .top-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 20px; }
+        .search-box { flex: 1 1 240px; min-width: 200px; position: relative; }
+        .search-box input { width: 100%; padding: 10px 12px; font-size: 15px; border: 2px solid #0d6efd; border-radius: 6px; box-sizing: border-box; }
+        .search-box input:focus { outline: none; box-shadow: 0 0 0 3px rgba(13,110,253,.25); }
+        #quickResultList { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ced4da; border-top: none; border-radius: 0 0 8px 8px; max-height: 250px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: none;}
+        .quick-item { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 16px;}
+        .quick-item:hover { background-color: #e8f4fd; color: #0d6efd; font-weight: bold;}
+
+        .address-inline { display: flex; align-items: center; gap: 5px; flex-shrink: 0; white-space: nowrap; }
+        .address-inline .lbl { font-weight: bold; font-size: 14px; color: #495057; }
+
+        .admin-box { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .btn-admin { padding: 9px 12px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; white-space: nowrap;}
+        .btn-admin:hover { background: #5c636a; }
+        .btn-clear { padding: 9px 12px; background: #f1f3f5; color: #495057; border: 1px solid #ced4da; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; white-space: nowrap;}
+        .btn-clear:hover { background: #e9ecef; }
+        .btn-export { padding: 9px 12px; background: #ffc107; color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; display: none; white-space: nowrap;}
+        .btn-export:hover { background: #e0a800; }
+
+        /* 四欄直選清單 */
+        .four-cols { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 20px;}
+        .col-list { flex: 1; min-width: 200px; display: flex; flex-direction: column; background: #fff; border: 1px solid #ced4da; border-radius: 8px; overflow: hidden; }
+        .col-header { background: #e9ecef; padding: 10px; font-weight: bold; text-align: center; border-bottom: 1px solid #ced4da; color: #495057; font-size: 15px; }
+        .col-filter { padding: 6px; border-bottom: 1px solid #ced4da; background: #f8f9fa; }
+        .col-filter input { width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        .listbox-content { height: 380px; overflow-y: auto; padding: 5px; }
+        .list-item { padding: 10px 12px; cursor: pointer; border-radius: 4px; border-bottom: 1px solid #f1f3f5; font-size: 15px; transition: 0.1s;}
+        .list-item:hover { background-color: #e8f4fd; }
+        .list-item.selected { background-color: #0d6efd; color: white; font-weight: bold; }
+
+        /* 門牌輸入 (已併入 top-bar) 與結果區 */
+        .component-input { width: 52px; text-align: center; padding: 8px 4px; font-size: 15px; border: 1px solid #ced4da; border-radius: 4px;}
+
+        /* 固定區：標題列 + 搜尋/門牌列，一起黏在頂部 */
+        .sticky-wrap {
+            position: sticky; top: 0; z-index: 500;
+            background: #fff; margin: -25px -25px 0 -25px; padding: 18px 25px 14px 25px;
+            border-bottom: 1px solid #e9ecef; border-radius: 12px 12px 0 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        /* 標題列：系統名稱 + 精簡結果小卡 */
+        .header-bar {
+            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+            margin-bottom: 14px;
+        }
+        .header-bar h2 { margin: 0; }
+
+        #finalBlock { display: none; align-items: center; gap: 12px; padding: 8px 16px; background: #d1e7dd; border: 1px solid #badbcc; border-radius: 8px; }
+        .zip-code { font-size: 20px; font-weight: bold; color: #0f5132; letter-spacing: 1px; white-space: nowrap; }
+        .full-address { font-size: 14px; color: #155724; font-weight: bold; white-space: nowrap; }
+        .btn-copy { padding: 7px 12px; font-size: 13px; background: #198754; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; white-space: nowrap;}
+        .btn-copy:hover { background: #157347; }
+
+        /* 提示訊息 (取代 alert) */
+        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background: #212529; color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 15px; opacity: 0; transition: all .25s ease; pointer-events: none; z-index: 2000; box-shadow: 0 4px 10px rgba(0,0,0,.25); }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="sticky-wrap">
+            <div class="header-bar">
+                <h2>台灣郵遞區號極速查詢系統</h2>
+                <div id="finalBlock">
+                    <span id="resZip" class="zip-code">------</span>
+                    <span id="resAddr" class="full-address">------</span>
+                    <button class="btn-copy" onclick="copyResult()">📋 複製</button>
+                </div>
+            </div>
+
+            <div class="top-bar" style="margin-bottom: 0;">
+                <div class="search-box">
+                    <input type="text" id="fuzzyInput" placeholder="🔍 智慧快搜：請輸入關鍵字 (如：斗六 上海路)" oninput="doSmartFuzzySearch()" autocomplete="off">
+                    <div id="quickResultList"></div>
+                </div>
+
+                <div class="address-inline">
+                    <span class="lbl">門牌：</span>
+                    <input type="number" id="addrLane" class="component-input" placeholder="巷" oninput="calculateExactZip()"> <span class="lbl">巷</span>
+                    <input type="number" id="addrAlley" class="component-input" placeholder="弄" oninput="calculateExactZip()"> <span class="lbl">弄</span>
+                    <input type="number" id="addrNo" class="component-input" placeholder="號" oninput="calculateExactZip()">
+                    <span class="lbl">之</span>
+                    <input type="number" id="addrSub" class="component-input" placeholder="之" oninput="calculateExactZip()"> <span class="lbl">號</span>
+                    <input type="text" id="addrFloor" class="component-input" style="width: 110px;" placeholder="樓/室(選填)" oninput="calculateExactZip()">
+                    <button class="btn-clear" onclick="clearAll()" title="清空所有已選城市/區域/村里/街路及門牌欄位">🧹 清空</button>
+                </div>
+
+                <div class="admin-box">
+                    <span id="sysStatus" style="font-weight: bold; font-size: 14px; color: #6c757d;">資料檢查中...</span>
+                    <button class="btn-admin" onclick="document.getElementById('dbfFile').click()" title="將郵局 rall1.dbf 轉為 JSON">⚙️ 更新 道路DBF</button>
+                    <input type="file" id="dbfFile" accept=".dbf" style="display:none;" onchange="loadDBF(event)">
+                    <button id="exportBtn" class="btn-export" onclick="downloadZipJSON()">⬇️ 匯出 rall1.json</button>
+
+                    <button class="btn-admin" onclick="document.getElementById('villDbfFile').click()" title="將戶政 village.dbf 轉為 JSON">⚙️ 更新 村里DBF</button>
+                    <input type="file" id="villDbfFile" accept=".dbf" style="display:none;" onchange="loadVillageDBF(event)">
+                    <button id="villExportBtn" class="btn-export" onclick="downloadVillageJSON()">⬇️ 匯出 rvillage.json</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="four-cols">
+            <div class="col-list">
+                <div class="col-header">1. 縣市</div>
+                <div class="listbox-content" id="cityList"></div>
+            </div>
+            <div class="col-list">
+                <div class="col-header">2. 鄉鎮市區</div>
+                <div class="listbox-content" id="areaList"></div>
+            </div>
+            <div class="col-list">
+                <div class="col-header">3. 村 / 里 (選填)</div>
+                <div class="col-filter"><input type="text" placeholder="過濾村里..." oninput="filterList('villageList', this.value)"></div>
+                <div class="listbox-content" id="villageList"></div>
+            </div>
+            <div class="col-list">
+                <div class="col-header">4. 街 / 路 / 段 (選填)</div>
+                <div class="col-filter"><input type="text" placeholder="過濾街路..." oninput="filterList('streetList', this.value)"></div>
+                <div class="listbox-content" id="streetList"></div>
+            </div>
+        </div>
+
+
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+        let zipData = [];
+        let uniqueStreets = [];
+        let cityIndex = new Map();   // city -> Map(area -> array of {road})
+        let currentSelected = { city: '', area: '', village: '', road: '' };
+        let searchDebounceTimer = null;
+
+        // 村里資料（來自戶政 village.dbf，提供官方完整村里清單，補足 rall1 道路資料的缺口）
+        let villageRawData = [];
+        let villageIndex = new Map();   // city -> Map(area -> array of {name, zip})
+        let villageZipMap = new Map();  // "city|area|village" -> 3碼郵遞區號
+        let dataStatus = { road: 'loading', village: 'loading' }; // loading | ok | missing
+
+        // --- 提示訊息 (取代 alert，體驗更順) ---
+        function showToast(msg, ms = 2200) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.classList.remove('show'), ms);
+        }
+
+        // 臺/台 屬同義字，避免使用者搜尋「台北」卻找不到「臺北市」
+        function normalize(s) {
+            return (s || '').replace(/臺/g, '台');
+        }
+
+        // ============================================================
+        // 系統開啟時，優先以 <script> 標籤讀取 rall1.json 與 rvillage.json
+        // 這個做法（瞞天過海）可同時相容 http(s):// 伺服器與純 file:// 雙擊開啟，
+        // 不會受瀏覽器 CORS/fetch 限制卡住，是本機單檔工具的標準解法。
+        // ============================================================
+        window.onload = function() {
+            loadJsonAsset('rall1.json', 'RALL1_DATA', (data) => {
+                zipData = data;
+                buildIndexes();
+                dataStatus.road = 'ok';
+                document.getElementById('fuzzyInput').disabled = false;
+                refreshStatusBar();
+            }, () => {
+                dataStatus.road = 'missing';
+                document.getElementById('fuzzyInput').disabled = true;
+                refreshStatusBar();
+            });
+
+            loadJsonAsset('rvillage.json', 'RVILLAGE_DATA', (data) => {
+                villageRawData = data;
+                buildVillageIndex();
+                dataStatus.village = 'ok';
+                refreshStatusBar();
+                // 若使用者已經選好城市/區域，補上剛載入的村里清單
+                if (currentSelected.city && currentSelected.area) renderRoadLists();
+            }, () => {
+                dataStatus.village = 'missing';
+                refreshStatusBar();
+            });
+        };
+
+        // 共用：以 <script> 標籤載入資料檔（避開 file:// 的 CORS 限制）
+        function loadJsonAsset(filename, globalVarName, onOk, onFail) {
+            const script = document.createElement('script');
+            script.src = filename + '?_=' + Date.now(); // 避免瀏覽器快取舊資料
+            script.onload = function() {
+                const data = window[globalVarName];
+                if (typeof data === 'undefined' || !Array.isArray(data) || data.length === 0) {
+                    onFail();
+                    return;
+                }
+                onOk(data);
+            };
+            script.onerror = onFail;
+            document.body.appendChild(script);
+        }
+
+        // 統一組合狀態列文字：道路資料為必要項，村里資料為輔助項（沒有也能運作）
+        function refreshStatusBar() {
+            const el = document.getElementById('sysStatus');
+            if (dataStatus.road === 'loading') {
+                el.innerHTML = `<span style="color:#6c757d;">資料檢查中...</span>`;
+                return;
+            }
+            if (dataStatus.road === 'missing') {
+                el.innerHTML = `<span style="color:#dc3545;">🔴 請點擊「更新 道路DBF」建立資料</span>`;
+                return;
+            }
+            const villPart = dataStatus.village === 'ok'
+                ? `，村里 ${villageRawData.length} 筆`
+                : `，<span style="color:#dc3545;">村里資料未載入</span>`;
+            el.innerHTML = `<span style="color:#198754;">🟢 系統就緒 (道路 ${zipData.length} 筆${villPart})</span>`;
+        }
+
+        // 建立索引：Map 巢狀結構取代逐次 filter()，大資料量時選單反應更快
+        function buildIndexes() {
+            const streetMap = new Map(); // key -> true，避免重複
+            uniqueStreets = [];
+            cityIndex = new Map();
+
+            for (const record of zipData) {
+                if (!record.CITY || !record.ROAD) continue;
+                const key = `${record.CITY}|${record.AREA}|${record.ROAD}`;
+                if (streetMap.has(key)) continue;
+                streetMap.set(key, true);
+
+                const entry = { city: record.CITY, area: record.AREA, road: record.ROAD };
+                uniqueStreets.push(entry);
+
+                if (!cityIndex.has(record.CITY)) cityIndex.set(record.CITY, new Map());
+                const areaMap = cityIndex.get(record.CITY);
+                if (!areaMap.has(record.AREA)) areaMap.set(record.AREA, []);
+                areaMap.get(record.AREA).push(entry);
+            }
+            renderCityList();
+        }
+
+        // 建立村里索引：city -> area -> [{name, zip}]，並建立快速查詢郵遞區號的 Map
+        function buildVillageIndex() {
+            villageIndex = new Map();
+            villageZipMap = new Map();
+
+            for (const r of villageRawData) {
+                if (!r.CITY || !r.AREA || !r.VILLAGE1) continue;
+
+                if (!villageIndex.has(r.CITY)) villageIndex.set(r.CITY, new Map());
+                const areaMap = villageIndex.get(r.CITY);
+                if (!areaMap.has(r.AREA)) areaMap.set(r.AREA, []);
+
+                const list = areaMap.get(r.AREA);
+                if (!list.find(v => v.name === r.VILLAGE1)) {
+                    list.push({ name: r.VILLAGE1, zip: r.ZIPCODE });
+                }
+                villageZipMap.set(`${r.CITY}|${r.AREA}|${r.VILLAGE1}`, r.ZIPCODE);
+            }
+        }
+
+        // --- 四欄連動邏輯 ---
+        function renderCityList() {
+            const container = document.getElementById('cityList');
+            container.innerHTML = '';
+            for (const city of cityIndex.keys()) {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.textContent = city;
+                div.onclick = () => selectCity(city, div);
+                container.appendChild(div);
+            }
+        }
+
+        function selectCity(city, element) {
+            clearSelection('cityList', element);
+            currentSelected.city = city;
+            currentSelected.area = '';
+            currentSelected.village = '';
+            currentSelected.road = '';
+
+            document.getElementById('villageList').innerHTML = '';
+            document.getElementById('streetList').innerHTML = '';
+            document.getElementById('finalBlock').style.display = 'none';
+
+            const areaContainer = document.getElementById('areaList');
+            areaContainer.innerHTML = '';
+            const areaMap = cityIndex.get(city);
+            if (!areaMap) return;
+            for (const area of areaMap.keys()) {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.textContent = area;
+                div.onclick = () => selectArea(area, div);
+                areaContainer.appendChild(div);
+            }
+        }
+
+        function selectArea(area, element) {
+            clearSelection('areaList', element);
+            currentSelected.area = area;
+            currentSelected.village = '';
+            currentSelected.road = '';
+            document.getElementById('finalBlock').style.display = 'none';
+            renderRoadLists();
+        }
+
+        // 核心進化：將 ROAD 欄位動態拆分成「村里」與「街路」
+        function renderRoadLists() {
+            const villContainer = document.getElementById('villageList');
+            const strContainer = document.getElementById('streetList');
+            villContainer.innerHTML = '';
+            strContainer.innerHTML = '';
+
+            const areaMap = cityIndex.get(currentSelected.city);
+            const matches = (areaMap && areaMap.get(currentSelected.area)) || [];
+
+            let hasVill = false, hasStr = false;
+            const addedVillNames = new Set(); // 避免道路資料與官方村里資料重複列出同名村里
+
+            const addVillageItem = (name) => {
+                if (addedVillNames.has(name)) return;
+                addedVillNames.add(name);
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                if (name === currentSelected.village) div.classList.add('selected');
+                div.textContent = name;
+                div.onclick = () => activateRoad(name, 'village', div);
+                villContainer.appendChild(div);
+                hasVill = true;
+            };
+
+            matches.forEach(s => {
+                if (s.road.endsWith('村') || s.road.endsWith('里')) {
+                    addVillageItem(s.road);
+                } else {
+                    const div = document.createElement('div');
+                    div.className = 'list-item';
+                    if (s.road === currentSelected.road) div.classList.add('selected');
+                    div.textContent = s.road;
+                    div.onclick = () => activateRoad(s.road, 'street', div);
+                    strContainer.appendChild(div);
+                    hasStr = true;
+                }
+            });
+
+            // 補上戶政村里資料庫（village.dbf）裡，rall1 道路資料沒有涵蓋到的村里
+            const officialAreaMap = villageIndex.get(currentSelected.city);
+            const officialList = (officialAreaMap && officialAreaMap.get(currentSelected.area)) || [];
+            officialList.forEach(v => addVillageItem(v.name));
+
+            if (!hasVill) villContainer.innerHTML = '<div style="padding: 10px; color: #aaa; text-align: center;">(無村里資料)</div>';
+            if (!hasStr) strContainer.innerHTML = '<div style="padding: 10px; color: #aaa; text-align: center;">(無街路資料)</div>';
+        }
+
+        // 村里、街路各自獨立選取，可同時並存（例如：梅北村 + 中山路）。
+        // 再次點擊同一個已選項目 = 取消該項選取。
+        function activateRoad(name, kind, element) {
+            const containerId = kind === 'village' ? 'villageList' : 'streetList';
+            const currentValue = kind === 'village' ? currentSelected.village : currentSelected.road;
+            const isDeselect = currentValue === name;
+
+            document.querySelectorAll(`#${containerId} .list-item`).forEach(el => el.classList.remove('selected'));
+
+            if (isDeselect) {
+                if (kind === 'village') currentSelected.village = '';
+                else currentSelected.road = '';
+            } else {
+                if (element) element.classList.add('selected');
+                if (kind === 'village') currentSelected.village = name;
+                else currentSelected.road = name;
+            }
+
+            document.getElementById('addrNo').focus();
+            calculateExactZip();
+        }
+
+        function clearSelection(containerId, activeElement) {
+            document.querySelectorAll(`#${containerId} .list-item`).forEach(el => el.classList.remove('selected'));
+            if (activeElement) activeElement.classList.add('selected');
+        }
+
+        // 清單快速過濾
+        function filterList(listId, keyword) {
+            const kw = normalize(keyword.trim());
+            const items = document.querySelectorAll(`#${listId} .list-item`);
+            items.forEach(item => {
+                item.style.display = normalize(item.textContent).includes(kw) ? 'block' : 'none';
+            });
+        }
+
+        // --- 智慧關鍵字快搜 (加上 Debounce，避免手機打字卡頓) ---
+        function doSmartFuzzySearch() {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(runSmartFuzzySearch, 150);
+        }
+
+        function runSmartFuzzySearch() {
+            const rawInput = document.getElementById('fuzzyInput').value.trim();
+            const resultBox = document.getElementById('quickResultList');
+            resultBox.innerHTML = '';
+
+            if (!rawInput) { resultBox.style.display = 'none'; return; }
+
+            const keywords = normalize(rawInput).split(/\s+/).filter(k => k);
+            const matches = uniqueStreets.filter(s => {
+                const fullStr = normalize(s.city + s.area + s.road);
+                return keywords.every(k => fullStr.includes(k));
+            }).slice(0, 50);
+
+            if (matches.length > 0) {
+                matches.forEach(s => {
+                    const div = document.createElement('div');
+                    div.className = 'quick-item';
+                    div.textContent = `${s.city} ${s.area} ${s.road}`;
+                    div.onclick = () => {
+                        applySearchResult(s.city, s.area, s.road);
+                        document.getElementById('fuzzyInput').value = '';
+                        resultBox.style.display = 'none';
+                    };
+                    resultBox.appendChild(div);
+                });
+                resultBox.style.display = 'block';
+            } else {
+                resultBox.style.display = 'none';
+            }
+        }
+
+        function applySearchResult(city, area, road) {
+            selectCity(city, null);
+            selectArea(area, null);
+
+            Array.from(document.querySelectorAll('#cityList .list-item')).find(el => el.textContent === city)?.classList.add('selected');
+            Array.from(document.querySelectorAll('#areaList .list-item')).find(el => el.textContent === area)?.classList.add('selected');
+
+            const isVill = road.endsWith('村') || road.endsWith('里');
+            const listId = isVill ? 'villageList' : 'streetList';
+
+            setTimeout(() => {
+                const targetEl = Array.from(document.querySelectorAll(`#${listId} .list-item`)).find(el => el.textContent === road);
+                activateRoad(road, isVill ? 'village' : 'street', targetEl);
+                if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 50);
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!document.getElementById('fuzzyInput').contains(e.target)) {
+                document.getElementById('quickResultList').style.display = 'none';
+            }
+        });
+
+        // --- 核心門牌比對與組裝 ---
+        function calculateExactZip() {
+            if (!currentSelected.city || !currentSelected.area) return;
+            if (!currentSelected.village && !currentSelected.road) return; // 村里、街路至少要選一項
+
+            const lane = parseInt(document.getElementById('addrLane').value) || 0;
+            const alley = parseInt(document.getElementById('addrAlley').value) || 0;
+            const no = parseInt(document.getElementById('addrNo').value) || 0;
+            const sub = parseInt(document.getElementById('addrSub').value) || 0;
+            const floorRoom = document.getElementById('addrFloor').value.trim();
+
+            // 門牌字串：例如 100之3號2樓1082室（「之」為附號，「樓/室」純顯示用，不影響郵遞區號比對）
+            const noStr = no ? `${no}${sub ? '之' + sub : ''}號${floorRoom}` : '';
+            const fullAddr = `${currentSelected.city}${currentSelected.area}${currentSelected.village}${currentSelected.road}${lane ? lane + '巷' : ''}${alley ? alley + '弄' : ''}${noStr}`;
+
+            // 台灣地址常見「村里+街路」合併記錄方式（例如：梅北村中山路），
+            // 依序嘗試：① 村里+街路合併字串 ② 純街路 ③ 純村里，找到第一個有資料的候選即採用
+            const candidates = [];
+            if (currentSelected.village && currentSelected.road) candidates.push(currentSelected.village + currentSelected.road);
+            if (currentSelected.road) candidates.push(currentSelected.road);
+            if (currentSelected.village) candidates.push(currentSelected.village);
+
+            let rows = [];
+            for (const cand of candidates) {
+                rows = zipData.filter(r => r.CITY === currentSelected.city && r.AREA === currentSelected.area && r.ROAD === cand);
+                if (rows.length > 0) break;
+            }
+
+            // rall1 道路資料查無以上任何候選組合（純戶政村里，無巷弄門牌細分）→ 改用 village.dbf 的 3 碼郵遞區號
+            if (rows.length === 0) {
+                if (currentSelected.village) {
+                    const staticZip = villageZipMap.get(`${currentSelected.city}|${currentSelected.area}|${currentSelected.village}`);
+                    if (staticZip) {
+                        document.getElementById('resZip').textContent = staticZip;
+                        document.getElementById('resAddr').textContent = fullAddr;
+                        document.getElementById('finalBlock').style.display = 'flex';
+                    }
+                }
+                return;
+            }
+
+            let bestMatch = null;
+
+            let level1 = rows.filter(r => (parseInt(r.LANE) || 0) === lane && (parseInt(r.ALLEY) || 0) === alley);
+            if (level1.length === 0) level1 = rows.filter(r => (parseInt(r.LANE) || 0) === 0 && (parseInt(r.ALLEY) || 0) === 0);
+
+            for (const r of level1) {
+                const bgn = parseInt(r.NO_BGN) || 0;
+                const end = parseInt(r.NO_END) || 0;
+                const even = parseInt(r.EVEN) || 0;
+
+                if (no > 0) {
+                    if (bgn > 0 && no < bgn) continue;
+                    if (end > 0 && no > end) continue;
+                    if (even === 1 && no % 2 === 0) continue;
+                    if (even === 2 && no % 2 !== 0) continue;
+                }
+                bestMatch = r;
+                break;
+            }
+
+            bestMatch = bestMatch || level1[0] || rows[0];
+
+            if (bestMatch) {
+                document.getElementById('resZip').textContent = bestMatch.ZIPCODE;
+                document.getElementById('resAddr').textContent = fullAddr;
+                document.getElementById('finalBlock').style.display = 'flex';
+            }
+        }
+
+        // --- 清空全部：回到初始狀態，重新開始查詢 ---
+        function clearAll() {
+            currentSelected = { city: '', area: '', village: '', road: '' };
+
+            document.getElementById('fuzzyInput').value = '';
+            document.getElementById('quickResultList').style.display = 'none';
+
+            document.getElementById('areaList').innerHTML = '';
+            document.getElementById('villageList').innerHTML = '';
+            document.getElementById('streetList').innerHTML = '';
+            document.querySelectorAll('#cityList .list-item').forEach(el => el.classList.remove('selected'));
+
+            document.getElementById('addrLane').value = '';
+            document.getElementById('addrAlley').value = '';
+            document.getElementById('addrNo').value = '';
+            document.getElementById('addrSub').value = '';
+            document.getElementById('addrFloor').value = '';
+
+            document.getElementById('finalBlock').style.display = 'none';
+            document.getElementById('fuzzyInput').focus();
+        }
+
+        // --- 複製結果 (改用 Clipboard API，失敗才退回舊方法) ---
+        function copyResult() {
+            const textToCopy = `${document.getElementById('resZip').textContent} ${document.getElementById('resAddr').textContent}`;
+
+            const fallbackCopy = () => {
+                const textArea = document.createElement('textarea');
+                textArea.value = textToCopy;
+                textArea.style.position = 'fixed';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.select();
+                try { document.execCommand('copy'); } catch (e) {}
+                document.body.removeChild(textArea);
+                showToast('📋 複製成功：' + textToCopy);
+            };
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(textToCopy)
+                    .then(() => showToast('📋 複製成功：' + textToCopy))
+                    .catch(fallbackCopy);
+            } else {
+                fallbackCopy();
+            }
+        }
+
+        // --- 管理者專區：共用的 DBF 二進位解析器 (big5/ansi，VFP6.0 相容) ---
+        // 回傳所有有效記錄的原始欄位物件陣列，供不同用途 (道路/村里) 各自篩選使用
+        function parseDBFRecords(buffer) {
+            const view = new DataView(buffer);
+            const numRecords = view.getUint32(4, true);
+            const headerBytes = view.getUint16(8, true);
+
+            let offset = 32;
+            const fields = [];
+            while (view.getUint8(offset) !== 0x0D) {
+                let name = '';
+                for (let i = 0; i < 11; i++) {
+                    const charCode = view.getUint8(offset + i);
+                    if (charCode !== 0) name += String.fromCharCode(charCode);
+                }
+                fields.push({ name: name.trim().toUpperCase(), length: view.getUint8(offset + 16) });
+                offset += 32;
+            }
+
+            const decoder = new TextDecoder('big5');
+            const records = [];
+            offset = headerBytes;
+            let deletedCount = 0;
+
+            for (let i = 0; i < numRecords; i++) {
+                const deleteFlag = view.getUint8(offset); // 0x20=有效 0x2A=已刪除
+                offset++;
+
+                if (deleteFlag === 0x2A) {
+                    // 已刪除記錄：仍需跳過對應長度的欄位資料，但不寫入結果
+                    offset += fields.reduce((sum, f) => sum + f.length, 0);
+                    deletedCount++;
+                    continue;
+                }
+
+                const record = {};
+                for (let j = 0; j < fields.length; j++) {
+                    const field = fields[j];
+                    const fieldData = new Uint8Array(buffer, offset, field.length);
+                    record[field.name] = decoder.decode(fieldData).trim();
+                    offset += field.length;
+                }
+                records.push(record);
+            }
+            return { records, deletedCount };
+        }
+
+        // --- 管理者專區：載入 rall1.dbf (道路/巷弄門牌) 轉 JSON ---
+        function loadDBF(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            document.getElementById('sysStatus').innerHTML = `<span style="color:#0d6efd;">高速解析中...</span>`;
+
+            reader.onload = function(e) {
+                try {
+                    const { records, deletedCount } = parseDBFRecords(e.target.result);
+                    zipData = records.filter(r => r.CITY && r.ROAD);
+
+                    const deletedNote = deletedCount > 0 ? `，已自動過濾 ${deletedCount} 筆刪除記錄` : '';
+                    dataStatus.road = 'ok';
+                    refreshStatusBar();
+                    document.getElementById('sysStatus').innerHTML += `（轉換成功${deletedNote}，請點擊匯出 rall1.json）`;
+                    document.getElementById('exportBtn').style.display = 'block';
+                    document.getElementById('fuzzyInput').disabled = false;
+                    buildIndexes();
+                    if (currentSelected.city && currentSelected.area) renderRoadLists();
+                } catch (error) {
+                    document.getElementById('sysStatus').innerHTML = `<span style="color:red;">🔴 檔案錯誤：${error.message}</span>`;
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // --- 管理者專區：載入 village.dbf (戶政村里清單) 轉 JSON ---
+        function loadVillageDBF(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            document.getElementById('sysStatus').innerHTML = `<span style="color:#0d6efd;">村里資料解析中...</span>`;
+
+            reader.onload = function(e) {
+                try {
+                    const { records } = parseDBFRecords(e.target.result);
+
+                    // village.dbf 常含大量同義字/異體字別名列，這裡只保留每個 城市+區域+里名 的第一筆，精簡輸出
+                    const seen = new Set();
+                    villageRawData = [];
+                    for (const r of records) {
+                        if (!r.CITY || !r.AREA || !r.VILLAGE1) continue;
+                        const key = `${r.CITY}|${r.AREA}|${r.VILLAGE1}`;
+                        if (seen.has(key)) continue;
+                        seen.add(key);
+                        villageRawData.push({ CITY: r.CITY, AREA: r.AREA, VILLAGE1: r.VILLAGE1, ZIPCODE: r.ZIPCODE });
+                    }
+
+                    buildVillageIndex();
+                    dataStatus.village = 'ok';
+                    refreshStatusBar();
+                    document.getElementById('sysStatus').innerHTML += `（村里轉換成功，共 ${villageRawData.length} 筆，請點擊匯出 rvillage.json）`;
+                    document.getElementById('villExportBtn').style.display = 'block';
+                    if (currentSelected.city && currentSelected.area) renderRoadLists();
+                } catch (error) {
+                    document.getElementById('sysStatus').innerHTML = `<span style="color:red;">🔴 村里檔案錯誤：${error.message}</span>`;
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // 匯出成 <script> 可直接載入的格式（瞞天過海寫法），同時相容 http(s):// 與 file://
+        function downloadZipJSON() {
+            const jsContent = 'var RALL1_DATA = ' + JSON.stringify(zipData) + ';';
+            const blob = new Blob([jsContent], { type: 'application/javascript;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'rall1.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function downloadVillageJSON() {
+            const jsContent = 'var RVILLAGE_DATA = ' + JSON.stringify(villageRawData) + ';';
+            const blob = new Blob([jsContent], { type: 'application/javascript;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'rvillage.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
