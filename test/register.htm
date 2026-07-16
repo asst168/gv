@@ -165,7 +165,7 @@ const BIZ_CONFIG = {
     title: "請款單客戶綁定",
     sub: "請確認資料後送出，日後請款通知將透過 LINE 發送給您。",
     codeLabel: "客戶代號",
-    apiEndpoint: "https://asst168.github.io/gv/test/register.htm"
+    apiEndpoint: "https://mini.tail0fcdc2.ts.net/liff-api/register"
   },
   yxg: {
     liffId: "REPLACE_WITH_YXG_LIFF_ID",     // 梅山玉虛宮 LIFF ID
@@ -173,7 +173,7 @@ const BIZ_CONFIG = {
     title: "信眾會員綁定",
     sub: "請確認資料後送出，日後各式請柬將透過 LINE 通知您。",
     codeLabel: "信眾代號",
-    apiEndpoint: "https://asst168.github.io/gv/test/register.htm"
+    apiEndpoint: "https://mini.tail0fcdc2.ts.net/liff-api/register"
   },
   zfh: {
     liffId: "REPLACE_WITH_ZFH_LIFF_ID",     // 照服工會繳費通知 LIFF ID
@@ -181,11 +181,31 @@ const BIZ_CONFIG = {
     title: "繳費通知綁定",
     sub: "請確認資料後送出，日後繳費通知將透過 LINE 發送給您。",
     codeLabel: "會員代號",
-    apiEndpoint: "https://asst168.github.io/gv/test/register.htm"
+    apiEndpoint: "https://mini.tail0fcdc2.ts.net/liff-api/register"
   }
 };
 
-const qs = new URLSearchParams(location.search);
+/* ------------------------------------------------------------
+   取得有效的查詢參數。
+   正常情況下 biz/code 會直接出現在網址上；
+   但若使用者是透過需要完整登入流程開啟（例如相機掃 QR code），
+   LINE 會先把原始參數包進 liff.state 暫存，
+   要等 liff.init() 跑完才會自動復原成乾淨網址。
+   這裡先手動解開 liff.state，避免在 liff.init() 之前就誤判參數不存在。
+   ------------------------------------------------------------ */
+function getEffectiveParams(){
+  const rawParams = new URLSearchParams(location.search);
+  if(rawParams.has("liff.state")){
+    let stateVal = rawParams.get("liff.state");
+    if(stateVal.startsWith("?")){
+      stateVal = stateVal.slice(1);
+    }
+    return new URLSearchParams(stateVal);
+  }
+  return rawParams;
+}
+
+const qs = getEffectiveParams();
 const biz = qs.get("biz");
 const presetCode = qs.get("code");
 
