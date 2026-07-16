@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>會員綁定</title>
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  :root{
+    --bg:#13110F;
+    --gold:#D4A843;
+    --gold-dim:#8a7333;
+    --panel:rgba(255,255,255,0.04);
+    --border:rgba(212,168,67,0.35);
+    --text:#EDE6D6;
+    --danger:#c0524a;
+    --ok:#5a9a6a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Microsoft JhengHei","PingFang TC",sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .card{
+    width:100%;
+    max-width:420px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:28px 24px;
+    backdrop-filter:blur(6px);
+    text-align:center;
+  }
+  .biz-badge{
+    display:inline-block;
+    font-size:13px;
+    color:var(--gold);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:4px 14px;
+    margin-bottom:14px;
+    letter-spacing:1px;
+  }
+  h1{
+    font-size:20px;
+    margin:0 0 6px;
+    color:var(--gold);
+  }
+  p.sub{
+    font-size:13px;
+    color:#b9b0a0;
+    margin:0 0 22px;
+  }
+  .field{
+    text-align:left;
+    margin-bottom:16px;
+  }
+  .field label{
+    display:block;
+    font-size:12px;
+    color:#b9b0a0;
+    margin-bottom:6px;
+  }
+  .field input{
+    width:100%;
+    padding:10px 12px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:rgba(0,0,0,0.25);
+    color:var(--text);
+    font-size:15px;
+  }
+  .field input[readonly]{
+    color:var(--gold);
+    background:rgba(212,168,67,0.08);
+  }
+  .profile{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:rgba(0,0,0,0.2);
+    border-radius:10px;
+    padding:10px 12px;
+    margin-bottom:18px;
+  }
+  .profile img{
+    width:44px;height:44px;border-radius:50%;
+  }
+  .profile .name{font-size:14px;color:var(--text);}
+  .profile .uid{font-size:11px;color:#8a8578;word-break:break-all;}
+  button#submitBtn{
+    width:100%;
+    padding:13px;
+    border:none;
+    border-radius:10px;
+    background:var(--gold);
+    color:#1a1710;
+    font-size:15px;
+    font-weight:bold;
+    cursor:pointer;
+    letter-spacing:1px;
+  }
+  button#submitBtn:disabled{
+    background:var(--gold-dim);
+    cursor:not-allowed;
+  }
+  .status{
+    margin-top:16px;
+    font-size:13px;
+    min-height:18px;
+  }
+  .status.ok{color:var(--ok);}
+  .status.err{color:var(--danger);}
+  .footer-note{
+    margin-top:20px;
+    font-size:11px;
+    color:#6b6558;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="biz-badge" id="bizBadge">載入中…</div>
+  <h1 id="titleText">會員身分綁定</h1>
+  <p class="sub" id="subText">請確認以下資訊並送出，完成綁定後即可透過 LINE 接收通知。</p>
+
+  <div class="profile" id="profileBox" style="display:none;">
+    <img id="profileAvatar" src="" alt="">
+    <div>
+      <div class="name" id="profileName"></div>
+      <div class="uid" id="profileUid"></div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label id="codeLabel">綁定代號</label>
+    <input type="text" id="codeInput" inputmode="text" placeholder="請輸入客戶/信眾代號" autocomplete="off">
+  </div>
+
+  <button id="submitBtn" disabled>載入中…</button>
+  <div class="status" id="statusMsg"></div>
+
+  <div class="footer-note">
+    <span id="bizFooter"></span>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   設定區：兩個業務線各自的 LIFF ID 與顯示文字
+   （biz 參數決定要 init 哪一個 LIFF Channel）
+   ============================================================ */
+const BIZ_CONFIG = {
+  jxc: {
+    liffId: "2008956794-cft16qHd",     // 進銷存 LIFF ID
+    label: "進銷存客戶",
+    title: "請款單客戶綁定",
+    sub: "請確認資料後送出，日後請款通知將透過 LINE 發送給您。",
+    codeLabel: "客戶代號",
+    apiEndpoint: "https://mini.tail0fcdc2.ts.net/liff-api/register"
+  },
+  yxg: {
+    liffId: "REPLACE_WITH_YXG_LIFF_ID",     // 梅山玉虛宮 LIFF ID
+    label: "梅山玉虛宮信眾",
+    title: "信眾會員綁定",
+    sub: "請確認資料後送出，日後各式請柬將透過 LINE 通知您。",
+    codeLabel: "信眾代號",
+    apiEndpoint: "https://mini.tail0fcdc2.ts.net/liff-api/register"
+  },
+  zfh: {
+    liffId: "REPLACE_WITH_ZFH_LIFF_ID",     // 照服工會繳費通知 LIFF ID
+    label: "照服工會會員",
+    title: "繳費通知綁定",
+    sub: "請確認資料後送出，日後繳費通知將透過 LINE 發送給您。",
+    codeLabel: "會員代號",
+    apiEndpoint: "https://mini.tail0fcdc2.ts.net/liff-api/register"
+  }
+};
+
+const qs = new URLSearchParams(location.search);
+const biz = qs.get("biz");
+const presetCode = qs.get("code");
+
+const bizBadge   = document.getElementById("bizBadge");
+const titleText  = document.getElementById("titleText");
+const subText    = document.getElementById("subText");
+const codeLabel  = document.getElementById("codeLabel");
+const codeInput  = document.getElementById("codeInput");
+const submitBtn  = document.getElementById("submitBtn");
+const statusMsg  = document.getElementById("statusMsg");
+const profileBox = document.getElementById("profileBox");
+const bizFooter  = document.getElementById("bizFooter");
+
+let userProfile = null;
+let cfg = null;
+
+function showStatus(text, type){
+  statusMsg.textContent = text;
+  statusMsg.className = "status " + (type || "");
+}
+
+function initUi(){
+  cfg = BIZ_CONFIG[biz];
+  if(!cfg){
+    bizBadge.textContent = "設定錯誤";
+    titleText.textContent = "連結參數不正確";
+    subText.textContent = "請確認連結是否包含正確的 biz 參數（jxc、yxg 或 zfh）。";
+    submitBtn.style.display = "none";
+    return null;
+  }
+  bizBadge.textContent = cfg.label;
+  titleText.textContent = cfg.title;
+  subText.textContent = cfg.sub;
+  codeLabel.textContent = cfg.codeLabel;
+  bizFooter.textContent = "系統識別：" + biz;
+
+  if(presetCode){
+    codeInput.value = presetCode;
+    codeInput.readOnly = true;
+  }
+  return cfg;
+}
+
+async function boot(){
+  const c = initUi();
+  if(!c) return;
+
+  try{
+    await liff.init({ liffId: c.liffId });
+
+    if(!liff.isLoggedIn()){
+      liff.login({ redirectUri: location.href });
+      return;
+    }
+
+    userProfile = await liff.getProfile();
+
+    document.getElementById("profileAvatar").src = userProfile.pictureUrl || "";
+    document.getElementById("profileName").textContent = userProfile.displayName || "";
+    document.getElementById("profileUid").textContent = "";
+    profileBox.style.display = "flex";
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = "確認送出綁定";
+    showStatus("", "");
+  }catch(err){
+    console.error(err);
+    showStatus("初始化失敗，請確認此頁面是否在 LINE App 內開啟。", "err");
+    submitBtn.textContent = "無法使用";
+  }
+}
+
+submitBtn.addEventListener("click", async () => {
+  const code = codeInput.value.trim();
+  if(!code){
+    showStatus("請輸入代號後再送出。", "err");
+    return;
+  }
+  if(!userProfile){
+    showStatus("尚未取得 LINE 個人資料，請重新整理頁面。", "err");
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "送出中…";
+  showStatus("", "");
+
+  const payload = {
+    biz: biz,
+    code: code,
+    userId: userProfile.userId,
+    displayName: userProfile.displayName || "",
+    pictureUrl: userProfile.pictureUrl || "",
+    ts: new Date().toISOString()
+  };
+
+  try{
+    const res = await fetch(cfg.apiEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if(res.ok && data.ok){
+      showStatus("綁定成功！您可以關閉此頁面。", "ok");
+      submitBtn.textContent = "已完成綁定";
+    }else{
+      throw new Error(data.message || "伺服器回應錯誤");
+    }
+  }catch(err){
+    console.error(err);
+    showStatus("送出失敗：" + err.message, "err");
+    submitBtn.disabled = false;
+    submitBtn.textContent = "重新送出";
+  }
+});
+
+boot();
+</script>
+</body>
+</html>
