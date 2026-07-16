@@ -249,19 +249,40 @@ function initUi(){
   return cfg;
 }
 
+/* ------------------------------------------------------------
+   逾時保護：避免網路不穩時，liff.init()/getProfile() 一直不回應，
+   導致畫面永遠卡在「載入中…」卻沒有任何提示。
+   ------------------------------------------------------------ */
+function withTimeout(promise, ms, timeoutMessage){
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(timeoutMessage || "操作逾時")), ms);
+    })
+  ]);
+}
+
 async function boot(){
   const c = initUi();
   if(!c) return;
 
   try{
-    await liff.init({ liffId: c.liffId });
+    await withTimeout(
+      liff.init({ liffId: c.liffId }),
+      15000,
+      "初始化逾時，請確認網路連線後重新整理頁面"
+    );
 
     if(!liff.isLoggedIn()){
       liff.login({ redirectUri: location.href });
       return;
     }
 
-    userProfile = await liff.getProfile();
+    userProfile = await withTimeout(
+      liff.getProfile(),
+      15000,
+      "取得個人資料逾時，請確認網路連線後重新整理頁面"
+    );
 
     document.getElementById("profileAvatar").src = userProfile.pictureUrl || "";
     document.getElementById("profileName").textContent = userProfile.displayName || "";
@@ -273,8 +294,8 @@ async function boot(){
     showStatus("", "");
   }catch(err){
     console.error(err);
-    showStatus("初始化失敗，請確認此頁面是否在 LINE App 內開啟。", "err");
-    submitBtn.textContent = "無法使用";
+    showStatus(err.message || "初始化失敗，請確認此頁面是否在 LINE App 內開啟，且網路連線正常。", "err");
+    submitBtn.textContent = "重新整理頁面再試一次";
   }
 }
 
