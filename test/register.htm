@@ -158,8 +158,6 @@
    設定區：兩個業務線各自的 LIFF ID 與顯示文字
    （biz 參數決定要 init 哪一個 LIFF Channel）
    ============================================================ */
-// 「系統服務」官方帳號 LINE ID（回報綁定文字最終送達這裡）
-const SYSTEM_OA_ID = "@768srubj";
 
 const BIZ_CONFIG = {
   jxc: {
@@ -289,7 +287,8 @@ async function boot(){
   }
 }
 
-submitBtn.addEventListener("click", () => {
+// 這裡加上 async
+submitBtn.addEventListener("click", async () => {
   const code = codeInput.value.trim();
   if(!code){
     showStatus("請輸入代號後再送出。", "err");
@@ -300,36 +299,50 @@ submitBtn.addEventListener("click", () => {
     return;
   }
 
-  // 回報內容：純文字給大俠自己看，之後手動存入客戶/信眾/會員資料
-  // 不走 Webhook 自動化，人工在 LINE Official Account Manager 聊天室裡讀取即可
-  //const reportText = "代號: " + code + "Lineid: " + userProfile.userId;
-  const reportText = `代號：${code}\nLine_id：${userProfile.userId}`;
-
-  // 組出 LINE 官方 oaMessage 連結：開啟「系統服務」OA 聊天室並帶入預填文字
-  const oaUrl = "https://line.me/R/oaMessage/"
-              + encodeURIComponent(SYSTEM_OA_ID)
-              + "/?" + encodeURIComponent(reportText);
-
-  showStatus("即將開啟「系統服務」聊天室，請在該視窗按下「送出」完成回報。", "ok");
-  submitBtn.textContent = "已開啟，請於聊天室送出";
+  // 按下按鈕後先進入防呆狀態，避免連點
   submitBtn.disabled = true;
+  submitBtn.textContent = "傳送中...";
+  showStatus("", "");
 
-  try{
-    if(typeof liff !== "undefined" && liff.openWindow){
-      liff.openWindow({ url: oaUrl, external: false });
-    }else{
-      location.href = oaUrl;
-    }
-  }catch(err){
-    console.error(err);
-    location.href = oaUrl;
-  }
+  // 組合大俠要看的純文字內容
+  const reportText = [
+    "=== 會員手動存檔 ===",
+    `顯示暱稱：${userProfile.displayName}`,
+    `會員代號：${code}`,
+    `ＬＩＮＥ：${userProfile.userId}` 
+  ].join("\n");
 
-  // 給使用者留一點時間看到提示，再嘗試關閉 LIFF 視窗（若環境支援）
-  setTimeout(() => {
+  // 檢查目前環境並發送訊息
+  if (liff.isInClient()) {
+    liff.sendMessages([
+      {
+        type: 'text',
+        text: reportText
+      }
+    ])
+    .then(() => {
+      console.log('訊息發送成功！');
+      showStatus("訊息發送成功！視窗即將關閉。", "ok");
+      
+      // 延遲 1.5 秒讓使用者看到成功訊息後自動關閉 LIFF 視窗
+      setTimeout(() => {
+        liff.closeWindow(); 
+      }, 1500);
+    })
+    .catch((error) => {
+      console.error('發送失敗，請檢查 chat_message.write 權限：', error);
+      showStatus('訊息發送失敗，請檢查權限或稍後再試！', "err");
+      
+      // 發送失敗時，恢復按鈕狀態讓使用者可以重試
+      submitBtn.disabled = false;
+      submitBtn.textContent = "回報綁定";
+    });
+  } else {
+    // 萬一用戶用外部瀏覽器開啟的防呆處理
+    showStatus('請在 LINE 軟體內開啟此連結才能自動發送訊息！', "err");
     submitBtn.disabled = false;
-    submitBtn.textContent = "重新開啟聊天室";
-  }, 4000);
+    submitBtn.textContent = "回報綁定";
+  }
 });
 
 boot();
