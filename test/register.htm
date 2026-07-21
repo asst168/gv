@@ -248,14 +248,25 @@ async function boot(){
   const c = initUi();
   if(!c) return;
 
+  // 逾時保護：若 8 秒內流程還沒跑完，提示使用者並允許重試
+  let settled = false;
+  const timeoutId = setTimeout(() => {
+    if(!settled){
+      showStatus("目前網路回應較慢，仍在嘗試連線…如持續無反應，請檢查網路訊號後重新整理頁面。", "err");
+    }
+  }, 8000);
+
   try{
+    showStatus("正在初始化 LIFF…", "");
     await liff.init({ liffId: c.liffId });
 
     if(!liff.isLoggedIn()){
+      showStatus("正在導向 LINE 登入…", "");
       liff.login({ redirectUri: location.href });
       return;
     }
 
+    showStatus("正在讀取個人資料…", "");
     userProfile = await liff.getProfile();
 
     document.getElementById("profileAvatar").src = userProfile.pictureUrl || "";
@@ -263,10 +274,14 @@ async function boot(){
     document.getElementById("profileUid").textContent = "";
     profileBox.style.display = "flex";
 
+    settled = true;
+    clearTimeout(timeoutId);
     submitBtn.disabled = false;
     submitBtn.textContent = "回報綁定";
     showStatus("", "");
   }catch(err){
+    settled = true;
+    clearTimeout(timeoutId);
     console.error(err);
     const detail = (err && (err.code || err.message)) ? (err.code + " " + err.message) : String(err);
     showStatus("初始化失敗：" + detail, "err");
@@ -285,8 +300,9 @@ submitBtn.addEventListener("click", () => {
     return;
   }
 
-  // 回報內容：代號 + LINE ID 相連（no+line id），系統服務端以此文字檔匯入資料庫
-  const reportText = code + userProfile.userId;
+  // 回報內容：純文字給大俠自己看，之後手動存入客戶/信眾/會員資料
+  // 不走 Webhook 自動化，人工在 LINE Official Account Manager 聊天室裡讀取即可
+  const reportText = "代號: " + code + " lineid: " + userProfile.userId;
 
   // 組出 LINE 官方 oaMessage 連結：開啟「系統服務」OA 聊天室並帶入預填文字
   const oaUrl = "https://line.me/R/oaMessage/"
