@@ -130,7 +130,7 @@
 <div class="card">
   <div class="biz-badge" id="bizBadge">載入中…</div>
   <h1 id="titleText">會員身分綁定</h1>
-  <p class="sub" id="subText">請確認以下資訊並送出，完成綁定後即可透過 LINE 接收通知。</p>
+  <p class="sub" id="subText">請確認以下資訊並點擊下方按鈕，完成綁定後即可透過 LINE 接收通知。</p>
 
   <div class="profile" id="profileBox" style="display:none;">
     <img id="profileAvatar" src="" alt="">
@@ -155,10 +155,8 @@
 
 <script>
 /* ============================================================
-   設定區：兩個業務線各自的 LIFF ID 與顯示文字
-   （biz 參數決定要 init 哪一個 LIFF Channel）
+   設定區：業務線各自的 LIFF ID 與顯示文字
    ============================================================ */
-// 「系統服務」官方帳號 LINE ID（回報綁定文字最終送達這裡）
 const SYSTEM_OA_ID = "@768srubj";
 
 const BIZ_CONFIG = {
@@ -166,21 +164,21 @@ const BIZ_CONFIG = {
     liffId: "2008956794-cft16qHd",     // 進銷存 LIFF ID
     label: "進銷存客戶",
     title: "請款單客戶綁定",
-    sub: "請確認資料後點擊「回報綁定」，日後請款通知將透過 LINE 發送給您。",
+    sub: "請確認資料後點擊【回報綁定】，日後請款通知將透過 LINE 發送給您。",
     codeLabel: "客戶代號"
   },
   yxg: {
     liffId: "REPLACE_WITH_YXG_LIFF_ID",     // 梅山玉虛宮 LIFF ID
     label: "梅山玉虛宮信眾",
     title: "信眾會員綁定",
-    sub: "請確認資料後點擊「回報綁定」，日後各式請柬將透過 LINE 通知您。",
+    sub: "請確認資料後點擊【回報綁定】，日後各式請柬將透過 LINE 通知您。",
     codeLabel: "信眾代號"
   },
   zfh: {
     liffId: "REPLACE_WITH_ZFH_LIFF_ID",     // 照服工會繳費通知 LIFF ID
     label: "照服工會會員",
     title: "繳費通知綁定",
-    sub: "請確認資料後點擊「回報綁定」，日後繳費通知將透過 LINE 發送給您。",
+    sub: "請確認資料後點擊【回報綁定】，日後繳費通知將透過 LINE 發送給您。",
     codeLabel: "會員代號"
   }
 };
@@ -189,8 +187,6 @@ const qs = new URLSearchParams(location.search);
 let biz = qs.get("biz");
 let presetCode = qs.get("code");
 
-// LINE 登入重新導向（liff.login）過程中，網址參數有時會遺失
-// 進頁面第一時間先把參數存起來，登入導回後若網址參數不見了，就從這裡撈回來
 const PARAM_CACHE_KEY = "liffRegisterParams";
 if(biz){
   try{ sessionStorage.setItem(PARAM_CACHE_KEY, JSON.stringify({ biz, code: presetCode })); }catch(e){}
@@ -227,7 +223,7 @@ function initUi(){
   if(!cfg){
     bizBadge.textContent = "設定錯誤";
     titleText.textContent = "連結參數不正確";
-    subText.textContent = "請確認連結是否包含正確的 biz 參數（jxc、yxg 或 zfh）。";
+    subText.textContent = "請確認連結是否包含正確的 biz 參數（例如 ?biz=jxc）。";
     submitBtn.style.display = "none";
     return null;
   }
@@ -248,11 +244,10 @@ async function boot(){
   const c = initUi();
   if(!c) return;
 
-  // 逾時保護：若 8 秒內流程還沒跑完，提示使用者並允許重試
   let settled = false;
   const timeoutId = setTimeout(() => {
     if(!settled){
-      showStatus("目前網路回應較慢，仍在嘗試連線…如持續無反應，請檢查網路訊號後重新整理頁面。", "err");
+      showStatus("目前網路回應較慢，請檢查網路連線或重新整理頁面。", "err");
     }
   }, 8000);
 
@@ -289,6 +284,7 @@ async function boot(){
   }
 }
 
+// 採用 100% 穩定的原版跳轉機制 (oaMessage)
 submitBtn.addEventListener("click", () => {
   const code = codeInput.value.trim();
   if(!code){
@@ -300,17 +296,14 @@ submitBtn.addEventListener("click", () => {
     return;
   }
 
-  // 回報內容：純文字給大俠自己看，之後手動存入客戶/信眾/會員資料
-  // 不走 Webhook 自動化，人工在 LINE Official Account Manager 聊天室裡讀取即可
-  //const reportText = "代號: " + code + "Lineid: " + userProfile.userId;
   const reportText = `代號：${code}\nLine_id：${userProfile.userId}`;
 
-  // 組出 LINE 官方 oaMessage 連結：開啟「系統服務」OA 聊天室並帶入預填文字
+  // 組出 LINE 官方 oaMessage 連結：開啟 OA 聊天室並帶入預填文字
   const oaUrl = "https://line.me/R/oaMessage/"
               + encodeURIComponent(SYSTEM_OA_ID)
               + "/?" + encodeURIComponent(reportText);
 
-  showStatus("即將開啟「系統服務」聊天室，請在該視窗按下「送出」完成回報。", "ok");
+  showStatus("即將開啟聊天室，請在該視窗按下「送出」完成回報。", "ok");
   submitBtn.textContent = "已開啟，請於聊天室送出";
   submitBtn.disabled = true;
 
@@ -325,7 +318,6 @@ submitBtn.addEventListener("click", () => {
     location.href = oaUrl;
   }
 
-  // 給使用者留一點時間看到提示，再嘗試關閉 LIFF 視窗（若環境支援）
   setTimeout(() => {
     submitBtn.disabled = false;
     submitBtn.textContent = "重新開啟聊天室";
