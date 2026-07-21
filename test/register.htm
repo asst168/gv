@@ -296,7 +296,7 @@ submitBtn.addEventListener("click", () => {
     return;
   }
 
-  const reportText = `代號：${code}\nLine_id：${userProfile.userId}`;
+  const reportText = `名稱：${userProfile.displayName}\n代號：${code}\n識別：${userProfile.userId}`;
 
   // 組出 LINE 官方 oaMessage 連結：開啟 OA 聊天室並帶入預填文字
   const oaUrl = "https://line.me/R/oaMessage/"
