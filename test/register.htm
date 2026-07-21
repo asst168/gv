@@ -186,8 +186,23 @@ const BIZ_CONFIG = {
 };
 
 const qs = new URLSearchParams(location.search);
-const biz = qs.get("biz");
-const presetCode = qs.get("code");
+let biz = qs.get("biz");
+let presetCode = qs.get("code");
+
+// LINE 登入重新導向（liff.login）過程中，網址參數有時會遺失
+// 進頁面第一時間先把參數存起來，登入導回後若網址參數不見了，就從這裡撈回來
+const PARAM_CACHE_KEY = "liffRegisterParams";
+if(biz){
+  try{ sessionStorage.setItem(PARAM_CACHE_KEY, JSON.stringify({ biz, code: presetCode })); }catch(e){}
+}else{
+  try{
+    const saved = JSON.parse(sessionStorage.getItem(PARAM_CACHE_KEY) || "null");
+    if(saved && saved.biz){
+      biz = saved.biz;
+      presetCode = saved.code;
+    }
+  }catch(e){}
+}
 
 const bizBadge   = document.getElementById("bizBadge");
 const titleText  = document.getElementById("titleText");
@@ -253,7 +268,8 @@ async function boot(){
     showStatus("", "");
   }catch(err){
     console.error(err);
-    showStatus("初始化失敗，請確認此頁面是否在 LINE App 內開啟。", "err");
+    const detail = (err && (err.code || err.message)) ? (err.code + " " + err.message) : String(err);
+    showStatus("初始化失敗：" + detail, "err");
     submitBtn.textContent = "無法使用";
   }
 }
