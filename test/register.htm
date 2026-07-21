@@ -158,54 +158,34 @@
    設定區：兩個業務線各自的 LIFF ID 與顯示文字
    （biz 參數決定要 init 哪一個 LIFF Channel）
    ============================================================ */
+// 「系統服務」官方帳號 LINE ID（回報綁定文字最終送達這裡）
+const SYSTEM_OA_ID = "@768srubj";
+
 const BIZ_CONFIG = {
   jxc: {
     liffId: "2008956794-cft16qHd",     // 進銷存 LIFF ID
     label: "進銷存客戶",
     title: "請款單客戶綁定",
-    sub: "請確認資料後送出，日後請款通知將透過 LINE 發送給您。",
-    codeLabel: "客戶代號",
-    apiEndpoint: "https://mini.tail0fcdc2.ts.net:10000/liff-api/register"
+    sub: "請確認資料後點擊「回報綁定」，日後請款通知將透過 LINE 發送給您。",
+    codeLabel: "客戶代號"
   },
   yxg: {
     liffId: "REPLACE_WITH_YXG_LIFF_ID",     // 梅山玉虛宮 LIFF ID
     label: "梅山玉虛宮信眾",
     title: "信眾會員綁定",
-    sub: "請確認資料後送出，日後各式請柬將透過 LINE 通知您。",
-    codeLabel: "信眾代號",
-    apiEndpoint: "https://mini.tail0fcdc2.ts.net:10000/liff-api/register"
+    sub: "請確認資料後點擊「回報綁定」，日後各式請柬將透過 LINE 通知您。",
+    codeLabel: "信眾代號"
   },
   zfh: {
     liffId: "REPLACE_WITH_ZFH_LIFF_ID",     // 照服工會繳費通知 LIFF ID
     label: "照服工會會員",
     title: "繳費通知綁定",
-    sub: "請確認資料後送出，日後繳費通知將透過 LINE 發送給您。",
-    codeLabel: "會員代號",
-    apiEndpoint: "https://mini.tail0fcdc2.ts.net:10000/liff-api/register"
+    sub: "請確認資料後點擊「回報綁定」，日後繳費通知將透過 LINE 發送給您。",
+    codeLabel: "會員代號"
   }
 };
 
-/* ------------------------------------------------------------
-   取得有效的查詢參數。
-   正常情況下 biz/code 會直接出現在網址上；
-   但若使用者是透過需要完整登入流程開啟（例如相機掃 QR code），
-   LINE 會先把原始參數包進 liff.state 暫存，
-   要等 liff.init() 跑完才會自動復原成乾淨網址。
-   這裡先手動解開 liff.state，避免在 liff.init() 之前就誤判參數不存在。
-   ------------------------------------------------------------ */
-function getEffectiveParams(){
-  const rawParams = new URLSearchParams(location.search);
-  if(rawParams.has("liff.state")){
-    let stateVal = rawParams.get("liff.state");
-    if(stateVal.startsWith("?")){
-      stateVal = stateVal.slice(1);
-    }
-    return new URLSearchParams(stateVal);
-  }
-  return rawParams;
-}
-
-const qs = getEffectiveParams();
+const qs = new URLSearchParams(location.search);
 const biz = qs.get("biz");
 const presetCode = qs.get("code");
 
@@ -249,40 +229,19 @@ function initUi(){
   return cfg;
 }
 
-/* ------------------------------------------------------------
-   逾時保護：避免網路不穩時，liff.init()/getProfile() 一直不回應，
-   導致畫面永遠卡在「載入中…」卻沒有任何提示。
-   ------------------------------------------------------------ */
-function withTimeout(promise, ms, timeoutMessage){
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => {
-      setTimeout(() => reject(new Error(timeoutMessage || "操作逾時")), ms);
-    })
-  ]);
-}
-
 async function boot(){
   const c = initUi();
   if(!c) return;
 
   try{
-    await withTimeout(
-      liff.init({ liffId: c.liffId }),
-      15000,
-      "初始化逾時，請確認網路連線後重新整理頁面"
-    );
+    await liff.init({ liffId: c.liffId });
 
     if(!liff.isLoggedIn()){
       liff.login({ redirectUri: location.href });
       return;
     }
 
-    userProfile = await withTimeout(
-      liff.getProfile(),
-      15000,
-      "取得個人資料逾時，請確認網路連線後重新整理頁面"
-    );
+    userProfile = await liff.getProfile();
 
     document.getElementById("profileAvatar").src = userProfile.pictureUrl || "";
     document.getElementById("profileName").textContent = userProfile.displayName || "";
@@ -290,16 +249,16 @@ async function boot(){
     profileBox.style.display = "flex";
 
     submitBtn.disabled = false;
-    submitBtn.textContent = "確認送出綁定";
+    submitBtn.textContent = "回報綁定";
     showStatus("", "");
   }catch(err){
     console.error(err);
-    showStatus(err.message || "初始化失敗，請確認此頁面是否在 LINE App 內開啟，且網路連線正常。", "err");
-    submitBtn.textContent = "重新整理頁面再試一次";
+    showStatus("初始化失敗，請確認此頁面是否在 LINE App 內開啟。", "err");
+    submitBtn.textContent = "無法使用";
   }
 }
 
-submitBtn.addEventListener("click", async () => {
+submitBtn.addEventListener("click", () => {
   const code = codeInput.value.trim();
   if(!code){
     showStatus("請輸入代號後再送出。", "err");
@@ -310,39 +269,34 @@ submitBtn.addEventListener("click", async () => {
     return;
   }
 
-  submitBtn.disabled = true;
-  submitBtn.textContent = "送出中…";
-  showStatus("", "");
+  // 回報內容：代號 + LINE ID 相連（no+line id），系統服務端以此文字檔匯入資料庫
+  const reportText = code + userProfile.userId;
 
-  const payload = {
-    biz: biz,
-    code: code,
-    userId: userProfile.userId,
-    displayName: userProfile.displayName || "",
-    pictureUrl: userProfile.pictureUrl || "",
-    ts: new Date().toISOString()
-  };
+  // 組出 LINE 官方 oaMessage 連結：開啟「系統服務」OA 聊天室並帶入預填文字
+  const oaUrl = "https://line.me/R/oaMessage/"
+              + encodeURIComponent(SYSTEM_OA_ID)
+              + "/?" + encodeURIComponent(reportText);
+
+  showStatus("即將開啟「系統服務」聊天室，請在該視窗按下「送出」完成回報。", "ok");
+  submitBtn.textContent = "已開啟，請於聊天室送出";
+  submitBtn.disabled = true;
 
   try{
-    const res = await fetch(cfg.apiEndpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-
-    if(res.ok && data.ok){
-      showStatus("綁定成功！您可以關閉此頁面。", "ok");
-      submitBtn.textContent = "已完成綁定";
+    if(typeof liff !== "undefined" && liff.openWindow){
+      liff.openWindow({ url: oaUrl, external: false });
     }else{
-      throw new Error(data.message || "伺服器回應錯誤");
+      location.href = oaUrl;
     }
   }catch(err){
     console.error(err);
-    showStatus("送出失敗：" + err.message, "err");
-    submitBtn.disabled = false;
-    submitBtn.textContent = "重新送出";
+    location.href = oaUrl;
   }
+
+  // 給使用者留一點時間看到提示，再嘗試關閉 LIFF 視窗（若環境支援）
+  setTimeout(() => {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "重新開啟聊天室";
+  }, 4000);
 });
 
 boot();
