@@ -303,7 +303,7 @@ submitBtn.addEventListener("click", () => {
   // 回報內容：純文字給大俠自己看，之後手動存入客戶/信眾/會員資料
   // 不走 Webhook 自動化，人工在 LINE Official Account Manager 聊天室裡讀取即可
   //const reportText = "代號: " + code + "Lineid: " + userProfile.userId;
-  const reportText = `代號：${code}\nLINE ID：${userProfile.userId}`;
+  const reportText = `代號：${code}\nLine_id：${userProfile.userId}`;
 
   // 組出 LINE 官方 oaMessage 連結：開啟「系統服務」OA 聊天室並帶入預填文字
   const oaUrl = "https://line.me/R/oaMessage/"
