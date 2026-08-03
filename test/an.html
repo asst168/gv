@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>安太歲登記表</title>
+  <style>
+    body {
+      font-family: "Microsoft JhengHei", sans-serif;
+      font-size: 1em;
+      line-height: 1.6;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    .form-container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    input[type="text"],
+    input[type="tel"],
+    input[type="email"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    input[type="submit"] {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      font-size: 1em;
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    input[type="submit"]:hover {
+      background-color: #004d99;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>安太歲登記表</h2>
+    <form action="mailto:your@email.com" method="post" enctype="text/plain">
+      <label for="name">姓名</label>
+      <input type="text" id="name" name="name" required>
+
+      <label for="birth">生辰（農曆）</label>
+      <input type="text" id="birth" name="birth" placeholder="例如：民國60年 正月初一">
+
+      <label for="address">住址</label>
+      <input type="text" id="address" name="address">
+
+      <label for="tel">電話</label>
+      <input type="tel" id="tel" name="tel">
+
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email">
+
+      <input type="submit" value="提交登記">
+    </form>
+  </div>
+</body>
+</html>
