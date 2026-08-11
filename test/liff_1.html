@@ -136,7 +136,7 @@
     margin-top:16px;
     font-size:13px;
     min-height:18px;
-    line-height:1.4;
+    line-line-height:1.4;
   }
   .status.ok{color:var(--ok);}
   .status.err{color:var(--danger);}
@@ -208,11 +208,26 @@ const BIZ_CONFIG = {
 };
 
 /* ============================================================
-   網址參數擷取與快取機制 (?biz=jxc&code=CUST001)
+   網址參數擷取與相容性解析（支援直接存取與 liff.state 包裹轉譯）
    ============================================================ */
-const qs = new URLSearchParams(location.search);
-let biz = qs.get("biz");
-let presetCode = qs.get("code");
+function getParams() {
+  const qs = new URLSearchParams(location.search);
+  let biz = qs.get("biz");
+  let code = qs.get("code");
+
+  // 若一般方式拿不到，嘗試從 liff.state 中解碼還原
+  if (!biz && qs.has("liff.state")) {
+    const liffState = qs.get("liff.state"); // 例如 "?biz=jxc&code=ABC008"
+    const stateParams = new URLSearchParams(liffState.startsWith('?') ? liffState : '?' + liffState);
+    biz = stateParams.get("biz");
+    code = stateParams.get("code");
+  }
+  return { biz, code };
+}
+
+const params = getParams();
+let biz = params.biz;
+let presetCode = params.code;
 
 const PARAM_CACHE_KEY = "liffRegisterParams";
 if(biz){
