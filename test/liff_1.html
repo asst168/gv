@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>會員身分綁定</title>
+<!-- 載入 LINE LIFF SDK -->
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  :root{
+    --bg:#13110F;
+    --gold:#D4A843;
+    --gold-dim:#8a7333;
+    --panel:rgba(255,255,255,0.04);
+    --border:rgba(212,168,67,0.35);
+    --text:#EDE6D6;
+    --danger:#c0524a;
+    --ok:#5a9a6a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Microsoft JhengHei","PingFang TC",sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .card{
+    width:100%;
+    max-width:420px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:28px 24px;
+    backdrop-filter:blur(6px);
+    text-align:center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .biz-badge{
+    display:inline-block;
+    font-size:13px;
+    color:var(--gold);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:4px 14px;
+    margin-bottom:14px;
+    letter-spacing:1px;
+  }
+  h1{
+    font-size:20px;
+    margin:0 0 6px;
+    color:var(--gold);
+  }
+  p.sub{
+    font-size:13px;
+    color:#b9b0a0;
+    margin:0 0 22px;
+    line-height:1.5;
+  }
+  .field{
+    text-align:left;
+    margin-bottom:16px;
+  }
+  .field label{
+    display:block;
+    font-size:12px;
+    color:#b9b0a0;
+    margin-bottom:6px;
+  }
+  .field input{
+    width:100%;
+    padding:10px 12px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:rgba(0,0,0,0.25);
+    color:var(--text);
+    font-size:15px;
+    outline:none;
+  }
+  .field input:focus{
+    border-color:var(--gold);
+  }
+  .field input[readonly]{
+    color:var(--gold);
+    background:rgba(212,168,67,0.08);
+  }
+  .profile{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:rgba(0,0,0,0.2);
+    border-radius:10px;
+    padding:10px 12px;
+    margin-bottom:18px;
+    text-align:left;
+  }
+  .profile img{
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    border:1px solid var(--border);
+  }
+  .profile .name{
+    font-size:15px;
+    font-weight:bold;
+    color:var(--text);
+  }
+  .profile .hint{
+    font-size:11px;
+    color:#8a8578;
+    margin-top:2px;
+  }
+  button#submitBtn{
+    width:100%;
+    padding:13px;
+    border:none;
+    border-radius:10px;
+    background:var(--gold);
+    color:#1a1710;
+    font-size:15px;
+    font-weight:bold;
+    cursor:pointer;
+    letter-spacing:1px;
+    transition:all 0.2s ease;
+  }
+  button#submitBtn:disabled{
+    background:var(--gold-dim);
+    color:#555;
+    cursor:not-allowed;
+  }
+  .status{
+    margin-top:16px;
+    font-size:13px;
+    min-height:18px;
+    line-height:1.4;
+  }
+  .status.ok{color:var(--ok);}
+  .status.err{color:var(--danger);}
+  .footer-note{
+    margin-top:20px;
+    font-size:11px;
+    color:#6b6558;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="biz-badge" id="bizBadge">載入中…</div>
+  <h1 id="titleText">會員身分綁定</h1>
+  <p class="sub" id="subText">請確認以下資訊並點擊下方按鈕，完成綁定後即可透過 LINE 接收通知。</p>
+
+  <!-- LINE 個人資料預覽 -->
+  <div class="profile" id="profileBox" style="display:none;">
+    <img id="profileAvatar" src="" alt="頭像">
+    <div>
+      <div class="name" id="profileName"></div>
+      <div class="hint">已驗證 LINE 帳號</div>
+    </div>
+  </div>
+
+  <!-- 代號輸入框 -->
+  <div class="field">
+    <label id="codeLabel">綁定代號</label>
+    <input type="text" id="codeInput" inputmode="text" placeholder="請輸入代號" autocomplete="off">
+  </div>
+
+  <button id="submitBtn" disabled>載入中…</button>
+  <div class="status" id="statusMsg"></div>
+
+  <div class="footer-note">
+    <span id="bizFooter"></span>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   系統設定區：LINE 官方帳號 ID 與各業務線 LIFF 設定
+   ============================================================ */
+const SYSTEM_OA_ID = "@768srubj"; // LINE 官方帳號 ID
+
+const BIZ_CONFIG = {
+  jxc: {
+    liffId: "2008956794-cft16qHd",            // 進銷存 LIFF ID
+    label: "進銷存客戶",
+    title: "請款單客戶綁定",
+    sub: "請確認資料後點擊【回報綁定】，日後請款通知將透過 LINE 發送給您。",
+    codeLabel: "客戶代號"
+  },
+  yxg: {
+    liffId: "REPLACE_WITH_YXG_LIFF_ID",     // 梅山玉虛宮 LIFF ID
+    label: "梅山玉虛宮信眾",
+    title: "信眾會員綁定",
+    sub: "請確認資料後點擊【回報綁定】，日後各式請柬將透過 LINE 通知您。",
+    codeLabel: "信眾代號"
+  },
+  zfh: {
+    liffId: "REPLACE_WITH_ZFH_LIFF_ID",     // 照服工會 LIFF ID
+    label: "照服工會會員",
+    title: "繳費通知綁定",
+    sub: "請確認資料後點擊【回報綁定】，日後繳費通知將透過 LINE 發送給您。",
+    codeLabel: "會員代號"
+  }
+};
+
+/* ============================================================
+   網址參數擷取與快取機制 (?biz=jxc&code=CUST001)
+   ============================================================ */
+const qs = new URLSearchParams(location.search);
+let biz = qs.get("biz");
+let presetCode = qs.get("code");
+
+const PARAM_CACHE_KEY = "liffRegisterParams";
+if(biz){
+  try{ sessionStorage.setItem(PARAM_CACHE_KEY, JSON.stringify({ biz, code: presetCode })); }catch(e){}
+}else{
+  try{
+    const saved = JSON.parse(sessionStorage.getItem(PARAM_CACHE_KEY) || "null");
+    if(saved && saved.biz){
+      biz = saved.biz;
+      presetCode = saved.code;
+    }
+  }catch(e){}
+}
+
+const bizBadge   = document.getElementById("bizBadge");
+const titleText  = document.getElementById("titleText");
+const subText    = document.getElementById("subText");
+const codeLabel  = document.getElementById("codeLabel");
+const codeInput  = document.getElementById("codeInput");
+const submitBtn  = document.getElementById("submitBtn");
+const statusMsg  = document.getElementById("statusMsg");
+const profileBox = document.getElementById("profileBox");
+const bizFooter  = document.getElementById("bizFooter");
+
+let userProfile = null;
+let cfg = null;
+
+function showStatus(text, type){
+  statusMsg.textContent = text;
+  statusMsg.className = "status " + (type || "");
+}
+
+// 初始化介面文字
+function initUi(){
+  cfg = BIZ_CONFIG[biz];
+  if(!cfg){
+    bizBadge.textContent = "設定錯誤";
+    titleText.textContent = "連結參數不正確";
+    subText.textContent = "請確認連結是否包含正確的 biz 參數（例如 ?biz=jxc）。";
+    submitBtn.style.display = "none";
+    return null;
+  }
+  bizBadge.textContent = cfg.label;
+  titleText.textContent = cfg.title;
+  subText.textContent = cfg.sub;
+  codeLabel.textContent = cfg.codeLabel;
+  bizFooter.textContent = "業務類別：" + biz.toUpperCase();
+
+  if(presetCode){
+    codeInput.value = presetCode;
+    codeInput.readOnly = true;
+  }
+  return cfg;
+}
+
+// 啟動 LIFF 初始化與取得 Profile
+async function boot(){
+  const c = initUi();
+  if(!c) return;
+
+  let settled = false;
+  const timeoutId = setTimeout(() => {
+    if(!settled){
+      showStatus("網路回應較慢，請檢查網路連線或重新整理頁面。", "err");
+    }
+  }, 8000);
+
+  try{
+    showStatus("正在開啟 LINE 驗證…", "");
+    await liff.init({ liffId: c.liffId });
+
+    if(!liff.isLoggedIn()){
+      showStatus("正在導向 LINE 登入…", "");
+      liff.login({ redirectUri: location.href });
+      return;
+    }
+
+    showStatus("正在讀取個人資料…", "");
+    userProfile = await liff.getProfile();
+
+    document.getElementById("profileAvatar").src = userProfile.pictureUrl || "https://static.line-scdn.net/liff/edge/2/img/default-avatar.png";
+    document.getElementById("profileName").textContent = userProfile.displayName || "LINE 用戶";
+    profileBox.style.display = "flex";
+
+    settled = true;
+    clearTimeout(timeoutId);
+    submitBtn.disabled = false;
+    submitBtn.textContent = "回報綁定";
+    showStatus("", "");
+  }catch(err){
+    settled = true;
+    clearTimeout(timeoutId);
+    console.error(err);
+    const detail = (err && (err.code || err.message)) ? (err.code + " " + err.message) : String(err);
+    showStatus("初始化失敗：" + detail, "err");
+    submitBtn.textContent = "無法使用";
+  }
+}
+
+/* ============================================================
+   回報按鈕事件：組出極易複製 LINE ID 的回報訊息
+   ============================================================ */
+submitBtn.addEventListener("click", () => {
+  const code = codeInput.value.trim();
+  if(!code){
+    showStatus("請輸入代號後再送出。", "err");
+    return;
+  }
+  if(!userProfile){
+    showStatus("尚未取得 LINE 個人資料，請重新整理頁面。", "err");
+    return;
+  }
+
+  // 💡 關鍵優化：把 LINE ID 獨立成最後一行，客服在 LINE 後台點兩下即可秒複製！
+  const reportText = `【綁定回報】\n`
+                   + `業務類別：${biz.toUpperCase()}\n`
+                   + `客戶代號：${code}\n`
+                   + `客戶名稱：${userProfile.displayName}\n`
+                   + `LINE_ID：\n`
+                   + `${userProfile.userId}`;
+
+  // 組出 LINE 官方 oaMessage 連結 (開啟 OA 聊天室並預填文字)
+  const oaUrl = "https://line.me/R/oaMessage/"
+              + encodeURIComponent(SYSTEM_OA_ID)
+              + "/?" + encodeURIComponent(reportText);
+
+  showStatus("即將開啟聊天室，請在該視窗按下「送出」完成回報。", "ok");
+  submitBtn.textContent = "已開啟，請於聊天室按下送出";
+  submitBtn.disabled = true;
+
+  try{
+    if(typeof liff !== "undefined" && liff.openWindow){
+      liff.openWindow({ url: oaUrl, external: false });
+    }else{
+      location.href = oaUrl;
+    }
+  }catch(err){
+    console.error(err);
+    location.href = oaUrl;
+  }
+
+  setTimeout(() => {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "重新開啟聊天室";
+  }, 4000);
+});
+
+boot();
+</script>
+</body>
+</html>
