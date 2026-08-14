@@ -10,27 +10,30 @@
   :root{
     --bg:#13110F;
     --gold:#D4A843;
+    --gold-light:#e8c06a;
     --gold-dim:#8a7333;
-    --gold-glow:rgba(212,168,67,0.18);
-    --panel:rgba(255,255,255,0.04);
-    --border:rgba(212,168,67,0.35);
+    --gold-glow:rgba(212,168,67,0.16);
+    --panel:rgba(255,255,255,0.035);
+    --border:rgba(212,168,67,0.28);
     --text:#EDE6D6;
-    --muted:#b9b0a0;
-    --faint:#6b6558;
+    --muted:#a89f8f;
+    --faint:#5c5548;
     --danger:#c0524a;
-    --danger-bg:rgba(192,82,74,0.12);
-    --ok:#5a9a6a;
-    --ok-bg:rgba(90,154,106,0.12);
-    --radius:16px;
-    --radius-sm:10px;
+    --danger-bg:rgba(192,82,74,0.10);
+    --ok:#4e9460;
+    --ok-bg:rgba(78,148,96,0.10);
+    --radius:18px;
+    --radius-sm:11px;
     --radius-xs:8px;
-    --transition:0.22s ease;
+    --t:0.22s ease;
   }
   *{ box-sizing:border-box; margin:0; padding:0; }
 
   body{
     min-height:100vh;
-    background:var(--bg);
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(212,168,67,0.07) 0%, transparent 70%),
+      var(--bg);
     color:var(--text);
     font-family:"Microsoft JhengHei","PingFang TC",sans-serif;
     display:flex;
@@ -42,153 +45,242 @@
   /* ── Card ── */
   .card{
     width:100%;
-    max-width:420px;
+    max-width:400px;
     background:var(--panel);
     border:1px solid var(--border);
     border-radius:var(--radius);
-    padding:28px 24px;
-    backdrop-filter:blur(8px);
+    overflow:hidden;
+    backdrop-filter:blur(12px);
     text-align:center;
-    box-shadow:0 8px 40px rgba(0,0,0,0.55);
+    box-shadow:
+      0 1px 0 rgba(212,168,67,0.15) inset,
+      0 12px 48px rgba(0,0,0,0.6);
   }
 
-  /* ── Badge ── */
-  .biz-badge{
-    display:inline-block;
-    font-size:12px;
-    color:var(--gold);
-    border:1px solid var(--border);
-    border-radius:999px;
-    padding:4px 14px;
-    margin-bottom:14px;
-    letter-spacing:1px;
-    background:var(--gold-glow);
+  /* ── Top Accent Bar ── */
+  .card-accent{
+    height:3px;
+    background:linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity:0.8;
   }
 
-  /* ── Headings ── */
-  h1{ font-size:20px; margin-bottom:6px; color:var(--gold); }
-  p.sub{ font-size:13px; color:var(--muted); margin-bottom:22px; line-height:1.6; }
+  .card-body{ padding:28px 24px 24px; }
 
-  /* ── Profile Row ── */
-  .profile{
+  /* ── Step Dots ── */
+  .steps{
     display:flex;
-    align-items:center;
-    gap:12px;
-    background:rgba(0,0,0,0.2);
-    border-radius:var(--radius-sm);
-    padding:10px 12px;
-    margin-bottom:14px;
-    text-align:left;
-    animation:fadeIn 0.3s ease;
-  }
-  .profile img{
-    width:44px; height:44px;
-    border-radius:50%;
-    border:1px solid var(--border);
-    flex-shrink:0;
-  }
-  .profile .name{ font-size:15px; font-weight:bold; }
-  .profile .hint{ font-size:11px; color:#8a8578; margin-top:2px; }
-
-  /* ── UID 複製列（新增）── */
-  .uid-row{
-    display:flex;
+    justify-content:center;
     align-items:center;
     gap:8px;
-    background:rgba(212,168,67,0.06);
-    border:1px solid var(--border);
-    border-radius:var(--radius-xs);
-    padding:9px 12px;
-    margin-bottom:18px;
-    cursor:pointer;
-    transition:background var(--transition);
-    animation:fadeIn 0.3s ease;
+    margin-bottom:22px;
   }
-  .uid-row:hover{ background:rgba(212,168,67,0.12); }
-  .uid-label{
-    font-size:11px; color:var(--muted);
-    white-space:nowrap; flex-shrink:0;
+  .step-dot{
+    width:7px; height:7px;
+    border-radius:50%;
+    background:rgba(212,168,67,0.2);
+    border:1px solid rgba(212,168,67,0.25);
+    transition:all 0.35s cubic-bezier(0.34,1.4,0.64,1);
   }
-  .uid-value{
-    font-size:12px; color:var(--gold);
-    font-family:monospace;
-    overflow:hidden; text-overflow:ellipsis;
-    white-space:nowrap; flex:1;
+  .step-dot.active{
+    background:var(--gold);
+    border-color:var(--gold);
+    transform:scale(1.25);
+    box-shadow:0 0 6px rgba(212,168,67,0.5);
   }
-  .copy-btn{
-    flex-shrink:0;
-    font-size:11px; color:var(--gold);
-    background:rgba(212,168,67,0.12);
-    border:1px solid var(--border);
-    border-radius:6px;
-    padding:3px 8px;
-    cursor:pointer;
-    transition:all var(--transition);
-    white-space:nowrap;
-    user-select:none;
-  }
-  .copy-btn.copied{
-    color:#fff;
+  .step-dot.done{
     background:var(--ok);
     border-color:var(--ok);
   }
+  .step-line{
+    width:24px; height:1px;
+    background:rgba(212,168,67,0.2);
+    transition:background 0.35s;
+  }
+  .step-line.done{ background:var(--ok); }
+
+  /* ── Badge ── */
+  .biz-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-size:11px;
+    color:var(--gold);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:3px 12px;
+    margin-bottom:12px;
+    letter-spacing:0.8px;
+    background:var(--gold-glow);
+  }
+  .biz-badge::before{
+    content:"";
+    width:5px; height:5px;
+    border-radius:50%;
+    background:var(--gold);
+    animation:pulse 2s ease infinite;
+  }
+
+  /* ── Headings ── */
+  h1{
+    font-size:19px;
+    margin-bottom:6px;
+    color:var(--gold);
+    letter-spacing:0.5px;
+  }
+  p.sub{
+    font-size:12.5px;
+    color:var(--muted);
+    margin-bottom:22px;
+    line-height:1.65;
+  }
+
+  /* ── Divider ── */
+  .divider{
+    border:none;
+    border-top:1px solid rgba(212,168,67,0.12);
+    margin:18px 0;
+  }
+
+  /* ── Profile Card ── */
+  .profile{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    background:rgba(0,0,0,0.18);
+    border:1px solid rgba(212,168,67,0.12);
+    border-radius:var(--radius-sm);
+    padding:12px 14px;
+    margin-bottom:18px;
+    text-align:left;
+    animation:slideUp 0.35s ease;
+  }
+  .avatar-wrap{
+    position:relative;
+    flex-shrink:0;
+  }
+  .avatar-wrap img{
+    width:46px; height:46px;
+    border-radius:50%;
+    border:2px solid rgba(212,168,67,0.4);
+    display:block;
+  }
+  .avatar-check{
+    position:absolute;
+    bottom:-2px; right:-2px;
+    width:16px; height:16px;
+    background:var(--ok);
+    border-radius:50%;
+    border:2px solid var(--bg);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:8px;
+    color:#fff;
+    line-height:1;
+  }
+  .profile-info{ flex:1; min-width:0; }
+  .profile-name{
+    font-size:14px;
+    font-weight:bold;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .profile-hint{
+    font-size:11px;
+    color:var(--ok);
+    margin-top:3px;
+    display:flex;
+    align-items:center;
+    gap:4px;
+  }
 
   /* ── Field ── */
-  .field{ text-align:left; margin-bottom:16px; }
-  .field label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
-  .field input{
-    width:100%; padding:10px 12px;
+  .field{ text-align:left; margin-bottom:14px; }
+  .field label{
+    display:block;
+    font-size:11.5px;
+    color:var(--muted);
+    margin-bottom:7px;
+    letter-spacing:0.3px;
+  }
+  .input-wrap{ position:relative; }
+  .input-wrap input{
+    width:100%;
+    padding:11px 12px 11px 38px;
     border-radius:var(--radius-xs);
     border:1px solid var(--border);
-    background:rgba(0,0,0,0.25);
-    color:var(--text); font-size:15px;
+    background:rgba(0,0,0,0.22);
+    color:var(--text);
+    font-size:15px;
     outline:none;
-    transition:border-color var(--transition);
+    transition:border-color var(--t), box-shadow var(--t);
   }
-  .field input:focus{ border-color:var(--gold); }
-  .field input[readonly]{
+  .input-wrap input:focus{
+    border-color:var(--gold);
+    box-shadow:0 0 0 3px rgba(212,168,67,0.08);
+  }
+  .input-wrap input[readonly]{
     color:var(--gold);
-    background:rgba(212,168,67,0.08);
+    background:rgba(212,168,67,0.06);
+    cursor:default;
+  }
+  .input-icon{
+    position:absolute;
+    left:12px; top:50%;
+    transform:translateY(-50%);
+    font-size:14px;
+    opacity:0.45;
+    pointer-events:none;
   }
 
   /* ── Primary Button ── */
   .btn-primary{
     width:100%; padding:13px;
     border:none; border-radius:var(--radius-sm);
-    background:var(--gold); color:#1a1710;
+    background:linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 100%);
+    color:#1a1710;
     font-size:15px; font-weight:bold;
     cursor:pointer; letter-spacing:1px;
-    transition:all var(--transition);
+    transition:all var(--t);
     display:flex; align-items:center; justify-content:center; gap:8px;
+    box-shadow:0 4px 14px rgba(212,168,67,0.25);
   }
-  .btn-primary:hover:not(:disabled){ filter:brightness(1.08); transform:translateY(-1px); }
-  .btn-primary:active:not(:disabled){ transform:translateY(0); }
-  .btn-primary:disabled{ background:var(--gold-dim); color:#555; cursor:not-allowed; }
+  .btn-primary:hover:not(:disabled){
+    filter:brightness(1.07);
+    transform:translateY(-1px);
+    box-shadow:0 6px 20px rgba(212,168,67,0.35);
+  }
+  .btn-primary:active:not(:disabled){
+    transform:translateY(0);
+    box-shadow:0 2px 8px rgba(212,168,67,0.2);
+  }
+  .btn-primary:disabled{
+    background:linear-gradient(135deg, #6a6040, #4a4025);
+    color:#666;
+    cursor:not-allowed;
+    box-shadow:none;
+  }
 
-  /* ── Retry Button ── */
-  .btn-retry{
+  /* ── Ghost Button ── */
+  .btn-ghost{
     margin-top:10px; width:100%; padding:10px;
     border:1px solid var(--border);
     border-radius:var(--radius-sm);
-    background:transparent; color:var(--gold);
-    font-size:14px; cursor:pointer;
-    transition:all var(--transition);
+    background:transparent; color:var(--muted);
+    font-size:13px; cursor:pointer;
+    transition:all var(--t);
+    letter-spacing:0.3px;
   }
-  .btn-retry:hover{ background:var(--gold-glow); }
-
-  /* ── Status ── */
-  .status{
-    margin-top:14px; font-size:13px;
-    min-height:18px; line-height:1.5;
-    border-radius:var(--radius-xs);
-    padding:0 4px;
+  .btn-ghost:hover{
+    background:var(--gold-glow);
+    color:var(--gold);
+    border-color:rgba(212,168,67,0.5);
   }
-  .status.ok { color:var(--ok); background:var(--ok-bg); padding:8px 12px; }
-  .status.err{ color:var(--danger); background:var(--danger-bg); padding:8px 12px; }
 
   /* ── Spinner ── */
   .spinner{
-    width:18px; height:18px;
+    width:17px; height:17px;
     border:2px solid rgba(26,23,16,0.3);
     border-top-color:#1a1710;
     border-radius:50%;
@@ -196,115 +288,155 @@
     display:none; flex-shrink:0;
   }
   .btn-primary.loading .spinner{ display:block; }
-  .btn-primary.loading .btn-text{ opacity:0.75; }
+  .btn-primary.loading .btn-text{ opacity:0.7; }
 
-  /* ── Step Dots ── */
-  .steps{
-    display:flex; justify-content:center;
-    gap:6px; margin-bottom:20px;
+  /* ── Status ── */
+  .status{
+    margin-top:12px; font-size:12.5px;
+    min-height:0; line-height:1.5;
+    border-radius:var(--radius-xs);
+    transition:all var(--t);
   }
-  .step-dot{
-    width:8px; height:8px;
-    border-radius:50%;
-    background:var(--border);
-    transition:background 0.3s;
-  }
-  .step-dot.active{ background:var(--gold); }
-  .step-dot.done  { background:var(--ok); }
-
-  /* ── Success Screen ── */
-  #successScreen{ display:none; animation:fadeIn 0.4s ease; }
-  .success-icon{
-    font-size:52px; margin-bottom:14px;
-    animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
-  }
-  .success-title{ font-size:20px; color:var(--ok); margin-bottom:8px; }
-  .success-sub{ font-size:13px; color:var(--muted); line-height:1.6; }
-  .success-divider{ border:none; border-top:1px solid var(--border); margin:18px 0; }
-  .success-uid{
-    font-size:11px; color:var(--faint);
-    word-break:break-all; font-family:monospace;
-  }
+  .status:not(:empty){ padding:9px 12px; }
+  .status.ok { color:var(--ok); background:var(--ok-bg); border:1px solid rgba(78,148,96,0.2); }
+  .status.err{ color:var(--danger); background:var(--danger-bg); border:1px solid rgba(192,82,74,0.2); }
 
   /* ── Footer ── */
-  .footer-note{ margin-top:20px; font-size:11px; color:var(--faint); }
+  .footer-note{ margin-top:18px; font-size:10.5px; color:var(--faint); }
+
+  /* ── Success Screen ── */
+  #successScreen{ display:none; animation:slideUp 0.4s ease; }
+  .success-ring{
+    width:72px; height:72px;
+    border-radius:50%;
+    background:var(--ok-bg);
+    border:2px solid rgba(78,148,96,0.3);
+    display:flex; align-items:center; justify-content:center;
+    font-size:32px;
+    margin:0 auto 18px;
+    animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .success-title{
+    font-size:18px;
+    font-weight:bold;
+    color:var(--ok);
+    margin-bottom:8px;
+    letter-spacing:0.5px;
+  }
+  .success-sub{
+    font-size:13px;
+    color:var(--muted);
+    line-height:1.7;
+    margin-bottom:6px;
+  }
+  .success-tip{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:12px;
+    color:var(--gold);
+    background:var(--gold-glow);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:5px 14px;
+    margin-top:14px;
+  }
 
   /* ── Keyframes ── */
-  @keyframes spin{ to{ transform:rotate(360deg); } }
-  @keyframes fadeIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
-  @keyframes popIn{ from{ transform:scale(0.4); opacity:0; } to{ transform:scale(1); opacity:1; } }
+  @keyframes spin { to{ transform:rotate(360deg); } }
+  @keyframes slideUp {
+    from{ opacity:0; transform:translateY(10px); }
+    to  { opacity:1; transform:none; }
+  }
+  @keyframes popIn {
+    from{ transform:scale(0.5); opacity:0; }
+    to  { transform:scale(1);   opacity:1; }
+  }
+  @keyframes pulse {
+    0%,100%{ opacity:1; transform:scale(1); }
+    50%     { opacity:0.5; transform:scale(0.8); }
+  }
 </style>
 </head>
 <body>
 
 <div class="card">
+  <div class="card-accent"></div>
+  <div class="card-body">
 
-  <!-- 步驟指示點 -->
-  <div class="steps">
-    <div class="step-dot" id="dot1"></div>
-    <div class="step-dot" id="dot2"></div>
-    <div class="step-dot" id="dot3"></div>
-  </div>
+    <!-- 步驟指示 -->
+    <div class="steps">
+      <div class="step-dot" id="dot1"></div>
+      <div class="step-line" id="line1"></div>
+      <div class="step-dot" id="dot2"></div>
+      <div class="step-line" id="line2"></div>
+      <div class="step-dot" id="dot3"></div>
+    </div>
 
-  <!-- ① 主流程畫面 -->
-  <div id="mainScreen">
-    <div class="biz-badge" id="bizBadge">載入中…</div>
-    <h1 id="titleText">會員身分綁定</h1>
-    <p class="sub" id="subText">請確認以下資訊並點擊下方按鈕，完成綁定後即可透過LINE接收通知。</p>
+    <!-- ① 主流程畫面 -->
+    <div id="mainScreen">
+      <div class="biz-badge" id="bizBadge">載入中</div>
+      <h1 id="titleText">會員身分綁定</h1>
+      <p class="sub" id="subText">請確認資料後點擊下方按鈕，完成後即可透過 LINE 接收通知。</p>
 
-    <!-- LINE 個人資料 -->
-    <div class="profile" id="profileBox" style="display:none;">
-      <img id="profileAvatar" src="" alt="頭像">
-      <div>
-        <div class="name" id="profileName"></div>
-        <div class="hint">已驗證 LINE 帳號</div>
+      <!-- LINE 個人資料 -->
+      <div class="profile" id="profileBox" style="display:none;">
+        <div class="avatar-wrap">
+          <img id="profileAvatar" src="" alt="頭像">
+          <div class="avatar-check">✓</div>
+        </div>
+        <div class="profile-info">
+          <div class="profile-name" id="profileName"></div>
+          <div class="profile-hint">
+            <span>●</span> LINE 帳號已驗證
+          </div>
+        </div>
       </div>
+
+      <hr class="divider" id="formDivider" style="display:none;">
+
+      <!-- 代號輸入框 -->
+      <div class="field">
+        <label id="codeLabel">綁定代號</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔖</span>
+          <input type="text" id="codeInput" inputmode="text"
+                 placeholder="請輸入代號" autocomplete="off" maxlength="60">
+        </div>
+      </div>
+
+      <!-- 送出按鈕 -->
+      <button class="btn-primary" id="submitBtn" disabled>
+        <div class="spinner"></div>
+        <span class="btn-text">載入中…</span>
+      </button>
+
+      <!-- 重試按鈕（失敗時出現）-->
+      <button class="btn-ghost" id="retryBtn" style="display:none;" onclick="retry()">
+        🔄 重新嘗試
+      </button>
+
+      <div class="status" id="statusMsg"></div>
+      <div class="footer-note"><span id="bizFooter"></span></div>
     </div>
 
-    <!-- 一鍵複製 UID（新功能）-->
-    <div class="uid-row" id="uidRow" style="display:none;" title="點擊複製 LINE UID">
-      <span class="uid-label">LINE UID</span>
-      <span class="uid-value" id="uidValue"></span>
-      <span class="copy-btn" id="copyBtn">複製</span>
+    <!-- ② 成功畫面 -->
+    <div id="successScreen">
+      <div class="success-ring">✓</div>
+      <div class="success-title">綁定回報完成</div>
+      <p class="success-sub">
+        您的 LINE 帳號已傳送給管理員。<br>
+        請至聊天室按下「傳送」鍵完成最後一步。
+      </p>
+      <div class="success-tip">
+        💬 沒有自動開啟？
+      </div>
+      <button class="btn-ghost" style="margin-top:10px;" onclick="reopenChat()">
+        📬 重新開啟聊天室
+      </button>
     </div>
 
-    <!-- 代號輸入框 -->
-    <div class="field">
-      <label id="codeLabel">綁定代號</label>
-      <input type="text" id="codeInput" inputmode="text"
-             placeholder="請輸入代號" autocomplete="off" maxlength="60">
-    </div>
-
-    <!-- 送出按鈕 -->
-    <button class="btn-primary" id="submitBtn" disabled>
-      <div class="spinner"></div>
-      <span class="btn-text">載入中…</span>
-    </button>
-
-    <!-- 重試按鈕（失敗時出現）-->
-    <button class="btn-retry" id="retryBtn" style="display:none;" onclick="retry()">
-      🔄 重新嘗試
-    </button>
-
-    <div class="status" id="statusMsg"></div>
-    <div class="footer-note"><span id="bizFooter"></span></div>
-  </div>
-
-  <!-- ② 成功畫面（新功能）-->
-  <div id="successScreen">
-    <div class="success-icon">✅</div>
-    <div class="success-title">回報成功！</div>
-    <p class="success-sub">
-      您的 LINE 帳號已成功回報給管理員。<br>
-      請在剛才開啟的聊天視窗按下「送出」完成綁定。
-    </p>
-    <hr class="success-divider">
-    <div class="success-uid" id="successUid"></div>
-    <button class="btn-retry" style="margin-top:16px;" onclick="reopenChat()">
-      📬 重新開啟聊天室
-    </button>
-  </div>
-
+  </div><!-- /card-body -->
 </div><!-- /card -->
 
 <script>
@@ -336,25 +468,30 @@ const BIZ_CONFIG = {
 
 /* ── DOM refs ── */
 const $ = id => document.getElementById(id);
-const bizBadge  = $("bizBadge"),  titleText = $("titleText");
-const subText   = $("subText"),   codeLabel = $("codeLabel");
-const codeInput = $("codeInput"), submitBtn = $("submitBtn");
-const statusMsg = $("statusMsg"), profileBox= $("profileBox");
-const bizFooter = $("bizFooter"), uidRow    = $("uidRow");
-const uidValue  = $("uidValue"),  copyBtn   = $("copyBtn");
-const retryBtn  = $("retryBtn");
+const bizBadge   = $("bizBadge"),   titleText  = $("titleText");
+const subText    = $("subText"),    codeLabel  = $("codeLabel");
+const codeInput  = $("codeInput"),  submitBtn  = $("submitBtn");
+const statusMsg  = $("statusMsg"),  profileBox = $("profileBox");
+const bizFooter  = $("bizFooter"),  retryBtn   = $("retryBtn");
+const formDivider= $("formDivider");
 const dot1=$("dot1"), dot2=$("dot2"), dot3=$("dot3");
+const line1=$("line1"), line2=$("line2");
 
 let userProfile = null;
-let cfg = null;
-let lastOaUrl = "";   // 供「重新開啟聊天室」使用
-let submitted  = false;
+let cfg         = null;
+let lastOaUrl   = "";
+let submitted   = false;
 
-/* ── 步驟指示點 ── */
+/* ── 步驟指示 ── */
 function setStep(n){
-  [dot1, dot2, dot3].forEach((d, i) => {
+  const dots  = [dot1, dot2, dot3];
+  const lines = [line1, line2];
+  dots.forEach((d,i)=>{
     d.className = "step-dot" +
-      (i+1 < n ? " done" : i+1 === n ? " active" : "");
+      (i+1 < n ? " done" : i+1===n ? " active" : "");
+  });
+  lines.forEach((l,i)=>{
+    l.className = "step-line" + (i+1 < n ? " done" : "");
   });
 }
 
@@ -365,7 +502,7 @@ function getParams(){
   let biz = qs.get("biz"), code = qs.get("code");
   if(!biz && qs.has("liff.state")){
     const s = new URLSearchParams(
-      (qs.get("liff.state") || "").replace(/^\?/, "")
+      (qs.get("liff.state")||"").replace(/^\?/,"")
     );
     biz = s.get("biz"); code = s.get("code");
   }
@@ -375,10 +512,10 @@ function getParams(){
 let { biz, code: presetCode } = getParams();
 if(biz){
   try{ sessionStorage.setItem(PARAM_CACHE_KEY, JSON.stringify({biz, code:presetCode})); }catch(e){}
-} else {
+}else{
   try{
-    const saved = JSON.parse(sessionStorage.getItem(PARAM_CACHE_KEY) || "null");
-    if(saved && saved.biz){ biz = saved.biz; presetCode = saved.code; }
+    const saved = JSON.parse(sessionStorage.getItem(PARAM_CACHE_KEY)||"null");
+    if(saved && saved.biz){ biz=saved.biz; presetCode=saved.code; }
   }catch(e){}
 }
 
@@ -405,47 +542,19 @@ function initUi(){
     submitBtn.style.display = "none";
     return false;
   }
-  bizBadge.textContent   = cfg.label;
-  titleText.textContent  = cfg.title;
-  subText.textContent    = cfg.sub;
-  codeLabel.textContent  = cfg.codeLabel;
-  bizFooter.textContent  = "業務類別：" + biz.toUpperCase();
+  bizBadge.textContent  = cfg.label;
+  titleText.textContent = cfg.title;
+  subText.textContent   = cfg.sub;
+  codeLabel.textContent = cfg.codeLabel;
+  bizFooter.textContent = "業務識別：" + biz.toUpperCase();
   if(presetCode){ codeInput.value = presetCode; codeInput.readOnly = true; }
   return true;
 }
 
-/* ── 一鍵複製 UID（新功能）── */
-function setupCopyUid(uid){
-  uidValue.textContent  = uid;
-  uidRow.style.display  = "flex";
-
-  function doCopy(){
-    if(navigator.clipboard){
-      navigator.clipboard.writeText(uid).then(()=>{
-        copyBtn.textContent = "已複製 ✓";
-        copyBtn.classList.add("copied");
-        setTimeout(()=>{ copyBtn.textContent="複製"; copyBtn.classList.remove("copied"); }, 2000);
-      }).catch(fallback);
-    } else { fallback(); }
-  }
-
-  function fallback(){
-    const range = document.createRange();
-    range.selectNodeContents(uidValue);
-    const sel = window.getSelection();
-    sel.removeAllRanges(); sel.addRange(range);
-    copyBtn.textContent = "請手動複製";
-    setTimeout(()=>{ copyBtn.textContent="複製"; sel.removeAllRanges(); }, 2500);
-  }
-
-  uidRow.addEventListener("click", doCopy);
-}
-
-/* ── 顯示成功畫面（新功能）── */
+/* ── 顯示成功畫面 ── */
 function showSuccess(){
-  $("mainScreen").style.display  = "none";
+  $("mainScreen").style.display    = "none";
   $("successScreen").style.display = "block";
-  $("successUid").textContent = "LINE UID：" + (userProfile?.userId || "");
   setStep(3);
 }
 
@@ -454,11 +563,11 @@ function openOa(url){
   try{
     if(typeof liff !== "undefined" && liff.openWindow){
       liff.openWindow({ url, external:false });
-    } else { location.href = url; }
+    }else{ location.href = url; }
   }catch(e){ location.href = url; }
 }
 
-/* ── 重新開啟聊天室（新功能）── */
+/* ── 重新開啟聊天室 ── */
 function reopenChat(){
   if(lastOaUrl) openOa(lastOaUrl);
 }
@@ -469,18 +578,18 @@ async function boot(){
   setStep(1);
   retryBtn.style.display = "none";
   setBtnLoading(true, "驗證 LINE 身分中…");
-  showStatus("", "");
+  showStatus("","");
 
   let settled = false;
   const tid = setTimeout(()=>{
-    if(!settled) showStatus("網路回應較慢，請檢查網路連線。", "err");
+    if(!settled) showStatus("網路回應較慢，請檢查網路連線。","err");
   }, 8000);
 
   try{
     await liff.init({ liffId: cfg.liffId });
 
     if(!liff.isLoggedIn()){
-      showStatus("正在導向 LINE 登入…", "");
+      showStatus("正在導向 LINE 登入…","");
       liff.login({ redirectUri: location.href });
       return;
     }
@@ -488,16 +597,16 @@ async function boot(){
     setStep(2);
     userProfile = await liff.getProfile();
 
-    $("profileAvatar").src = userProfile.pictureUrl
-      || "https://static.line-scdn.net/liff/edge/2/img/default-avatar.png";
+    $("profileAvatar").src =
+      userProfile.pictureUrl ||
+      "https://static.line-scdn.net/liff/edge/2/img/default-avatar.png";
     $("profileName").textContent = userProfile.displayName || "LINE 用戶";
-    profileBox.style.display = "flex";
-
-    setupCopyUid(userProfile.userId);
+    profileBox.style.display  = "flex";
+    formDivider.style.display = "block";
 
     settled = true; clearTimeout(tid);
     setBtnLoading(false, "回報綁定");
-    showStatus("", "");
+    showStatus("","");
 
   }catch(err){
     settled = true; clearTimeout(tid);
@@ -510,12 +619,12 @@ async function boot(){
   }
 }
 
-/* ── 重試（新功能）── */
+/* ── 重試 ── */
 function retry(){
   userProfile = null;
   submitted   = false;
-  profileBox.style.display = "none";
-  uidRow.style.display     = "none";
+  profileBox.style.display  = "none";
+  formDivider.style.display = "none";
   boot();
 }
 
@@ -524,8 +633,8 @@ submitBtn.addEventListener("click", ()=>{
   if(submitted) return;
 
   const code = codeInput.value.trim();
-  if(!code){ showStatus("請輸入代號後再送出。", "err"); return; }
-  if(!userProfile){ showStatus("尚未取得 LINE 個人資料，請重新整理。", "err"); return; }
+  if(!code){ showStatus("請輸入代號後再送出。","err"); return; }
+  if(!userProfile){ showStatus("尚未取得 LINE 個人資料，請重新整理。","err"); return; }
 
   const reportText =
     `【綁定回報】\n` +
@@ -535,9 +644,10 @@ submitBtn.addEventListener("click", ()=>{
     `LINE_ID：\n` +
     `${userProfile.userId}`;
 
+  // ⚠️ SYSTEM_OA_ID 不可 encodeURIComponent（@ 會變成 %40 導致 400）
   lastOaUrl =
     "https://line.me/R/oaMessage/" +
-    encodeURIComponent(SYSTEM_OA_ID) + "/?" +
+    SYSTEM_OA_ID + "/?" +
     encodeURIComponent(reportText);
 
   openOa(lastOaUrl);
