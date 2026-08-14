@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>會員身分綁定</title>
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  /* ── Design Tokens ── */
+  :root{
+    --bg:#13110F;
+    --gold:#D4A843;
+    --gold-dim:#8a7333;
+    --gold-glow:rgba(212,168,67,0.18);
+    --panel:rgba(255,255,255,0.04);
+    --border:rgba(212,168,67,0.35);
+    --text:#EDE6D6;
+    --muted:#b9b0a0;
+    --faint:#6b6558;
+    --danger:#c0524a;
+    --danger-bg:rgba(192,82,74,0.12);
+    --ok:#5a9a6a;
+    --ok-bg:rgba(90,154,106,0.12);
+    --radius:16px;
+    --radius-sm:10px;
+    --radius-xs:8px;
+    --transition:0.22s ease;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  body{
+    min-height:100vh;
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Microsoft JhengHei","PingFang TC",sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+
+  /* ── Card ── */
+  .card{
+    width:100%;
+    max-width:420px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:28px 24px;
+    backdrop-filter:blur(8px);
+    text-align:center;
+    box-shadow:0 8px 40px rgba(0,0,0,0.55);
+  }
+
+  /* ── Badge ── */
+  .biz-badge{
+    display:inline-block;
+    font-size:12px;
+    color:var(--gold);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:4px 14px;
+    margin-bottom:14px;
+    letter-spacing:1px;
+    background:var(--gold-glow);
+  }
+
+  /* ── Headings ── */
+  h1{ font-size:20px; margin-bottom:6px; color:var(--gold); }
+  p.sub{ font-size:13px; color:var(--muted); margin-bottom:22px; line-height:1.6; }
+
+  /* ── Profile Row ── */
+  .profile{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:rgba(0,0,0,0.2);
+    border-radius:var(--radius-sm);
+    padding:10px 12px;
+    margin-bottom:14px;
+    text-align:left;
+    animation:fadeIn 0.3s ease;
+  }
+  .profile img{
+    width:44px; height:44px;
+    border-radius:50%;
+    border:1px solid var(--border);
+    flex-shrink:0;
+  }
+  .profile .name{ font-size:15px; font-weight:bold; }
+  .profile .hint{ font-size:11px; color:#8a8578; margin-top:2px; }
+
+  /* ── UID 複製列（新增）── */
+  .uid-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:rgba(212,168,67,0.06);
+    border:1px solid var(--border);
+    border-radius:var(--radius-xs);
+    padding:9px 12px;
+    margin-bottom:18px;
+    cursor:pointer;
+    transition:background var(--transition);
+    animation:fadeIn 0.3s ease;
+  }
+  .uid-row:hover{ background:rgba(212,168,67,0.12); }
+  .uid-label{
+    font-size:11px; color:var(--muted);
+    white-space:nowrap; flex-shrink:0;
+  }
+  .uid-value{
+    font-size:12px; color:var(--gold);
+    font-family:monospace;
+    overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; flex:1;
+  }
+  .copy-btn{
+    flex-shrink:0;
+    font-size:11px; color:var(--gold);
+    background:rgba(212,168,67,0.12);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:3px 8px;
+    cursor:pointer;
+    transition:all var(--transition);
+    white-space:nowrap;
+    user-select:none;
+  }
+  .copy-btn.copied{
+    color:#fff;
+    background:var(--ok);
+    border-color:var(--ok);
+  }
+
+  /* ── Field ── */
+  .field{ text-align:left; margin-bottom:16px; }
+  .field label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
+  .field input{
+    width:100%; padding:10px 12px;
+    border-radius:var(--radius-xs);
+    border:1px solid var(--border);
+    background:rgba(0,0,0,0.25);
+    color:var(--text); font-size:15px;
+    outline:none;
+    transition:border-color var(--transition);
+  }
+  .field input:focus{ border-color:var(--gold); }
+  .field input[readonly]{
+    color:var(--gold);
+    background:rgba(212,168,67,0.08);
+  }
+
+  /* ── Primary Button ── */
+  .btn-primary{
+    width:100%; padding:13px;
+    border:none; border-radius:var(--radius-sm);
+    background:var(--gold); color:#1a1710;
+    font-size:15px; font-weight:bold;
+    cursor:pointer; letter-spacing:1px;
+    transition:all var(--transition);
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .btn-primary:hover:not(:disabled){ filter:brightness(1.08); transform:translateY(-1px); }
+  .btn-primary:active:not(:disabled){ transform:translateY(0); }
+  .btn-primary:disabled{ background:var(--gold-dim); color:#555; cursor:not-allowed; }
+
+  /* ── Retry Button ── */
+  .btn-retry{
+    margin-top:10px; width:100%; padding:10px;
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    background:transparent; color:var(--gold);
+    font-size:14px; cursor:pointer;
+    transition:all var(--transition);
+  }
+  .btn-retry:hover{ background:var(--gold-glow); }
+
+  /* ── Status ── */
+  .status{
+    margin-top:14px; font-size:13px;
+    min-height:18px; line-height:1.5;
+    border-radius:var(--radius-xs);
+    padding:0 4px;
+  }
+  .status.ok { color:var(--ok); background:var(--ok-bg); padding:8px 12px; }
+  .status.err{ color:var(--danger); background:var(--danger-bg); padding:8px 12px; }
+
+  /* ── Spinner ── */
+  .spinner{
+    width:18px; height:18px;
+    border:2px solid rgba(26,23,16,0.3);
+    border-top-color:#1a1710;
+    border-radius:50%;
+    animation:spin 0.7s linear infinite;
+    display:none; flex-shrink:0;
+  }
+  .btn-primary.loading .spinner{ display:block; }
+  .btn-primary.loading .btn-text{ opacity:0.75; }
+
+  /* ── Step Dots ── */
+  .steps{
+    display:flex; justify-content:center;
+    gap:6px; margin-bottom:20px;
+  }
+  .step-dot{
+    width:8px; height:8px;
+    border-radius:50%;
+    background:var(--border);
+    transition:background 0.3s;
+  }
+  .step-dot.active{ background:var(--gold); }
+  .step-dot.done  { background:var(--ok); }
+
+  /* ── Success Screen ── */
+  #successScreen{ display:none; animation:fadeIn 0.4s ease; }
+  .success-icon{
+    font-size:52px; margin-bottom:14px;
+    animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .success-title{ font-size:20px; color:var(--ok); margin-bottom:8px; }
+  .success-sub{ font-size:13px; color:var(--muted); line-height:1.6; }
+  .success-divider{ border:none; border-top:1px solid var(--border); margin:18px 0; }
+  .success-uid{
+    font-size:11px; color:var(--faint);
+    word-break:break-all; font-family:monospace;
+  }
+
+  /* ── Footer ── */
+  .footer-note{ margin-top:20px; font-size:11px; color:var(--faint); }
+
+  /* ── Keyframes ── */
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  @keyframes fadeIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+  @keyframes popIn{ from{ transform:scale(0.4); opacity:0; } to{ transform:scale(1); opacity:1; } }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- 步驟指示點 -->
+  <div class="steps">
+    <div class="step-dot" id="dot1"></div>
+    <div class="step-dot" id="dot2"></div>
+    <div class="step-dot" id="dot3"></div>
+  </div>
+
+  <!-- ① 主流程畫面 -->
+  <div id="mainScreen">
+    <div class="biz-badge" id="bizBadge">載入中…</div>
+    <h1 id="titleText">會員身分綁定</h1>
+    <p class="sub" id="subText">請確認以下資訊並點擊下方按鈕，完成綁定後即可透過LINE接收通知。</p>
+
+    <!-- LINE 個人資料 -->
+    <div class="profile" id="profileBox" style="display:none;">
+      <img id="profileAvatar" src="" alt="頭像">
+      <div>
+        <div class="name" id="profileName"></div>
+        <div class="hint">已驗證 LINE 帳號</div>
+      </div>
+    </div>
+
+    <!-- 一鍵複製 UID（新功能）-->
+    <div class="uid-row" id="uidRow" style="display:none;" title="點擊複製 LINE UID">
+      <span class="uid-label">LINE UID</span>
+      <span class="uid-value" id="uidValue"></span>
+      <span class="copy-btn" id="copyBtn">複製</span>
+    </div>
+
+    <!-- 代號輸入框 -->
+    <div class="field">
+      <label id="codeLabel">綁定代號</label>
+      <input type="text" id="codeInput" inputmode="text"
+             placeholder="請輸入代號" autocomplete="off" maxlength="60">
+    </div>
+
+    <!-- 送出按鈕 -->
+    <button class="btn-primary" id="submitBtn" disabled>
+      <div class="spinner"></div>
+      <span class="btn-text">載入中…</span>
+    </button>
+
+    <!-- 重試按鈕（失敗時出現）-->
+    <button class="btn-retry" id="retryBtn" style="display:none;" onclick="retry()">
+      🔄 重新嘗試
+    </button>
+
+    <div class="status" id="statusMsg"></div>
+    <div class="footer-note"><span id="bizFooter"></span></div>
+  </div>
+
+  <!-- ② 成功畫面（新功能）-->
+  <div id="successScreen">
+    <div class="success-icon">✅</div>
+    <div class="success-title">回報成功！</div>
+    <p class="success-sub">
+      您的 LINE 帳號已成功回報給管理員。<br>
+      請在剛才開啟的聊天視窗按下「送出」完成綁定。
+    </p>
+    <hr class="success-divider">
+    <div class="success-uid" id="successUid"></div>
+    <button class="btn-retry" style="margin-top:16px;" onclick="reopenChat()">
+      📬 重新開啟聊天室
+    </button>
+  </div>
+
+</div><!-- /card -->
+
+<script>
+/* ============================================================
+   系統設定區
+   ============================================================ */
+const SYSTEM_OA_ID = "@768srubj";
+
+const BIZ_CONFIG = {
+  jxc: {
+    liffId: "2008956794-cft16qHd",
+    label: "進銷存客戶", title: "請款單客戶綁定",
+    sub: "請確認資料後點擊【回報綁定】，日後請款通知將透過 LINE 發送給您。",
+    codeLabel: "客戶代號"
+  },
+  yxg: {
+    liffId: "REPLACE_WITH_YXG_LIFF_ID",
+    label: "梅山玉虛宮信眾", title: "信眾會員綁定",
+    sub: "請確認資料後點擊【回報綁定】，日後各式請柬將透過 LINE 通知您。",
+    codeLabel: "信眾代號"
+  },
+  zfh: {
+    liffId: "REPLACE_WITH_ZFH_LIFF_ID",
+    label: "照服工會會員", title: "繳費通知綁定",
+    sub: "請確認資料後點擊【回報綁定】，日後繳費通知將透過 LINE 發送給您。",
+    codeLabel: "會員代號"
+  }
+};
+
+/* ── DOM refs ── */
+const $ = id => document.getElementById(id);
+const bizBadge  = $("bizBadge"),  titleText = $("titleText");
+const subText   = $("subText"),   codeLabel = $("codeLabel");
+const codeInput = $("codeInput"), submitBtn = $("submitBtn");
+const statusMsg = $("statusMsg"), profileBox= $("profileBox");
+const bizFooter = $("bizFooter"), uidRow    = $("uidRow");
+const uidValue  = $("uidValue"),  copyBtn   = $("copyBtn");
+const retryBtn  = $("retryBtn");
+const dot1=$("dot1"), dot2=$("dot2"), dot3=$("dot3");
+
+let userProfile = null;
+let cfg = null;
+let lastOaUrl = "";   // 供「重新開啟聊天室」使用
+let submitted  = false;
+
+/* ── 步驟指示點 ── */
+function setStep(n){
+  [dot1, dot2, dot3].forEach((d, i) => {
+    d.className = "step-dot" +
+      (i+1 < n ? " done" : i+1 === n ? " active" : "");
+  });
+}
+
+/* ── 網址參數 ── */
+const PARAM_CACHE_KEY = "liffRegisterParams";
+function getParams(){
+  const qs = new URLSearchParams(location.search);
+  let biz = qs.get("biz"), code = qs.get("code");
+  if(!biz && qs.has("liff.state")){
+    const s = new URLSearchParams(
+      (qs.get("liff.state") || "").replace(/^\?/, "")
+    );
+    biz = s.get("biz"); code = s.get("code");
+  }
+  return { biz, code };
+}
+
+let { biz, code: presetCode } = getParams();
+if(biz){
+  try{ sessionStorage.setItem(PARAM_CACHE_KEY, JSON.stringify({biz, code:presetCode})); }catch(e){}
+} else {
+  try{
+    const saved = JSON.parse(sessionStorage.getItem(PARAM_CACHE_KEY) || "null");
+    if(saved && saved.biz){ biz = saved.biz; presetCode = saved.code; }
+  }catch(e){}
+}
+
+/* ── 狀態顯示 ── */
+function showStatus(text, type){
+  statusMsg.textContent = text;
+  statusMsg.className = "status" + (type ? " "+type : "");
+}
+
+/* ── 按鈕載入態 ── */
+function setBtnLoading(loading, label){
+  submitBtn.disabled = loading;
+  submitBtn.classList.toggle("loading", loading);
+  submitBtn.querySelector(".btn-text").textContent = label;
+}
+
+/* ── 初始化 UI 文字 ── */
+function initUi(){
+  cfg = BIZ_CONFIG[biz];
+  if(!cfg){
+    bizBadge.textContent  = "設定錯誤";
+    titleText.textContent = "連結參數不正確";
+    subText.textContent   = "請確認連結是否包含正確的 biz 參數（例如 ?biz=jxc）。";
+    submitBtn.style.display = "none";
+    return false;
+  }
+  bizBadge.textContent   = cfg.label;
+  titleText.textContent  = cfg.title;
+  subText.textContent    = cfg.sub;
+  codeLabel.textContent  = cfg.codeLabel;
+  bizFooter.textContent  = "業務類別：" + biz.toUpperCase();
+  if(presetCode){ codeInput.value = presetCode; codeInput.readOnly = true; }
+  return true;
+}
+
+/* ── 一鍵複製 UID（新功能）── */
+function setupCopyUid(uid){
+  uidValue.textContent  = uid;
+  uidRow.style.display  = "flex";
+
+  function doCopy(){
+    if(navigator.clipboard){
+      navigator.clipboard.writeText(uid).then(()=>{
+        copyBtn.textContent = "已複製 ✓";
+        copyBtn.classList.add("copied");
+        setTimeout(()=>{ copyBtn.textContent="複製"; copyBtn.classList.remove("copied"); }, 2000);
+      }).catch(fallback);
+    } else { fallback(); }
+  }
+
+  function fallback(){
+    const range = document.createRange();
+    range.selectNodeContents(uidValue);
+    const sel = window.getSelection();
+    sel.removeAllRanges(); sel.addRange(range);
+    copyBtn.textContent = "請手動複製";
+    setTimeout(()=>{ copyBtn.textContent="複製"; sel.removeAllRanges(); }, 2500);
+  }
+
+  uidRow.addEventListener("click", doCopy);
+}
+
+/* ── 顯示成功畫面（新功能）── */
+function showSuccess(){
+  $("mainScreen").style.display  = "none";
+  $("successScreen").style.display = "block";
+  $("successUid").textContent = "LINE UID：" + (userProfile?.userId || "");
+  setStep(3);
+}
+
+/* ── 開啟 OA 聊天室 ── */
+function openOa(url){
+  try{
+    if(typeof liff !== "undefined" && liff.openWindow){
+      liff.openWindow({ url, external:false });
+    } else { location.href = url; }
+  }catch(e){ location.href = url; }
+}
+
+/* ── 重新開啟聊天室（新功能）── */
+function reopenChat(){
+  if(lastOaUrl) openOa(lastOaUrl);
+}
+
+/* ── 主流程 ── */
+async function boot(){
+  if(!initUi()) return;
+  setStep(1);
+  retryBtn.style.display = "none";
+  setBtnLoading(true, "驗證 LINE 身分中…");
+  showStatus("", "");
+
+  let settled = false;
+  const tid = setTimeout(()=>{
+    if(!settled) showStatus("網路回應較慢，請檢查網路連線。", "err");
+  }, 8000);
+
+  try{
+    await liff.init({ liffId: cfg.liffId });
+
+    if(!liff.isLoggedIn()){
+      showStatus("正在導向 LINE 登入…", "");
+      liff.login({ redirectUri: location.href });
+      return;
+    }
+
+    setStep(2);
+    userProfile = await liff.getProfile();
+
+    $("profileAvatar").src = userProfile.pictureUrl
+      || "https://static.line-scdn.net/liff/edge/2/img/default-avatar.png";
+    $("profileName").textContent = userProfile.displayName || "LINE 用戶";
+    profileBox.style.display = "flex";
+
+    setupCopyUid(userProfile.userId);
+
+    settled = true; clearTimeout(tid);
+    setBtnLoading(false, "回報綁定");
+    showStatus("", "");
+
+  }catch(err){
+    settled = true; clearTimeout(tid);
+    console.error(err);
+    const detail = err?.code || err?.message || String(err);
+    showStatus("初始化失敗：" + detail, "err");
+    setBtnLoading(false, "無法使用");
+    submitBtn.disabled = true;
+    retryBtn.style.display = "block";
+  }
+}
+
+/* ── 重試（新功能）── */
+function retry(){
+  userProfile = null;
+  submitted   = false;
+  profileBox.style.display = "none";
+  uidRow.style.display     = "none";
+  boot();
+}
+
+/* ── 送出事件 ── */
+submitBtn.addEventListener("click", ()=>{
+  if(submitted) return;
+
+  const code = codeInput.value.trim();
+  if(!code){ showStatus("請輸入代號後再送出。", "err"); return; }
+  if(!userProfile){ showStatus("尚未取得 LINE 個人資料，請重新整理。", "err"); return; }
+
+  const reportText =
+    `【綁定回報】\n` +
+    `業務類別：${biz.toUpperCase()}\n` +
+    `${cfg.codeLabel}：${code}\n` +
+    `客戶名稱：${userProfile.displayName}\n` +
+    `LINE_ID：\n` +
+    `${userProfile.userId}`;
+
+  lastOaUrl =
+    "https://line.me/R/oaMessage/" +
+    encodeURIComponent(SYSTEM_OA_ID) + "/?" +
+    encodeURIComponent(reportText);
+
+  openOa(lastOaUrl);
+
+  submitted = true;
+  showSuccess();
+});
+
+boot();
+</script>
+</body>
+</html>
