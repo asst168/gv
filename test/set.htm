@@ -9,38 +9,36 @@
   <style>
     :root {
       --bg-gradient: linear-gradient(135deg, #f0f4f9 0%, #e2eafc 100%);
+      --header-bg: rgba(240, 244, 249, 0.85);
       --text-main: #1f2937;
       --text-muted: #6b7280;
       --card-bg: #ffffff;
-      --card-hover-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+      --card-hover-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
       --border-color: #e5e7eb;
       --primary: #0078d4;
       --primary-hover: #005a9e;
       --kbd-bg: #f3f4f6;
       --kbd-border: #d1d5db;
       --kbd-text: #d946ef;
-      --header-shadow: rgba(0, 0, 0, 0.05);
-      --badge-bg: #e0f2fe;
-      --badge-color: #0369a1;
+      --header-shadow: rgba(0, 0, 0, 0.06);
       --toast-bg: #1f2937;
       --toast-text: #ffffff;
     }
 
     [data-theme="dark"] {
       --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      --header-bg: rgba(15, 23, 42, 0.88);
       --text-main: #f3f4f6;
       --text-muted: #9ca3af;
       --card-bg: #1e293b;
-      --card-hover-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+      --card-hover-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
       --border-color: #334155;
       --primary: #38bdf8;
       --primary-hover: #0ea5e9;
       --kbd-bg: #334155;
       --kbd-border: #475569;
       --kbd-text: #f472b6;
-      --header-shadow: rgba(0, 0, 0, 0.3);
-      --badge-bg: #1e3a8a;
-      --badge-color: #93c5fd;
+      --header-shadow: rgba(0, 0, 0, 0.4);
       --toast-bg: #f8fafc;
       --toast-text: #0f172a;
     }
@@ -52,7 +50,7 @@
       background: var(--bg-gradient);
       background-attachment: fixed;
       margin: 0;
-      padding: 24px 16px 100px;
+      padding: 0 16px 80px;
       color: var(--text-main);
       min-height: 100vh;
       transition: background 0.3s, color 0.3s;
@@ -63,154 +61,184 @@
       margin: 0 auto;
     }
 
-    /* 頂部工具列 */
-    .top-bar {
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      margin-bottom: 8px;
+    /* ================= 固定頂部導航 (Sticky Header) ================= */
+    .sticky-top-wrapper {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: var(--header-bg);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: 0 4px 20px var(--header-shadow);
+      margin: 0 -16px 20px -16px;
+      padding: 10px 16px;
     }
+
+    .sticky-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* 第一列：標題 + 分頁 + 主題切換 */
+    .nav-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-main);
+      white-space: nowrap;
+      margin: 0;
+    }
+    .brand-title i {
+      color: var(--primary);
+    }
+
+    .tabs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 7px 14px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      cursor: pointer;
+      background: var(--card-bg);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .tab-btn:hover {
+      color: var(--text-main);
+      border-color: var(--primary);
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 120, 212, 0.35);
+    }
+
     .theme-toggle-btn {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       color: var(--text-main);
-      padding: 8px 16px;
-      border-radius: 999px;
+      padding: 7px 12px;
+      border-radius: 8px;
       cursor: pointer;
-      font-size: 0.95rem;
+      font-size: 0.88rem;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+      white-space: nowrap;
       transition: all 0.2s;
-      box-shadow: 0 2px 6px var(--header-shadow);
     }
     .theme-toggle-btn:hover {
       border-color: var(--primary);
       color: var(--primary);
     }
 
-    /* 標題 */
-    header {
-      text-align: center;
-      margin: 1rem 0 2rem;
-    }
-    h1 {
-      font-size: 2.3rem;
-      margin: 0 0 8px;
-      letter-spacing: -0.5px;
-      font-weight: 700;
-    }
-    .subtitle {
-      color: var(--text-muted);
-      font-size: 1.05rem;
-      margin: 0;
-    }
-
-    /* 標籤導覽 (Tabs) */
-    .tabs {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin: 1.8rem 0 1.5rem;
-    }
-    .tab-btn {
-      padding: 11px 24px;
-      font-size: 1.05rem;
-      font-weight: 600;
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      cursor: pointer;
-      background: var(--card-bg);
-      color: var(--text-muted);
+    /* 第二列：搜尋欄 */
+    .search-row {
       display: flex;
       align-items: center;
-      gap: 8px;
-      transition: all 0.25s ease;
-      box-shadow: 0 2px 8px var(--header-shadow);
-    }
-    .tab-btn:hover {
-      color: var(--text-main);
-      transform: translateY(-2px);
-    }
-    .tab-btn.active {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: #ffffff;
-      box-shadow: 0 4px 14px rgba(0, 120, 212, 0.35);
+      gap: 12px;
     }
 
-    /* 搜尋欄 */
-    .search-container {
-      position: relative;
-      max-width: 600px;
-      margin: 0 auto 2.2rem;
-    }
     .search-wrapper {
       position: relative;
+      flex: 1;
       display: flex;
       align-items: center;
     }
+
     .search-icon {
       position: absolute;
-      left: 18px;
+      left: 14px;
       color: var(--text-muted);
-      font-size: 1.1rem;
+      font-size: 0.95rem;
     }
+
     #searchInput {
       width: 100%;
-      padding: 14px 45px 14px 48px;
-      border: 2px solid var(--border-color);
-      border-radius: 999px;
-      font-size: 1.05rem;
+      padding: 8px 65px 8px 36px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 0.95rem;
       background: var(--card-bg);
       color: var(--text-main);
-      box-shadow: 0 4px 16px var(--header-shadow);
       outline: none;
-      transition: all 0.25s;
+      transition: all 0.2s;
     }
     #searchInput:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(0, 120, 212, 0.2);
+      box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.15);
     }
+
+    .search-shortcut-tag {
+      position: absolute;
+      right: 32px;
+      font-size: 0.75rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--kbd-bg);
+      border: 1px solid var(--kbd-border);
+      color: var(--text-muted);
+      pointer-events: none;
+      font-family: monospace;
+    }
+
     .clear-search-btn {
       position: absolute;
-      right: 16px;
+      right: 8px;
       background: none;
       border: none;
       color: var(--text-muted);
       cursor: pointer;
-      font-size: 1.1rem;
+      font-size: 0.95rem;
       display: none;
+      padding: 4px;
     }
     .clear-search-btn:hover { color: var(--text-main); }
-    .search-hint {
-      text-align: center;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-top: 8px;
-    }
+
     .search-result-count {
-      text-align: center;
-      font-size: 0.95rem;
+      font-size: 0.88rem;
       font-weight: 600;
       color: var(--primary);
-      margin-bottom: 1.5rem;
+      white-space: nowrap;
       display: none;
     }
 
-    /* 區塊 */
+    /* ================= 內容區塊 ================= */
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    .section {
-      margin-bottom: 2.8rem;
-    }
+    .section { margin-bottom: 2.4rem; }
     .section-title {
-      font-size: 1.3rem;
+      font-size: 1.2rem;
       font-weight: 700;
-      margin: 1.5rem 0 1.2rem;
-      padding-left: 14px;
-      border-left: 5px solid var(--primary);
+      margin: 1.2rem 0 1rem;
+      padding-left: 12px;
+      border-left: 4px solid var(--primary);
       color: var(--text-main);
     }
 
@@ -218,54 +246,53 @@
     .button-container {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 16px;
+      gap: 14px;
     }
     .setting-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
-      border-radius: 14px;
-      padding: 14px 16px;
-      box-shadow: 0 4px 12px var(--header-shadow);
+      border-radius: 12px;
+      padding: 12px 14px;
+      box-shadow: 0 2px 8px var(--header-shadow);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      transition: all 0.25s ease;
-      position: relative;
+      gap: 10px;
+      transition: all 0.2s ease;
     }
     .setting-card:hover {
-      transform: translateY(-3px);
+      transform: translateY(-2px);
       box-shadow: var(--card-hover-shadow);
       border-color: var(--primary);
     }
     .setting-info {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
       flex: 1;
       cursor: pointer;
       text-decoration: none;
       color: inherit;
     }
     .setting-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       color: white;
       flex-shrink: 0;
     }
     .setting-text h3 {
-      margin: 0 0 3px 0;
-      font-size: 1rem;
+      margin: 0 0 2px 0;
+      font-size: 0.95rem;
       font-weight: 600;
     }
     .setting-text p {
       margin: 0;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       color: var(--text-muted);
       font-family: Consolas, monospace;
     }
@@ -278,9 +305,9 @@
       background: transparent;
       border: none;
       color: var(--text-muted);
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       cursor: pointer;
-      padding: 6px;
+      padding: 5px;
       border-radius: 6px;
       transition: all 0.2s;
     }
@@ -307,49 +334,46 @@
     /* 快捷鍵清單網格 */
     .shortcut-list {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 14px;
     }
     .shortcut-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      padding: 14px 16px;
-      box-shadow: 0 3px 10px var(--header-shadow);
+      padding: 12px 14px;
+      box-shadow: 0 2px 8px var(--header-shadow);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
-      transition: all 0.25s;
+      gap: 10px;
+      transition: all 0.2s;
     }
     .shortcut-card:hover {
-      transform: translateY(-3px);
+      transform: translateY(-2px);
       box-shadow: var(--card-hover-shadow);
     }
-    .shortcut-body {
-      flex: 1;
-    }
+    .shortcut-body { flex: 1; }
     .keys {
       display: inline-flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 5px;
       align-items: center;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
     kbd {
       background: var(--kbd-bg);
       border: 1px solid var(--kbd-border);
       border-bottom: 2px solid var(--kbd-border);
-      border-radius: 6px;
-      padding: 3px 8px;
+      border-radius: 5px;
+      padding: 2px 6px;
       font-family: Consolas, monospace;
-      font-size: 0.88rem;
+      font-size: 0.82rem;
       font-weight: 700;
       color: var(--kbd-text);
-      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
     .shortcut-desc {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       color: var(--text-main);
       font-weight: 500;
     }
@@ -357,42 +381,36 @@
     /* 空搜尋提示 */
     .empty-state {
       text-align: center;
-      padding: 60px 20px;
+      padding: 50px 20px;
       display: none;
     }
     .empty-state i {
-      font-size: 3rem;
+      font-size: 2.5rem;
       color: var(--text-muted);
-      margin-bottom: 1rem;
+      margin-bottom: 0.8rem;
     }
-    .empty-state h3 {
-      margin: 0 0 8px;
-      font-size: 1.3rem;
-    }
-    .empty-state p {
-      color: var(--text-muted);
-      margin: 0;
-    }
+    .empty-state h3 { margin: 0 0 6px; font-size: 1.15rem; }
+    .empty-state p { color: var(--text-muted); margin: 0; }
 
     /* Toast 通知 */
     #toast {
       position: fixed;
-      bottom: 30px;
+      bottom: 24px;
       left: 50%;
       transform: translateX(-50%) translateY(100px);
       background: var(--toast-bg);
       color: var(--toast-text);
-      padding: 12px 24px;
+      padding: 10px 20px;
       border-radius: 999px;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 600;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
       z-index: 10000;
       opacity: 0;
       transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       pointer-events: none;
     }
     #toast.show {
@@ -403,20 +421,20 @@
     /* 回到頂部按鈕 */
     #back-to-top {
       position: fixed;
-      bottom: 30px;
-      right: 30px;
-      width: 52px;
-      height: 52px;
+      bottom: 24px;
+      right: 24px;
+      width: 46px;
+      height: 46px;
       border-radius: 50%;
       background: var(--primary);
       color: white;
-      font-size: 1.3rem;
+      font-size: 1.15rem;
       border: none;
       cursor: pointer;
-      box-shadow: 0 6px 18px rgba(0, 120, 212, 0.4);
+      box-shadow: 0 4px 14px rgba(0, 120, 212, 0.35);
       opacity: 0;
       visibility: hidden;
-      transition: all 0.3s ease;
+      transition: all 0.25s ease;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -424,50 +442,52 @@
     }
     #back-to-top.show { opacity: 1; visibility: visible; }
     #back-to-top:hover {
-      transform: scale(1.15) translateY(-3px);
+      transform: scale(1.1);
       background: var(--primary-hover);
     }
 
-    @media (max-width: 600px) {
-      h1 { font-size: 1.8rem; }
-      .button-container, .shortcut-list { grid-template-columns: 1fr; }
-      .tab-btn { padding: 8px 16px; font-size: 0.95rem; }
+    @media (max-width: 768px) {
+      .nav-row { justify-content: center; }
+      .brand-title { width: 100%; text-align: center; justify-content: center; }
+      .search-shortcut-tag { display: none; }
     }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="top-bar">
-    <button class="theme-toggle-btn" id="themeToggleBtn" title="切換色彩主題">
-      <i class="fas fa-moon"></i> <span>深色模式</span>
-    </button>
-  </div>
+<!-- 固定定格頂部 (精簡為 2 列) -->
+<div class="sticky-top-wrapper">
+  <div class="sticky-inner">
+    <!-- 第一列：標題 + 分類標籤 + 深色切換 -->
+    <div class="nav-row">
+      <h1 class="brand-title"><i class="fab fa-windows"></i> Windows 11 工具箱</h1>
+      
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="settings"><i class="fas fa-sliders-h"></i> 設定面板</button>
+        <button class="tab-btn" data-tab="shortcuts"><i class="fas fa-keyboard"></i> 快捷按鍵</button>
+        <button class="tab-btn" data-tab="runcommands"><i class="fas fa-terminal"></i> 常用 Win+R</button>
+        <button class="tab-btn" data-tab="favorites"><i class="fas fa-star"></i> 我的收藏</button>
+      </div>
 
-  <header>
-    <h1>Windows 11 工具箱</h1>
-    <p class="subtitle">設定面板 URI 直達、完整快捷鍵指南與 Win + R 執行指令</p>
-  </header>
-
-  <!-- 標籤切換 -->
-  <div class="tabs">
-    <button class="tab-btn active" data-tab="settings"><i class="fas fa-sliders-h"></i> 設定面板</button>
-    <button class="tab-btn" data-tab="shortcuts"><i class="fas fa-keyboard"></i> 快捷按鍵</button>
-    <button class="tab-btn" data-tab="runcommands"><i class="fas fa-terminal"></i> 常用 Win+R 指令</button>
-    <button class="tab-btn" data-tab="favorites"><i class="fas fa-star"></i> 我的收藏</button>
-  </div>
-
-  <!-- 搜尋框 -->
-  <div class="search-container">
-    <div class="search-wrapper">
-      <i class="fas fa-search search-icon"></i>
-      <input type="text" id="searchInput" placeholder="搜尋（設定項目 / 快捷鍵描述 / 指令）..." autocomplete="off" />
-      <button class="clear-search-btn" id="clearSearchBtn"><i class="fas fa-times"></i></button>
+      <button class="theme-toggle-btn" id="themeToggleBtn" title="切換色彩主題">
+        <i class="fas fa-moon"></i> <span>深色</span>
+      </button>
     </div>
-    <div class="search-hint">💡 提示：按 <b>Ctrl + K</b> 或 <b>/</b> 可立即搜尋；點擊複製圖示可複製 URI 或按鍵！</div>
-  </div>
 
-  <div class="search-result-count" id="searchResultCount"></div>
+    <!-- 第二列：搜尋列 + 統計計數 -->
+    <div class="search-row">
+      <div class="search-wrapper">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" id="searchInput" placeholder="搜尋功能、快捷鍵或指令..." autocomplete="off" />
+        <span class="search-shortcut-tag">Ctrl+K</span>
+        <button class="clear-search-btn" id="clearSearchBtn"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="search-result-count" id="searchResultCount"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
 
   <!-- 空搜尋狀態 -->
   <div class="empty-state" id="emptyState">
@@ -476,7 +496,7 @@
     <p>試試其他關鍵字，或切換上方分頁查看。</p>
   </div>
 
-  <!-- ==================== 1. 設定面板 (全部 9 大類完整補齊) ==================== -->
+  <!-- ==================== 1. 設定面板 (全部 9 大類完整保留) ==================== -->
   <div id="settings" class="tab-content active">
 
     <!-- 系統 -->
@@ -792,7 +812,7 @@
 
   </div>
 
-  <!-- ==================== 2. 快捷按鍵 (全部 5 大類完整補齊) ==================== -->
+  <!-- ==================== 2. 快捷按鍵 (全部 5 大類完整保留) ==================== -->
   <div id="shortcuts" class="tab-content">
 
     <!-- 最常用基礎快捷鍵 -->
@@ -1128,8 +1148,8 @@
     localStorage.setItem('theme', theme);
     const isDark = theme === 'dark';
     themeToggleBtn.innerHTML = isDark 
-      ? '<i class="fas fa-sun"></i> <span>淺色模式</span>' 
-      : '<i class="fas fa-moon"></i> <span>深色模式</span>';
+      ? '<i class="fas fa-sun"></i> <span>淺色</span>' 
+      : '<i class="fas fa-moon"></i> <span>深色</span>';
   }
   applyTheme(savedTheme);
 
@@ -1183,7 +1203,7 @@
       const text = copyBtn.dataset.copy;
       if (text) {
         navigator.clipboard.writeText(text).then(() => {
-          showToast(`已複製「${text}」到剪貼簿！`);
+          showToast(`已複製「${text}」！`);
         });
       }
     }
@@ -1218,7 +1238,7 @@
         showToast('已從收藏移除');
       } else {
         favorites.push(id);
-        showToast('已加入我的收藏 ⭐');
+        showToast('已加入收藏 ⭐');
       }
       localStorage.setItem('user_favorites', JSON.stringify(favorites));
       updateFavoriteButtons();
@@ -1312,7 +1332,7 @@
     });
 
     searchResultCount.style.display = 'block';
-    searchResultCount.textContent = `找到 ${matchCount} 個符合的項目`;
+    searchResultCount.textContent = `(${matchCount} 項)`;
     emptyState.style.display = matchCount === 0 ? 'block' : 'none';
   }
 
