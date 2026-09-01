@@ -1,447 +1,1325 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Windows 11 工具箱：設定面板 + 快捷鍵指南</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <title>Windows 11 工具箱：設定面板 + 快捷鍵 + 執行指令全指南</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   
   <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #f0f4f9 0%, #e2eafc 100%);
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --card-bg: #ffffff;
+      --card-hover-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+      --border-color: #e5e7eb;
+      --primary: #0078d4;
+      --primary-hover: #005a9e;
+      --kbd-bg: #f3f4f6;
+      --kbd-border: #d1d5db;
+      --kbd-text: #d946ef;
+      --header-shadow: rgba(0, 0, 0, 0.05);
+      --badge-bg: #e0f2fe;
+      --badge-color: #0369a1;
+      --toast-bg: #1f2937;
+      --toast-text: #ffffff;
+    }
+
+    [data-theme="dark"] {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --card-bg: #1e293b;
+      --card-hover-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+      --border-color: #334155;
+      --primary: #38bdf8;
+      --primary-hover: #0ea5e9;
+      --kbd-bg: #334155;
+      --kbd-border: #475569;
+      --kbd-text: #f472b6;
+      --header-shadow: rgba(0, 0, 0, 0.3);
+      --badge-bg: #1e3a8a;
+      --badge-color: #93c5fd;
+      --toast-bg: #f8fafc;
+      --toast-text: #0f172a;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
-      font-family: "Segoe UI", system-ui, sans-serif;
-      background: linear-gradient(to right, #e3f2fd, #fce4ec);
+      font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg-gradient);
+      background-attachment: fixed;
       margin: 0;
-      padding: 20px 16px 120px;
-      color: #222;
+      padding: 24px 16px 100px;
+      color: var(--text-main);
       min-height: 100vh;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* 頂部工具列 */
+    .top-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .theme-toggle-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 8px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 2px 6px var(--header-shadow);
+    }
+    .theme-toggle-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* 標題 */
+    header {
+      text-align: center;
+      margin: 1rem 0 2rem;
     }
     h1 {
-      text-align: center;
-      margin: 1em 0 0.5em;
-      font-size: 2.4rem;
-      color: #1a1a1a;
+      font-size: 2.3rem;
+      margin: 0 0 8px;
+      letter-spacing: -0.5px;
+      font-weight: 700;
     }
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      margin: 0;
+    }
+
+    /* 標籤導覽 (Tabs) */
     .tabs {
-      text-align: center;
-      margin: 1.5rem 0 1rem;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 1.8rem 0 1.5rem;
     }
     .tab-btn {
-      padding: 12px 32px;
-      font-size: 1.1rem;
-      border: none;
-      border-radius: 8px 8px 0 0;
+      padding: 11px 24px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
       cursor: pointer;
-      background: #e0e0e0;
-      margin: 0 6px;
-      transition: all 0.3s;
+      background: var(--card-bg);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.25s ease;
+      box-shadow: 0 2px 8px var(--header-shadow);
+    }
+    .tab-btn:hover {
+      color: var(--text-main);
+      transform: translateY(-2px);
     }
     .tab-btn.active {
-      background: #1976d2;
-      color: white;
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(0, 120, 212, 0.35);
     }
-    .tab-content {
-      display: none;
-    }
-    .tab-content.active {
-      display: block;
-    }
+
+    /* 搜尋欄 */
     .search-container {
-      text-align: center;
-      margin: 1rem 0 2.5rem;
+      position: relative;
+      max-width: 600px;
+      margin: 0 auto 2.2rem;
+    }
+    .search-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-icon {
+      position: absolute;
+      left: 18px;
+      color: var(--text-muted);
+      font-size: 1.1rem;
     }
     #searchInput {
-      padding: 14px 22px;
-      width: 90%;
-      max-width: 520px;
-      border: 1px solid #bbb;
+      width: 100%;
+      padding: 14px 45px 14px 48px;
+      border: 2px solid var(--border-color);
       border-radius: 999px;
-      font-size: 1.1rem;
-      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
-    }
-    #searchInput:focus {
-      outline: none;
-      border-color: #1976d2;
-      box-shadow: 0 0 0 4px rgba(25,118,210,0.2);
-    }
-
-    .section {
-      max-width: 1150px;
-      margin: 0 auto 4rem;
-    }
-    .section-title {
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin: 2.2rem 0 1.2rem;
-      padding-left: 16px;
-      border-left: 6px solid #444;
-      color: #111;
-    }
-
-    /* 設定面板樣式 */
-    .button-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 18px;
-    }
-    .grid-item-btn {
-      padding: 16px 20px;
       font-size: 1.05rem;
-      border: none;
-      border-radius: 14px;
-      color: white;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
-      min-height: 72px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      text-align: center;
-      white-space: normal;
-    }
-    .grid-item-btn:hover {
-      transform: translateY(-5px) scale(1.03);
-      box-shadow: 0 12px 28px rgba(0,0,0,0.25);
-    }
-    .grid-item-btn i {
-      font-size: 1.45em;
-      transition: all 0.3s;
-    }
-    .grid-item-btn:hover i {
-      transform: scale(1.2) rotate(10deg);
-    }
-
-    .system { background: #1976d2; }
-    .network { background: #0097a7; }
-    .personal { background: #8e24aa; }
-    .device { background: #2e7d32; }
-    .account { background: #e65100; }
-    .time { background: #5e35b1; }
-    .privacy { background: #c2185b; }
-    .apps { background: #455a64; }
-    .other { background: #6d4c41; }
-
-    /* 快捷鍵樣式 */
-    .shortcut-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-      gap: 16px;
-    }
-    .shortcut-item {
-      background: white;
-      border-radius: 12px;
-      padding: 16px 20px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+      background: var(--card-bg);
+      color: var(--text-main);
+      box-shadow: 0 4px 16px var(--header-shadow);
+      outline: none;
       transition: all 0.25s;
     }
-    .shortcut-item:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+    #searchInput:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(0, 120, 212, 0.2);
     }
-    .shortcut-key {
-      font-family: Consolas, monospace;
-      background: #f0f4f8;
-      padding: 5px 10px;
-      border-radius: 6px;
-      color: #d63384;
-      font-weight: bold;
-      white-space: nowrap;
+    .clear-search-btn {
+      position: absolute;
+      right: 16px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: none;
+    }
+    .clear-search-btn:hover { color: var(--text-main); }
+    .search-hint {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+    .search-result-count {
+      text-align: center;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+      display: none;
     }
 
-    /* 回到頂部 */
-    #back-to-top {
-      position: fixed;
-      bottom: 40px;
-      right: 40px;
-      width: 68px;
-      height: 68px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #6a11cb, #2575fc);
-      color: white;
-      font-size: 2.2rem;
-      border: 4px solid rgba(255,255,255,0.55);
+    /* 區塊 */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .section {
+      margin-bottom: 2.8rem;
+    }
+    .section-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin: 1.5rem 0 1.2rem;
+      padding-left: 14px;
+      border-left: 5px solid var(--primary);
+      color: var(--text-main);
+    }
+
+    /* 設定面板按鈕網格 */
+    .button-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .setting-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 14px 16px;
+      box-shadow: 0 4px 12px var(--header-shadow);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+    .setting-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--card-hover-shadow);
+      border-color: var(--primary);
+    }
+    .setting-info {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex: 1;
       cursor: pointer;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-      opacity: 0;
-      visibility: hidden;
-      transition: all 0.4s ease;
+      text-decoration: none;
+      color: inherit;
+    }
+    .setting-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 9999;
+      font-size: 1.2rem;
+      color: white;
+      flex-shrink: 0;
+    }
+    .setting-text h3 {
+      margin: 0 0 3px 0;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .setting-text p {
+      margin: 0;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-family: Consolas, monospace;
+    }
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .action-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .action-btn:hover {
+      color: var(--primary);
+      background: var(--border-color);
+    }
+    .action-btn.fav-btn.active {
+      color: #f59e0b;
+    }
+
+    /* 分類顏色標籤 */
+    .c-system { background: #1976d2; }
+    .c-network { background: #0097a7; }
+    .c-device { background: #2e7d32; }
+    .c-personal { background: #8e24aa; }
+    .c-apps { background: #455a64; }
+    .c-account { background: #e65100; }
+    .c-time { background: #5e35b1; }
+    .c-privacy { background: #c2185b; }
+    .c-other { background: #6d4c41; }
+    .c-run { background: #0d9488; }
+
+    /* 快捷鍵清單網格 */
+    .shortcut-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .shortcut-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: 0 3px 10px var(--header-shadow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.25s;
+    }
+    .shortcut-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--card-hover-shadow);
+    }
+    .shortcut-body {
+      flex: 1;
+    }
+    .keys {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    kbd {
+      background: var(--kbd-bg);
+      border: 1px solid var(--kbd-border);
+      border-bottom: 2px solid var(--kbd-border);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-family: Consolas, monospace;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--kbd-text);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .shortcut-desc {
+      font-size: 0.95rem;
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    /* 空搜尋提示 */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      display: none;
+    }
+    .empty-state i {
+      font-size: 3rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .empty-state h3 {
+      margin: 0 0 8px;
+      font-size: 1.3rem;
+    }
+    .empty-state p {
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    /* Toast 通知 */
+    #toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--toast-bg);
+      color: var(--toast-text);
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      z-index: 10000;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: none;
+    }
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* 回到頂部按鈕 */
+    #back-to-top {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      font-size: 1.3rem;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(0, 120, 212, 0.4);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
     }
     #back-to-top.show { opacity: 1; visibility: visible; }
-    #back-to-top:hover { transform: scale(1.2); box-shadow: 0 14px 32px rgba(0,0,0,0.5); }
-    #back-to-top i { transition: transform 0.35s; }
-    #back-to-top:hover i { transform: translateY(-8px); }
+    #back-to-top:hover {
+      transform: scale(1.15) translateY(-3px);
+      background: var(--primary-hover);
+    }
 
     @media (max-width: 600px) {
-      h1 { font-size: 2rem; }
-      .tabs { margin: 1rem 0; }
-      .tab-btn { padding: 10px 20px; font-size: 1rem; margin: 0 3px; }
-      .button-container, .shortcut-list { grid-template-columns: 1fr; gap: 14px; }
-      .grid-item-btn, .shortcut-item { min-height: 68px; font-size: 1rem; }
-      #back-to-top { width: 58px; height: 58px; font-size: 1.9rem; bottom: 30px; right: 30px; }
+      h1 { font-size: 1.8rem; }
+      .button-container, .shortcut-list { grid-template-columns: 1fr; }
+      .tab-btn { padding: 8px 16px; font-size: 0.95rem; }
     }
   </style>
 </head>
 <body>
 
-<h1>Windows 11 工具箱：設定面板 + 快捷鍵指南</h1>
-
-<div class="tabs">
-  <button class="tab-btn active" data-tab="settings">設定面板</button>
-  <button class="tab-btn" data-tab="shortcuts">快捷按鍵</button>
-</div>
-
-<div class="search-container">
-  <input type="text" id="searchInput" placeholder="搜尋（設定項目 / 快捷鍵描述）...">
-</div>
-
-<div id="settings" class="tab-content active">
-<div class="section">
-  <div class="section-title">系統</div>
-  <div class="button-container">
-    <button class="grid-item-btn system" onclick="location='ms-settings:'"><i class="fas fa-cog"></i> 設定首頁</button>
-    <button class="grid-item-btn system" onclick="location='ms-settings:about'"><i class="fas fa-info-circle"></i> 關於本機</button>
-    <button class="grid-item-btn system" onclick="location='ms-settings:display'"><i class="fas fa-desktop"></i> 顯示</button>
-    <button class="grid-item-btn system" onclick="location='ms-settings:nightlight'"><i class="fas fa-moon"></i> 夜間模式</button>
-    <button class="grid-item-btn system" onclick="location='ms-settings:powersleep'"><i class="fas fa-battery-half"></i> 電源與睡眠</button>
-    <button class="grid-item-btn system" onclick="location='ms-settings:batterysaver'"><i class="fas fa-bolt"></i> 電池節電器</button>
-    <button class="grid-item-btn system" onclick="location='ms-settings:sound'"><i class="fas fa-volume-up"></i> 聲音</button>
-    <button class="grid-item-btn system" onclick="location='ms-settings:notifications'"><i class="fas fa-bell"></i> 通知</button>
-    <button class="grid-item-btn system" onclick="location='ms-settings:multitasking'"><i class="fas fa-columns"></i> 多工處理</button>
-    <button class="grid-item-btn system" onclick="location='ms-settings:clipboard'"><i class="fas fa-clipboard"></i> 剪貼簿</button>
-    <button class="grid-item-btn system" onclick="location='ms-settings:storage'"><i class="fas fa-hdd"></i> 儲存空間</button>
-    <button class="grid-item-btn system" onclick="location='ms-settings:activation'"><i class="fas fa-key"></i> 啟用</button>
-    <button class="grid-item-btn system" onclick="location='ms-settings:remotedesktop'"><i class="fas fa-desktop-alt"></i> 遠端桌面</button>
+<div class="container">
+  <div class="top-bar">
+    <button class="theme-toggle-btn" id="themeToggleBtn" title="切換色彩主題">
+      <i class="fas fa-moon"></i> <span>深色模式</span>
+    </button>
   </div>
-</div>
 
-<div class="section">
-  <div class="section-title">網路與網際網路</div>
-  <div class="button-container">
-    <button class="grid-item-btn network" onclick="location='ms-settings:network'"><i class="fas fa-network-wired"></i> 網路總覽</button>
-    <button class="grid-item-btn network" onclick="location='ms-settings:network-status'"><i class="fas fa-signal"></i> 網路狀態</button>
-    <button class="grid-item-btn network" onclick="location='ms-settings:network-wifi'"><i class="fas fa-wifi"></i> Wi-Fi</button>
-    <button class="grid-item-btn network" onclick="location='ms-settings:network-ethernet'"><i class="fas fa-ethernet"></i> 乙太網路</button>
-    <button class="grid-item-btn network" onclick="location='ms-settings:network-proxy'"><i class="fas fa-user-secret"></i> Proxy</button>
-    <button class="grid-item-btn network" onclick="location='ms-settings:network-mobilehotspot'"><i class="fas fa-mobile-alt"></i> 行動熱點</button>
-    <button class="grid-item-btn network" onclick="location='ms-settings:network-cellular'"><i class="fas fa-sim-card"></i> 行動網路</button>
-    <button class="grid-item-btn network" onclick="location='ms-settings:network-vpn'"><i class="fas fa-lock"></i> VPN</button>
-    <button class="grid-item-btn network" onclick="location='ms-settings:network-airplanemode'"><i class="fas fa-plane"></i> 飛航模式</button>
+  <header>
+    <h1>Windows 11 工具箱</h1>
+    <p class="subtitle">設定面板 URI 直達、完整快捷鍵指南與 Win + R 執行指令</p>
+  </header>
+
+  <!-- 標籤切換 -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="settings"><i class="fas fa-sliders-h"></i> 設定面板</button>
+    <button class="tab-btn" data-tab="shortcuts"><i class="fas fa-keyboard"></i> 快捷按鍵</button>
+    <button class="tab-btn" data-tab="runcommands"><i class="fas fa-terminal"></i> 常用 Win+R 指令</button>
+    <button class="tab-btn" data-tab="favorites"><i class="fas fa-star"></i> 我的收藏</button>
   </div>
-</div>
 
-<div class="section">
-  <div class="section-title">藍牙與裝置</div>
-  <div class="button-container">
-    <button class="grid-item-btn device" onclick="location='ms-settings:bluetooth'"><i class="fas fa-bluetooth-b"></i> 藍牙與裝置</button>
-    <button class="grid-item-btn device" onclick="location='ms-settings:printers'"><i class="fas fa-print"></i> 印表機與掃描器</button>
-    <button class="grid-item-btn device" onclick="location='ms-settings:mouse'"><i class="fas fa-mouse-pointer"></i> 滑鼠</button>
-    <button class="grid-item-btn device" onclick="location='ms-settings:touchpad'"><i class="fas fa-hand-pointer"></i> 觸控板</button>
-    <button class="grid-item-btn device" onclick="location='ms-settings:pen'"><i class="fas fa-pen"></i> 筆與 Windows Ink</button>
-    <button class="grid-item-btn device" onclick="location='ms-settings:autoplay'"><i class="fas fa-play"></i> 自動播放</button>
-    <button class="grid-item-btn device" onclick="location='ms-settings:usb'"><i class="fas fa-usb"></i> USB</button>
+  <!-- 搜尋框 -->
+  <div class="search-container">
+    <div class="search-wrapper">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" id="searchInput" placeholder="搜尋（設定項目 / 快捷鍵描述 / 指令）..." autocomplete="off" />
+      <button class="clear-search-btn" id="clearSearchBtn"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="search-hint">💡 提示：按 <b>Ctrl + K</b> 或 <b>/</b> 可立即搜尋；點擊複製圖示可複製 URI 或按鍵！</div>
   </div>
-</div>
 
-<div class="section">
-  <div class="section-title">個人化</div>
-  <div class="button-container">
-    <button class="grid-item-btn personal" onclick="location='ms-settings:personalization'"><i class="fas fa-user-edit"></i> 個人化總覽</button>
-    <button class="grid-item-btn personal" onclick="location='ms-settings:personalization-background'"><i class="fas fa-image"></i> 背景</button>
-    <button class="grid-item-btn personal" onclick="location='ms-settings:colors'"><i class="fas fa-palette"></i> 顏色</button>
-    <button class="grid-item-btn personal" onclick="location='ms-settings:themes'"><i class="fas fa-magic"></i> 主題</button>
-    <button class="grid-item-btn personal" onclick="location='ms-settings:lockscreen'"><i class="fas fa-lock"></i> 鎖定畫面</button>
-    <button class="grid-item-btn personal" onclick="location='ms-settings:fonts'"><i class="fas fa-font"></i> 字型</button>
-    <button class="grid-item-btn personal" onclick="location='ms-settings:taskbar'"><i class="fas fa-tasks"></i> 工作列</button>
-    <button class="grid-item-btn personal" onclick="location='ms-settings:personalization-start'"><i class="fas fa-th-large"></i> 開始功能表</button>
+  <div class="search-result-count" id="searchResultCount"></div>
+
+  <!-- 空搜尋狀態 -->
+  <div class="empty-state" id="emptyState">
+    <i class="fas fa-search-minus"></i>
+    <h3>找不到相符的項目</h3>
+    <p>試試其他關鍵字，或切換上方分頁查看。</p>
   </div>
-</div>
 
-<div class="section">
-  <div class="section-title">應用程式</div>
-  <div class="button-container">
-    <button class="grid-item-btn apps" onclick="location='ms-settings:appsfeatures'"><i class="fas fa-th-large"></i> 已安裝應用程式</button>
-    <button class="grid-item-btn apps" onclick="location='ms-settings:defaultapps'"><i class="fas fa-mouse-pointer"></i> 預設應用程式</button>
-    <button class="grid-item-btn apps" onclick="location='ms-settings:optionalfeatures'"><i class="fas fa-puzzle-piece"></i> 選用功能</button>
-    <button class="grid-item-btn apps" onclick="location='ms-settings:startupapps'"><i class="fas fa-rocket"></i> 啟動應用程式</button>
+  <!-- ==================== 1. 設定面板 (全部 9 大類完整補齊) ==================== -->
+  <div id="settings" class="tab-content active">
+
+    <!-- 系統 -->
+    <div class="section">
+      <div class="section-title">系統 (System)</div>
+      <div class="button-container">
+        <div class="setting-card" data-id="s-home">
+          <a class="setting-info" href="ms-settings:"><div class="setting-icon c-system"><i class="fas fa-cog"></i></div><div class="setting-text"><h3>設定首頁</h3><p>ms-settings:</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" title="複製 URI" data-copy="ms-settings:"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn" title="加入收藏"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="s-about">
+          <a class="setting-info" href="ms-settings:about"><div class="setting-icon c-system"><i class="fas fa-info-circle"></i></div><div class="setting-text"><h3>關於本機</h3><p>ms-settings:about</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:about"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="s-display">
+          <a class="setting-info" href="ms-settings:display"><div class="setting-icon c-system"><i class="fas fa-desktop"></i></div><div class="setting-text"><h3>顯示</h3><p>ms-settings:display</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:display"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="s-nightlight">
+          <a class="setting-info" href="ms-settings:nightlight"><div class="setting-icon c-system"><i class="fas fa-moon"></i></div><div class="setting-text"><h3>夜間模式</h3><p>ms-settings:nightlight</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:nightlight"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="s-powersleep">
+          <a class="setting-info" href="ms-settings:powersleep"><div class="setting-icon c-system"><i class="fas fa-battery-half"></i></div><div class="setting-text"><h3>電源與睡眠</h3><p>ms-settings:powersleep</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:powersleep"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="s-batterysaver">
+          <a class="setting-info" href="ms-settings:batterysaver"><div class="setting-icon c-system"><i class="fas fa-bolt"></i></div><div class="setting-text"><h3>電池節電器</h3><p>ms-settings:batterysaver</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:batterysaver"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="s-sound">
+          <a class="setting-info" href="ms-settings:sound"><div class="setting-icon c-system"><i class="fas fa-volume-up"></i></div><div class="setting-text"><h3>聲音</h3><p>ms-settings:sound</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:sound"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="s-notifications">
+          <a class="setting-info" href="ms-settings:notifications"><div class="setting-icon c-system"><i class="fas fa-bell"></i></div><div class="setting-text"><h3>通知</h3><p>ms-settings:notifications</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:notifications"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="s-multitasking">
+          <a class="setting-info" href="ms-settings:multitasking"><div class="setting-icon c-system"><i class="fas fa-columns"></i></div><div class="setting-text"><h3>多工處理</h3><p>ms-settings:multitasking</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:multitasking"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="s-clipboard">
+          <a class="setting-info" href="ms-settings:clipboard"><div class="setting-icon c-system"><i class="fas fa-clipboard"></i></div><div class="setting-text"><h3>剪貼簿</h3><p>ms-settings:clipboard</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:clipboard"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="s-storage">
+          <a class="setting-info" href="ms-settings:storage"><div class="setting-icon c-system"><i class="fas fa-hdd"></i></div><div class="setting-text"><h3>儲存空間</h3><p>ms-settings:storage</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:storage"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="s-activation">
+          <a class="setting-info" href="ms-settings:activation"><div class="setting-icon c-system"><i class="fas fa-key"></i></div><div class="setting-text"><h3>啟用</h3><p>ms-settings:activation</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:activation"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="s-remotedesktop">
+          <a class="setting-info" href="ms-settings:remotedesktop"><div class="setting-icon c-system"><i class="fas fa-desktop"></i></div><div class="setting-text"><h3>遠端桌面</h3><p>ms-settings:remotedesktop</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:remotedesktop"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 網路與網際網路 -->
+    <div class="section">
+      <div class="section-title">網路與網際網路 (Network & Internet)</div>
+      <div class="button-container">
+        <div class="setting-card" data-id="n-network">
+          <a class="setting-info" href="ms-settings:network"><div class="setting-icon c-network"><i class="fas fa-network-wired"></i></div><div class="setting-text"><h3>網路總覽</h3><p>ms-settings:network</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:network"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="n-status">
+          <a class="setting-info" href="ms-settings:network-status"><div class="setting-icon c-network"><i class="fas fa-signal"></i></div><div class="setting-text"><h3>網路狀態</h3><p>ms-settings:network-status</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:network-status"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="n-wifi">
+          <a class="setting-info" href="ms-settings:network-wifi"><div class="setting-icon c-network"><i class="fas fa-wifi"></i></div><div class="setting-text"><h3>Wi-Fi</h3><p>ms-settings:network-wifi</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:network-wifi"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="n-ethernet">
+          <a class="setting-info" href="ms-settings:network-ethernet"><div class="setting-icon c-network"><i class="fas fa-ethernet"></i></div><div class="setting-text"><h3>乙太網路</h3><p>ms-settings:network-ethernet</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:network-ethernet"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="n-proxy">
+          <a class="setting-info" href="ms-settings:network-proxy"><div class="setting-icon c-network"><i class="fas fa-user-secret"></i></div><div class="setting-text"><h3>Proxy</h3><p>ms-settings:network-proxy</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:network-proxy"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="n-hotspot">
+          <a class="setting-info" href="ms-settings:network-mobilehotspot"><div class="setting-icon c-network"><i class="fas fa-mobile-alt"></i></div><div class="setting-text"><h3>行動熱點</h3><p>ms-settings:network-mobilehotspot</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:network-mobilehotspot"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="n-cellular">
+          <a class="setting-info" href="ms-settings:network-cellular"><div class="setting-icon c-network"><i class="fas fa-sim-card"></i></div><div class="setting-text"><h3>行動網路</h3><p>ms-settings:network-cellular</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:network-cellular"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="n-vpn">
+          <a class="setting-info" href="ms-settings:network-vpn"><div class="setting-icon c-network"><i class="fas fa-lock"></i></div><div class="setting-text"><h3>VPN</h3><p>ms-settings:network-vpn</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:network-vpn"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="n-airplane">
+          <a class="setting-info" href="ms-settings:network-airplanemode"><div class="setting-icon c-network"><i class="fas fa-plane"></i></div><div class="setting-text"><h3>飛航模式</h3><p>ms-settings:network-airplanemode</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:network-airplanemode"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 藍牙與裝置 -->
+    <div class="section">
+      <div class="section-title">藍牙與裝置 (Bluetooth & Devices)</div>
+      <div class="button-container">
+        <div class="setting-card" data-id="d-bluetooth">
+          <a class="setting-info" href="ms-settings:bluetooth"><div class="setting-icon c-device"><i class="fab fa-bluetooth-b"></i></div><div class="setting-text"><h3>藍牙與裝置</h3><p>ms-settings:bluetooth</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:bluetooth"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="d-printers">
+          <a class="setting-info" href="ms-settings:printers"><div class="setting-icon c-device"><i class="fas fa-print"></i></div><div class="setting-text"><h3>印表機與掃描器</h3><p>ms-settings:printers</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:printers"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="d-mouse">
+          <a class="setting-info" href="ms-settings:mouse"><div class="setting-icon c-device"><i class="fas fa-mouse-pointer"></i></div><div class="setting-text"><h3>滑鼠</h3><p>ms-settings:mouse</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:mouse"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="d-touchpad">
+          <a class="setting-info" href="ms-settings:touchpad"><div class="setting-icon c-device"><i class="fas fa-hand-pointer"></i></div><div class="setting-text"><h3>觸控板</h3><p>ms-settings:touchpad</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:touchpad"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="d-pen">
+          <a class="setting-info" href="ms-settings:pen"><div class="setting-icon c-device"><i class="fas fa-pen"></i></div><div class="setting-text"><h3>筆與 Windows Ink</h3><p>ms-settings:pen</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:pen"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="d-autoplay">
+          <a class="setting-info" href="ms-settings:autoplay"><div class="setting-icon c-device"><i class="fas fa-play"></i></div><div class="setting-text"><h3>自動播放</h3><p>ms-settings:autoplay</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:autoplay"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="d-usb">
+          <a class="setting-info" href="ms-settings:usb"><div class="setting-icon c-device"><i class="fas fa-usb"></i></div><div class="setting-text"><h3>USB</h3><p>ms-settings:usb</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:usb"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 個人化 -->
+    <div class="section">
+      <div class="section-title">個人化 (Personalization)</div>
+      <div class="button-container">
+        <div class="setting-card" data-id="p-personalization">
+          <a class="setting-info" href="ms-settings:personalization"><div class="setting-icon c-personal"><i class="fas fa-user-edit"></i></div><div class="setting-text"><h3>個人化總覽</h3><p>ms-settings:personalization</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:personalization"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="p-background">
+          <a class="setting-info" href="ms-settings:personalization-background"><div class="setting-icon c-personal"><i class="fas fa-image"></i></div><div class="setting-text"><h3>背景</h3><p>ms-settings:personalization-background</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:personalization-background"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="p-colors">
+          <a class="setting-info" href="ms-settings:colors"><div class="setting-icon c-personal"><i class="fas fa-palette"></i></div><div class="setting-text"><h3>顏色</h3><p>ms-settings:colors</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:colors"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="p-themes">
+          <a class="setting-info" href="ms-settings:themes"><div class="setting-icon c-personal"><i class="fas fa-magic"></i></div><div class="setting-text"><h3>主題</h3><p>ms-settings:themes</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:themes"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="p-lockscreen">
+          <a class="setting-info" href="ms-settings:lockscreen"><div class="setting-icon c-personal"><i class="fas fa-lock"></i></div><div class="setting-text"><h3>鎖定畫面</h3><p>ms-settings:lockscreen</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:lockscreen"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="p-fonts">
+          <a class="setting-info" href="ms-settings:fonts"><div class="setting-icon c-personal"><i class="fas fa-font"></i></div><div class="setting-text"><h3>字型</h3><p>ms-settings:fonts</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:fonts"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="p-taskbar">
+          <a class="setting-info" href="ms-settings:taskbar"><div class="setting-icon c-personal"><i class="fas fa-tasks"></i></div><div class="setting-text"><h3>工作列</h3><p>ms-settings:taskbar</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:taskbar"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="p-start">
+          <a class="setting-info" href="ms-settings:personalization-start"><div class="setting-icon c-personal"><i class="fas fa-th-large"></i></div><div class="setting-text"><h3>開始功能表</h3><p>ms-settings:personalization-start</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:personalization-start"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 應用程式 -->
+    <div class="section">
+      <div class="section-title">應用程式 (Apps)</div>
+      <div class="button-container">
+        <div class="setting-card" data-id="a-appsfeatures">
+          <a class="setting-info" href="ms-settings:appsfeatures"><div class="setting-icon c-apps"><i class="fas fa-th-large"></i></div><div class="setting-text"><h3>已安裝應用程式</h3><p>ms-settings:appsfeatures</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:appsfeatures"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="a-defaultapps">
+          <a class="setting-info" href="ms-settings:defaultapps"><div class="setting-icon c-apps"><i class="fas fa-mouse-pointer"></i></div><div class="setting-text"><h3>預設應用程式</h3><p>ms-settings:defaultapps</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:defaultapps"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="a-optional">
+          <a class="setting-info" href="ms-settings:optionalfeatures"><div class="setting-icon c-apps"><i class="fas fa-puzzle-piece"></i></div><div class="setting-text"><h3>選用功能</h3><p>ms-settings:optionalfeatures</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:optionalfeatures"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="a-startup">
+          <a class="setting-info" href="ms-settings:startupapps"><div class="setting-icon c-apps"><i class="fas fa-rocket"></i></div><div class="setting-text"><h3>啟動應用程式</h3><p>ms-settings:startupapps</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:startupapps"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 帳戶 -->
+    <div class="section">
+      <div class="section-title">帳戶 (Accounts)</div>
+      <div class="button-container">
+        <div class="setting-card" data-id="ac-yourinfo">
+          <a class="setting-info" href="ms-settings:yourinfo"><div class="setting-icon c-account"><i class="fas fa-user"></i></div><div class="setting-text"><h3>您的資訊</h3><p>ms-settings:yourinfo</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:yourinfo"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="ac-signin">
+          <a class="setting-info" href="ms-settings:signinoptions"><div class="setting-icon c-account"><i class="fas fa-key"></i></div><div class="setting-text"><h3>登入選項</h3><p>ms-settings:signinoptions</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:signinoptions"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="ac-other">
+          <a class="setting-info" href="ms-settings:otherusers"><div class="setting-icon c-account"><i class="fas fa-users"></i></div><div class="setting-text"><h3>其他使用者</h3><p>ms-settings:otherusers</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:otherusers"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="ac-family">
+          <a class="setting-info" href="ms-settings:family-group"><div class="setting-icon c-account"><i class="fas fa-users-cog"></i></div><div class="setting-text"><h3>家庭群組</h3><p>ms-settings:family-group</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:family-group"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="ac-workplace">
+          <a class="setting-info" href="ms-settings:workplace"><div class="setting-icon c-account"><i class="fas fa-briefcase"></i></div><div class="setting-text"><h3>公司或學校帳戶</h3><p>ms-settings:workplace</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:workplace"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 時間與語言 -->
+    <div class="section">
+      <div class="section-title">時間與語言 (Time & Language)</div>
+      <div class="button-container">
+        <div class="setting-card" data-id="t-dateandtime">
+          <a class="setting-info" href="ms-settings:dateandtime"><div class="setting-icon c-time"><i class="fas fa-clock"></i></div><div class="setting-text"><h3>日期與時間</h3><p>ms-settings:dateandtime</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:dateandtime"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="t-region">
+          <a class="setting-info" href="ms-settings:regionlanguage"><div class="setting-icon c-time"><i class="fas fa-globe-asia"></i></div><div class="setting-text"><h3>語言與地區</h3><p>ms-settings:regionlanguage</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:regionlanguage"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="t-keyboard">
+          <a class="setting-info" href="ms-settings:keyboard"><div class="setting-icon c-time"><i class="fas fa-keyboard"></i></div><div class="setting-text"><h3>鍵盤</h3><p>ms-settings:keyboard</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:keyboard"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="t-speech">
+          <a class="setting-info" href="ms-settings:speech"><div class="setting-icon c-time"><i class="fas fa-microphone"></i></div><div class="setting-text"><h3>語音</h3><p>ms-settings:speech</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:speech"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 隱私權與安全性 -->
+    <div class="section">
+      <div class="section-title">隱私權與安全性 (Privacy & Security)</div>
+      <div class="button-container">
+        <div class="setting-card" data-id="pr-privacy">
+          <a class="setting-info" href="ms-settings:privacy"><div class="setting-icon c-privacy"><i class="fas fa-user-shield"></i></div><div class="setting-text"><h3>隱私權總覽</h3><p>ms-settings:privacy</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:privacy"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="pr-general">
+          <a class="setting-info" href="ms-settings:privacy-general"><div class="setting-icon c-privacy"><i class="fas fa-shield-alt"></i></div><div class="setting-text"><h3>一般</h3><p>ms-settings:privacy-general</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:privacy-general"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="pr-location">
+          <a class="setting-info" href="ms-settings:privacy-location"><div class="setting-icon c-privacy"><i class="fas fa-map-marker-alt"></i></div><div class="setting-text"><h3>位置</h3><p>ms-settings:privacy-location</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:privacy-location"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="pr-camera">
+          <a class="setting-info" href="ms-settings:privacy-camera"><div class="setting-icon c-privacy"><i class="fas fa-video"></i></div><div class="setting-text"><h3>相機</h3><p>ms-settings:privacy-camera</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:privacy-camera"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="pr-microphone">
+          <a class="setting-info" href="ms-settings:privacy-microphone"><div class="setting-icon c-privacy"><i class="fas fa-microphone-slash"></i></div><div class="setting-text"><h3>麥克風</h3><p>ms-settings:privacy-microphone</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:privacy-microphone"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="pr-defender">
+          <a class="setting-info" href="ms-settings:windowsdefender"><div class="setting-icon c-privacy"><i class="fas fa-shield-virus"></i></div><div class="setting-text"><h3>Windows 安全性</h3><p>ms-settings:windowsdefender</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:windowsdefender"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="pr-update">
+          <a class="setting-info" href="ms-settings:windowsupdate"><div class="setting-icon c-privacy"><i class="fas fa-sync"></i></div><div class="setting-text"><h3>Windows Update</h3><p>ms-settings:windowsupdate</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:windowsupdate"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="pr-troubleshoot">
+          <a class="setting-info" href="ms-settings:troubleshoot"><div class="setting-icon c-privacy"><i class="fas fa-tools"></i></div><div class="setting-text"><h3>疑難排解</h3><p>ms-settings:troubleshoot</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:troubleshoot"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 無障礙 / 其他 -->
+    <div class="section">
+      <div class="section-title">無障礙 / 其他 (Accessibility & Others)</div>
+      <div class="button-container">
+        <div class="setting-card" data-id="o-display">
+          <a class="setting-info" href="ms-settings:easeofaccess-display"><div class="setting-icon c-other"><i class="fas fa-eye"></i></div><div class="setting-text"><h3>放大鏡與顯示</h3><p>ms-settings:easeofaccess-display</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:easeofaccess-display"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="o-mouse">
+          <a class="setting-info" href="ms-settings:easeofaccess-mousepointer"><div class="setting-icon c-other"><i class="fas fa-mouse-pointer"></i></div><div class="setting-text"><h3>滑鼠指標</h3><p>ms-settings:easeofaccess-mousepointer</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:easeofaccess-mousepointer"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="o-gamebar">
+          <a class="setting-info" href="ms-settings:gaming-gamebar"><div class="setting-icon c-other"><i class="fas fa-gamepad"></i></div><div class="setting-text"><h3>遊戲列</h3><p>ms-settings:gaming-gamebar</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:gaming-gamebar"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="setting-card" data-id="o-project">
+          <a class="setting-info" href="ms-settings:project"><div class="setting-icon c-other"><i class="fas fa-expand-arrows-alt"></i></div><div class="setting-text"><h3>投影</h3><p>ms-settings:project</p></div></a>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="ms-settings:project"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+      </div>
+    </div>
+
   </div>
-</div>
 
-<div class="section">
-  <div class="section-title">帳戶</div>
-  <div class="button-container">
-    <button class="grid-item-btn account" onclick="location='ms-settings:yourinfo'"><i class="fas fa-user"></i> 您的資訊</button>
-    <button class="grid-item-btn account" onclick="location='ms-settings:signinoptions'"><i class="fas fa-key"></i> 登入選項</button>
-    <button class="grid-item-btn account" onclick="location='ms-settings:otherusers'"><i class="fas fa-users"></i> 其他使用者</button>
-    <button class="grid-item-btn account" onclick="location='ms-settings:family-group'"><i class="fas fa-users-cog"></i> 家庭群組</button>
-    <button class="grid-item-btn account" onclick="location='ms-settings:workplace'"><i class="fas fa-briefcase"></i> 公司或學校帳戶</button>
+  <!-- ==================== 2. 快捷按鍵 (全部 5 大類完整補齊) ==================== -->
+  <div id="shortcuts" class="tab-content">
+
+    <!-- 最常用基礎快捷鍵 -->
+    <div class="section">
+      <div class="section-title">最常用基礎快捷鍵</div>
+      <div class="shortcut-list">
+        <div class="shortcut-card" data-id="sc-copy">
+          <div class="shortcut-body"><div class="keys"><kbd>Ctrl</kbd> + <kbd>C</kbd> / <kbd>Ctrl</kbd> + <kbd>Insert</kbd></div><div class="shortcut-desc">複製</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Ctrl + C"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-paste">
+          <div class="shortcut-body"><div class="keys"><kbd>Ctrl</kbd> + <kbd>V</kbd> / <kbd>Shift</kbd> + <kbd>Insert</kbd></div><div class="shortcut-desc">貼上</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Ctrl + V"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-cut">
+          <div class="shortcut-body"><div class="keys"><kbd>Ctrl</kbd> + <kbd>X</kbd></div><div class="shortcut-desc">剪下</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Ctrl + X"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-undo">
+          <div class="shortcut-body"><div class="keys"><kbd>Ctrl</kbd> + <kbd>Z</kbd></div><div class="shortcut-desc">復原</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Ctrl + Z"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-selectall">
+          <div class="shortcut-body"><div class="keys"><kbd>Ctrl</kbd> + <kbd>A</kbd></div><div class="shortcut-desc">全選</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Ctrl + A"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-alttab">
+          <div class="shortcut-body"><div class="keys"><kbd>Alt</kbd> + <kbd>Tab</kbd></div><div class="shortcut-desc">切換視窗</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Alt + Tab"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-altf4">
+          <div class="shortcut-body"><div class="keys"><kbd>Alt</kbd> + <kbd>F4</kbd></div><div class="shortcut-desc">關閉視窗</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Alt + F4"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-winl">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>L</kbd></div><div class="shortcut-desc">鎖定電腦</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + L"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-wind">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>D</kbd></div><div class="shortcut-desc">顯示 / 隱藏桌面</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + D"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Windows 鍵組合（核心功能） -->
+    <div class="section">
+      <div class="section-title">Windows 鍵組合（核心功能）</div>
+      <div class="shortcut-list">
+        <div class="shortcut-card" data-id="sc-win">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd></div><div class="shortcut-desc">開啟 / 關閉開始功能表</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-wine">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>E</kbd></div><div class="shortcut-desc">檔案總管</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + E"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-wini">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>I</kbd></div><div class="shortcut-desc">設定</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + I"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-wina">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>A</kbd></div><div class="shortcut-desc">快速設定</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + A"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-winn">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>N</kbd></div><div class="shortcut-desc">通知中心</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + N"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-winw">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>W</kbd></div><div class="shortcut-desc">小工具 (Widgets)</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + W"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-winc">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>C</kbd></div><div class="shortcut-desc">Copilot (AI 助理)</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + C"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-wins">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>S</kbd> / <kbd>Q</kbd></div><div class="shortcut-desc">搜尋</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + S"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-wintab">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>Tab</kbd></div><div class="shortcut-desc">工作檢視 / 虛擬桌面</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + Tab"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-winshifts">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd></div><div class="shortcut-desc">區域截圖</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + Shift + S"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-windot">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>.</kbd> / <kbd>;</kbd></div><div class="shortcut-desc">表情符號面板</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + ."><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-winv">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>V</kbd></div><div class="shortcut-desc">剪貼簿歷史</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + V"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-wink">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>K</kbd></div><div class="shortcut-desc">投射 / 連接無線顯示器</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + K"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 視窗與 Snap 佈局 -->
+    <div class="section">
+      <div class="section-title">視窗與 Snap 佈局</div>
+      <div class="shortcut-list">
+        <div class="shortcut-card" data-id="sc-winz">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>Z</kbd></div><div class="shortcut-desc">Snap 佈局建議</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + Z"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-winleftright">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>←</kbd> / <kbd>→</kbd></div><div class="shortcut-desc">貼靠左 / 右半屏</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + Left/Right"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-winup">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>↑</kbd></div><div class="shortcut-desc">最大化視窗</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + Up"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-windown">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>↓</kbd></div><div class="shortcut-desc">最小化 / 還原視窗</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + Down"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-winshiftleftright">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>Shift</kbd> + <kbd>←</kbd> / <kbd>→</kbd></div><div class="shortcut-desc">移到另一螢幕</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + Shift + Left/Right"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 檔案總管與文字編輯 -->
+    <div class="section">
+      <div class="section-title">檔案總管與文字編輯</div>
+      <div class="shortcut-list">
+        <div class="shortcut-card" data-id="sc-altd">
+          <div class="shortcut-body"><div class="keys"><kbd>Alt</kbd> + <kbd>D</kbd> / <kbd>Ctrl</kbd> + <kbd>L</kbd></div><div class="shortcut-desc">選取網址列 / 路徑列</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Alt + D"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-f2">
+          <div class="shortcut-body"><div class="keys"><kbd>F2</kbd></div><div class="shortcut-desc">重新命名</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="F2"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-ctrlshiftn">
+          <div class="shortcut-body"><div class="keys"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>N</kbd></div><div class="shortcut-desc">建立新資料夾</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Ctrl + Shift + N"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-ctrlbackspace">
+          <div class="shortcut-body"><div class="keys"><kbd>Ctrl</kbd> + <kbd>Backspace</kbd></div><div class="shortcut-desc">刪除左邊一個字詞</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Ctrl + Backspace"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-ctrlarrows">
+          <div class="shortcut-body"><div class="keys"><kbd>Ctrl</kbd> + <kbd>←</kbd> / <kbd>→</kbd></div><div class="shortcut-desc">按單字跳轉游標</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Ctrl + Left/Right"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 無障礙與其他 -->
+    <div class="section">
+      <div class="section-title">無障礙與其他</div>
+      <div class="shortcut-list">
+        <div class="shortcut-card" data-id="sc-winplus">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>+</kbd></div><div class="shortcut-desc">開啟放大鏡</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + +"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-taskmgr">
+          <div class="shortcut-body"><div class="keys"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Esc</kbd></div><div class="shortcut-desc">工作管理員</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Ctrl + Shift + Esc"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-sysinfo">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>Pause</kbd> / <kbd>Break</kbd></div><div class="shortcut-desc">系統資訊</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + Pause"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+        <div class="shortcut-card" data-id="sc-prtscn">
+          <div class="shortcut-body"><div class="keys"><kbd>Win</kbd> + <kbd>PrtScn</kbd></div><div class="shortcut-desc">全螢幕截圖並儲存</div></div>
+          <div class="card-actions"><button class="action-btn copy-btn" data-copy="Win + PrtScn"><i class="fas fa-copy"></i></button><button class="action-btn fav-btn"><i class="far fa-star"></i></button></div>
+        </div>
+      </div>
+    </div>
+
   </div>
-</div>
 
-<div class="section">
-  <div class="section-title">時間與語言</div>
-  <div class="button-container">
-    <button class="grid-item-btn time" onclick="location='ms-settings:dateandtime'"><i class="fas fa-clock"></i> 日期與時間</button>
-    <button class="grid-item-btn time" onclick="location='ms-settings:regionlanguage'"><i class="fas fa-globe-asia"></i> 語言與地區</button>
-    <button class="grid-item-btn time" onclick="location='ms-settings:keyboard'"><i class="fas fa-keyboard"></i> 鍵盤</button>
-    <button class="grid-item-btn time" onclick="location='ms-settings:speech'"><i class="fas fa-microphone"></i> 語音</button>
-  </div>
-</div>
+  <!-- ==================== 3. 常用 Win + R 執行指令 ==================== -->
+  <div id="runcommands" class="tab-content">
+    <div class="section">
+      <div class="section-title">實用 Win + R 執行指令</div>
+      <div class="button-container">
+        <div class="setting-card" data-id="run-ncpa">
+          <div class="setting-info">
+            <div class="setting-icon c-run"><i class="fas fa-network-wired"></i></div>
+            <div class="setting-text">
+              <h3>網路連線 (介面卡設定)</h3>
+              <p>ncpa.cpl</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn copy-btn" title="複製指令" data-copy="ncpa.cpl"><i class="fas fa-copy"></i></button>
+            <button class="action-btn fav-btn" title="加入收藏"><i class="far fa-star"></i></button>
+          </div>
+        </div>
 
-<div class="section">
-  <div class="section-title">隱私權與安全性</div>
-  <div class="button-container">
-    <button class="grid-item-btn privacy" onclick="location='ms-settings:privacy'"><i class="fas fa-user-shield"></i> 隱私權總覽</button>
-    <button class="grid-item-btn privacy" onclick="location='ms-settings:privacy-general'"><i class="fas fa-shield-alt"></i> 一般</button>
-    <button class="grid-item-btn privacy" onclick="location='ms-settings:privacy-location'"><i class="fas fa-map-marker-alt"></i> 位置</button>
-    <button class="grid-item-btn privacy" onclick="location='ms-settings:privacy-camera'"><i class="fas fa-video"></i> 相機</button>
-    <button class="grid-item-btn privacy" onclick="location='ms-settings:privacy-microphone'"><i class="fas fa-microphone-slash"></i> 麥克風</button>
-    <button class="grid-item-btn privacy" onclick="location='ms-settings:windowsdefender'"><i class="fas fa-shield-virus"></i> Windows 安全性</button>
-    <button class="grid-item-btn privacy" onclick="location='ms-settings:windowsupdate'"><i class="fas fa-sync"></i> Windows Update</button>
-    <button class="grid-item-btn privacy" onclick="location='ms-settings:troubleshoot'"><i class="fas fa-tools"></i> 疑難排解</button>
-  </div>
-</div>
+        <div class="setting-card" data-id="run-appwiz">
+          <div class="setting-info">
+            <div class="setting-icon c-run"><i class="fas fa-cubes"></i></div>
+            <div class="setting-text">
+              <h3>傳統程式和功能 (解除安裝)</h3>
+              <p>appwiz.cpl</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn copy-btn" data-copy="appwiz.cpl"><i class="fas fa-copy"></i></button>
+            <button class="action-btn fav-btn"><i class="far fa-star"></i></button>
+          </div>
+        </div>
 
-<div class="section">
-  <div class="section-title">無障礙 / 其他</div>
-  <div class="button-container">
-    <button class="grid-item-btn other" onclick="location='ms-settings:easeofaccess-display'"><i class="fas fa-eye"></i> 放大鏡與顯示</button>
-    <button class="grid-item-btn other" onclick="location='ms-settings:easeofaccess-mousepointer'"><i class="fas fa-mouse-pointer"></i> 滑鼠指標</button>
-    <button class="grid-item-btn other" onclick="location='ms-settings:gaming-gamebar'"><i class="fas fa-gamepad"></i> 遊戲列</button>
-    <button class="grid-item-btn other" onclick="location='ms-settings:project'"><i class="fas fa-expand-arrows-alt"></i> 投影</button>
-  </div>
-</div>
-</div>
+        <div class="setting-card" data-id="run-devmgmt">
+          <div class="setting-info">
+            <div class="setting-icon c-run"><i class="fas fa-microchip"></i></div>
+            <div class="setting-text">
+              <h3>裝置管理員</h3>
+              <p>devmgmt.msc</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn copy-btn" data-copy="devmgmt.msc"><i class="fas fa-copy"></i></button>
+            <button class="action-btn fav-btn"><i class="far fa-star"></i></button>
+          </div>
+        </div>
 
-<div id="shortcuts" class="tab-content">
-  <div class="section">
-    <div class="section-title">最常用基礎快捷鍵</div>
-    <div class="shortcut-list">
-      <div class="shortcut-item"><span class="shortcut-key">Ctrl + C</span> / Ctrl + Insert → 複製</div>
-      <div class="shortcut-item"><span class="shortcut-key">Ctrl + V</span> / Shift + Insert → 貼上</div>
-      <div class="shortcut-item"><span class="shortcut-key">Ctrl + X</span> → 剪下</div>
-      <div class="shortcut-item"><span class="shortcut-key">Ctrl + Z</span> → 復原</div>
-      <div class="shortcut-item"><span class="shortcut-key">Ctrl + A</span> → 全選</div>
-      <div class="shortcut-item"><span class="shortcut-key">Alt + Tab</span> → 切換視窗</div>
-      <div class="shortcut-item"><span class="shortcut-key">Alt + F4</span> → 關閉視窗</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + L</span> → 鎖定電腦</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + D</span> → 顯示/隱藏桌面</div>
+        <div class="setting-card" data-id="run-regedit">
+          <div class="setting-info">
+            <div class="setting-icon c-run"><i class="fas fa-database"></i></div>
+            <div class="setting-text">
+              <h3>登錄編輯程式</h3>
+              <p>regedit</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn copy-btn" data-copy="regedit"><i class="fas fa-copy"></i></button>
+            <button class="action-btn fav-btn"><i class="far fa-star"></i></button>
+          </div>
+        </div>
+
+        <div class="setting-card" data-id="run-cleanmgr">
+          <div class="setting-info">
+            <div class="setting-icon c-run"><i class="fas fa-broom"></i></div>
+            <div class="setting-text">
+              <h3>磁碟清理工具</h3>
+              <p>cleanmgr</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn copy-btn" data-copy="cleanmgr"><i class="fas fa-copy"></i></button>
+            <button class="action-btn fav-btn"><i class="far fa-star"></i></button>
+          </div>
+        </div>
+
+        <div class="setting-card" data-id="run-gpedit">
+          <div class="setting-info">
+            <div class="setting-icon c-run"><i class="fas fa-users-cog"></i></div>
+            <div class="setting-text">
+              <h3>本機群組原則編輯器</h3>
+              <p>gpedit.msc</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn copy-btn" data-copy="gpedit.msc"><i class="fas fa-copy"></i></button>
+            <button class="action-btn fav-btn"><i class="far fa-star"></i></button>
+          </div>
+        </div>
+
+        <div class="setting-card" data-id="run-services">
+          <div class="setting-info">
+            <div class="setting-icon c-run"><i class="fas fa-cogs"></i></div>
+            <div class="setting-text">
+              <h3>Windows 服務管理</h3>
+              <p>services.msc</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn copy-btn" data-copy="services.msc"><i class="fas fa-copy"></i></button>
+            <button class="action-btn fav-btn"><i class="far fa-star"></i></button>
+          </div>
+        </div>
+
+        <div class="setting-card" data-id="run-dxdiag">
+          <div class="setting-info">
+            <div class="setting-icon c-run"><i class="fas fa-info-circle"></i></div>
+            <div class="setting-text">
+              <h3>DirectX 診斷工具</h3>
+              <p>dxdiag</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn copy-btn" data-copy="dxdiag"><i class="fas fa-copy"></i></button>
+            <button class="action-btn fav-btn"><i class="far fa-star"></i></button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-title">Windows 鍵組合（核心功能）</div>
-    <div class="shortcut-list">
-      <div class="shortcut-item"><span class="shortcut-key">Win</span> → 開啟/關閉開始功能表</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + E</span> → 檔案總管</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + I</span> → 設定</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + A</span> → 快速設定</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + N</span> → 通知中心</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + W</span> → 小工具 (Widgets)</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + C</span> → Copilot (AI 助理)</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + S / Q</span> → 搜尋</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + Tab</span> → 工作檢視 / 虛擬桌面</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + Shift + S</span> → 區域截圖</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + . / ;</span> → 表情符號面板</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + V</span> → 剪貼簿歷史</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + K</span> → 投射 / 連接無線顯示器</div>
+  <!-- ==================== 4. 我的收藏 ==================== -->
+  <div id="favorites" class="tab-content">
+    <div class="section">
+      <div class="section-title">我的收藏項目</div>
+      <div id="favContainer" class="button-container">
+        <!-- 動態渲染 -->
+      </div>
+      <div id="favEmpty" class="empty-state" style="display:block;">
+        <i class="far fa-star"></i>
+        <h3>目前尚無收藏項目</h3>
+        <p>點擊任何卡片右上角的星號 ★ 即可加入常用清單！</p>
+      </div>
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-title">視窗與 Snap 佈局</div>
-    <div class="shortcut-list">
-      <div class="shortcut-item"><span class="shortcut-key">Win + Z</span> → Snap 佈局建議</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + 左/右</span> → 貼靠左/右半屏</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + 上</span> → 最大化</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + 下</span> → 最小化 / 還原</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + Shift + 左/右</span> → 移到另一螢幕</div>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">檔案總管與文字編輯</div>
-    <div class="shortcut-list">
-      <div class="shortcut-item"><span class="shortcut-key">Alt + D / Ctrl + L</span> → 選取網址列</div>
-      <div class="shortcut-item"><span class="shortcut-key">F2</span> → 重新命名</div>
-      <div class="shortcut-item"><span class="shortcut-key">Ctrl + Shift + N</span> → 新資料夾</div>
-      <div class="shortcut-item"><span class="shortcut-key">Ctrl + Backspace</span> → 刪除左邊一個字</div>
-      <div class="shortcut-item"><span class="shortcut-key">Ctrl + 左右方向鍵</span> → 跳單字</div>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">無障礙與其他</div>
-    <div class="shortcut-list">
-      <div class="shortcut-item"><span class="shortcut-key">Win + +</span> → 開啟放大鏡</div>
-      <div class="shortcut-item"><span class="shortcut-key">Ctrl + Shift + Esc</span> → 工作管理員</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + Pause/Break</span> → 系統資訊</div>
-      <div class="shortcut-item"><span class="shortcut-key">Win + PrtScn</span> → 全螢幕截圖並儲存</div>
-    </div>
-  </div>
 </div>
 
-<button id="back-to-top"><i class="fas fa-chevron-up"></i></button>
+<!-- 浮動元件 -->
+<button id="back-to-top" title="回到頂部"><i class="fas fa-chevron-up"></i></button>
+<div id="toast"><i class="fas fa-check-circle"></i> <span id="toastMsg">已複製到剪貼簿！</span></div>
 
 <script>
-  // Tab 切換
-  document.querySelectorAll('.tab-btn').forEach(btn => {
+  // 1. 主題切換 (Light / Dark)
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const savedTheme = localStorage.getItem('theme') || (prefersDark ? 'dark' : 'light');
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    const isDark = theme === 'dark';
+    themeToggleBtn.innerHTML = isDark 
+      ? '<i class="fas fa-sun"></i> <span>淺色模式</span>' 
+      : '<i class="fas fa-moon"></i> <span>深色模式</span>';
+  }
+  applyTheme(savedTheme);
+
+  themeToggleBtn.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  });
+
+  // 2. Tab 切換
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      tabBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      document.getElementById(btn.dataset.tab).classList.add('active');
-      
-      // 切換分頁時重置搜尋
+
+      tabContents.forEach(c => c.classList.remove('active'));
+      const target = document.getElementById(btn.dataset.tab);
+      if (target) target.classList.add('active');
+
+      if (btn.dataset.tab === 'favorites') {
+        renderFavorites();
+      }
+
+      // 重設搜尋
       searchInput.value = '';
-      resetDisplay();
+      clearSearchBtn.style.display = 'none';
+      searchResultCount.style.display = 'none';
+      resetFilter();
     });
   });
 
-  const searchInput = document.getElementById('searchInput');
+  // 3. 複製功能 & Toast
+  const toast = document.getElementById('toast');
+  const toastMsg = document.getElementById('toastMsg');
+  let toastTimer = null;
 
-  // 重置顯示狀態
-  function resetDisplay() {
+  function showToast(msg) {
+    toastMsg.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+
+  document.addEventListener('click', e => {
+    const copyBtn = e.target.closest('.copy-btn');
+    if (copyBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const text = copyBtn.dataset.copy;
+      if (text) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast(`已複製「${text}」到剪貼簿！`);
+        });
+      }
+    }
+  });
+
+  // 4. 收藏功能 (LocalStorage)
+  let favorites = JSON.parse(localStorage.getItem('user_favorites') || '[]');
+
+  function updateFavoriteButtons() {
+    document.querySelectorAll('.fav-btn').forEach(btn => {
+      const card = btn.closest('[data-id]');
+      if (!card) return;
+      const id = card.dataset.id;
+      const isFav = favorites.includes(id);
+      btn.classList.toggle('active', isFav);
+      btn.innerHTML = isFav ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
+    });
+  }
+  updateFavoriteButtons();
+
+  document.addEventListener('click', e => {
+    const favBtn = e.target.closest('.fav-btn');
+    if (favBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const card = favBtn.closest('[data-id]');
+      if (!card) return;
+      const id = card.dataset.id;
+
+      if (favorites.includes(id)) {
+        favorites = favorites.filter(item => item !== id);
+        showToast('已從收藏移除');
+      } else {
+        favorites.push(id);
+        showToast('已加入我的收藏 ⭐');
+      }
+      localStorage.setItem('user_favorites', JSON.stringify(favorites));
+      updateFavoriteButtons();
+
+      if (document.getElementById('favorites').classList.contains('active')) {
+        renderFavorites();
+      }
+    }
+  });
+
+  function renderFavorites() {
+    const favContainer = document.getElementById('favContainer');
+    const favEmpty = document.getElementById('favEmpty');
+    favContainer.innerHTML = '';
+
+    if (favorites.length === 0) {
+      favEmpty.style.display = 'block';
+      return;
+    }
+    favEmpty.style.display = 'none';
+
+    favorites.forEach(id => {
+      const originalCard = document.querySelector(`[data-id="${id}"]`);
+      if (originalCard) {
+        const clone = originalCard.cloneNode(true);
+        favContainer.appendChild(clone);
+      }
+    });
+    updateFavoriteButtons();
+  }
+
+  // 5. 搜尋功能 + 快捷鍵 (Ctrl + K / '/')
+  const searchInput = document.getElementById('searchInput');
+  const clearSearchBtn = document.getElementById('clearSearchBtn');
+  const searchResultCount = document.getElementById('searchResultCount');
+  const emptyState = document.getElementById('emptyState');
+
+  window.addEventListener('keydown', e => {
+    if ((e.ctrlKey && e.key.toLowerCase() === 'k') || (e.key === '/' && document.activeElement !== searchInput)) {
+      e.preventDefault();
+      searchInput.focus();
+      searchInput.select();
+    }
+  });
+
+  searchInput.addEventListener('input', () => {
+    const term = searchInput.value.trim().toLowerCase();
+    clearSearchBtn.style.display = term ? 'block' : 'none';
+    filterContent(term);
+  });
+
+  clearSearchBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    clearSearchBtn.style.display = 'none';
+    resetFilter();
+    searchInput.focus();
+  });
+
+  function resetFilter() {
+    emptyState.style.display = 'none';
+    searchResultCount.style.display = 'none';
     const activeTab = document.querySelector('.tab-content.active');
-    activeTab.querySelectorAll('.shortcut-item, .grid-item-btn, .section').forEach(el => {
+    if (!activeTab) return;
+    activeTab.querySelectorAll('.setting-card, .shortcut-card, .section').forEach(el => {
       el.style.display = '';
     });
   }
 
-  // 統一搜尋功能邏輯
-  searchInput.addEventListener('input', function() {
-    const term = this.value.trim().toLowerCase();
+  function filterContent(term) {
     const activeTab = document.querySelector('.tab-content.active');
     if (!activeTab) return;
 
-    // 1. 過濾項目（排除標籤按鈕）
-    const items = activeTab.querySelectorAll('.shortcut-item, .grid-item-btn');
-    items.forEach(item => {
-      const text = item.textContent.toLowerCase();
-      item.style.display = (term === '' || text.includes(term)) ? '' : 'none';
+    if (!term) {
+      resetFilter();
+      return;
+    }
+
+    let matchCount = 0;
+    const cards = activeTab.querySelectorAll('.setting-card, .shortcut-card');
+
+    cards.forEach(card => {
+      const text = card.textContent.toLowerCase();
+      const isMatch = text.includes(term);
+      card.style.display = isMatch ? '' : 'none';
+      if (isMatch) matchCount++;
     });
 
-    // 2. 處理分類區塊的連動隱藏
     activeTab.querySelectorAll('.section').forEach(sec => {
-      // 檢查該區塊內是否還有「非隱藏」的內容項目
-      const visibleItems = sec.querySelectorAll('.shortcut-item:not([style*="display: none"]), .grid-item-btn:not([style*="display: none"])');
-      
-      if (term === '' || visibleItems.length > 0) {
-        sec.style.display = '';
-      } else {
-        sec.style.display = 'none';
-      }
+      const visible = sec.querySelectorAll('.setting-card:not([style*="display: none"]), .shortcut-card:not([style*="display: none"])');
+      sec.style.display = visible.length > 0 ? '' : 'none';
     });
-  });
 
-  // 回到頂部功能
+    searchResultCount.style.display = 'block';
+    searchResultCount.textContent = `找到 ${matchCount} 個符合的項目`;
+    emptyState.style.display = matchCount === 0 ? 'block' : 'none';
+  }
+
+  // 6. 回到頂部按鈕
   const backToTop = document.getElementById('back-to-top');
   window.addEventListener('scroll', () => {
-    backToTop.classList.toggle('show', window.scrollY > 400);
+    backToTop.classList.toggle('show', window.scrollY > 300);
   });
   backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 </script>
