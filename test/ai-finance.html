@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>六大AI龍頭財務雷達｜大聖整理 (PRO)</title>
+<link rel="icon" href="data:,">
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2333; --panel3:#232b3b; --line:#2d3548;
+    --txt:#e6edf3; --sub:#9aa7b8; --gold:#e8b339; --gold2:#f5d48a;
+    --red:#ff6b6b; --green:#5dd39e; --blue:#58a6ff; --purple:#bc8cff; --cyan:#39d3c2;
+    --warn:#ffd27d;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html{scroll-behavior:smooth;}
+  body{font-family:"Segoe UI","Microsoft JhengHei","PingFang TC",system-ui,sans-serif;
+       background:linear-gradient(180deg,#0b0e14 0%,var(--bg) 40%); color:var(--txt); line-height:1.7;}
+  .wrap{max-width:1160px; margin:0 auto; padding:24px 18px 60px;}
+  
+  /* Header */
+  header{border-bottom:1px solid var(--line); padding-bottom:20px; margin-bottom:18px;}
+  .badge{display:inline-block; background:linear-gradient(90deg,#6b4b12,#8a6416); color:var(--gold2);
+         border:1px solid #b8902f; font-size:12px; padding:2px 12px; border-radius:999px; letter-spacing:1.5px;}
+  h1{font-size:28px; margin:12px 0 6px; letter-spacing:1px;}
+  h1 .star{color:var(--gold);}
+  .sub{color:var(--sub); font-size:13.5px;}
+  .meta{color:var(--sub); font-size:12px; margin-top:8px;}
+  .meta b{color:var(--gold2); font-weight:600;}
+
+  /* Floating / Sticky Toolbar */
+  .toolbar-sticky-wrapper{position:sticky; top:10px; z-index:90; margin-bottom:18px;}
+  .toolbar-panel{background:rgba(22, 27, 34, 0.92); backdrop-filter:blur(10px);
+                 border:1px solid var(--line); border-radius:14px; padding:10px 14px;
+                 display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between;
+                 box-shadow:0 8px 24px rgba(0,0,0,0.4);}
+  .tool-group{display:flex; flex-wrap:wrap; gap:6px; align-items:center;}
+  .btn{font-size:12px; color:var(--txt); text-decoration:none; border:1px solid var(--line);
+       padding:5px 12px; border-radius:999px; background:var(--panel2); cursor:pointer; font-family:inherit;
+       display:inline-flex; align-items:center; gap:5px; transition:all .2s;}
+  .btn:hover{border-color:var(--gold); color:var(--gold2); transform:translateY(-1px);}
+  .btn.act{background:var(--green); color:#111; font-weight:700; border-color:var(--green);}
+  .btn.danger{border-color:#7d2e4d; color:#ff9db0;}
+  .btn.danger:hover{background:#4d1f2e;}
+
+  /* Filters */
+  .filter-bar{display:flex; align-items:center; gap:6px; margin:10px 0 16px; flex-wrap:wrap;}
+  .filter-lbl{font-size:12px; color:var(--sub); margin-right:4px;}
+  .f-chip{font-size:11.5px; padding:3px 10px; border-radius:6px; border:1px solid var(--line); background:var(--panel2); cursor:pointer; color:var(--txt);}
+  .f-chip.active{background:var(--gold); color:#111; font-weight:700; border-color:var(--gold);}
+
+  .stored{font-size:12px; color:var(--sub); margin-bottom:12px;}
+  .stored b{color:var(--green);}
+  
+  /* Ticker */
+  .ticker{display:flex; align-items:center; gap:10px; background:var(--panel2); border:1px solid var(--line);
+          border-radius:10px; padding:10px 14px; margin:0 0 16px; font-size:13px;}
+  .ticker .t{flex-shrink:0; background:var(--gold); color:#111; font-weight:700; padding:2px 10px; border-radius:6px;}
+  .ticker .msg{overflow:hidden; white-space:nowrap; text-overflow:ellipsis; color:var(--gold2); flex-grow:1;}
+  
+  h2{font-size:19px; margin:32px 0 12px; padding-left:10px; border-left:4px solid var(--gold); display:flex; align-items:center; justify-content:space-between;}
+  h3{font-size:15px; margin:14px 0 8px; color:var(--gold2);}
+
+  /* Table Style + Sticky First Column */
+  .table-scroll{overflow-x:auto; width:100%; border:1px solid var(--line); border-radius:10px; margin:10px 0 4px; background:var(--panel);}
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{background:var(--panel2); text-align:left; padding:10px 12px; color:var(--gold2);
+     font-weight:600; white-space:nowrap; border-bottom:1px solid var(--line);}
+  td{padding:9px 12px; border-bottom:1px solid #232b3b; vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:rgba(255,255,255,0.02);}
+
+  /* Sticky First Column */
+  th:first-child, td:first-child{position:sticky; left:0; z-index:2; background:var(--panel2); min-width:110px;}
+  tbody td:first-child{background:var(--panel); font-weight:600;}
+  tbody tr:hover td:first-child{background:#1a202c;}
+
+  .co{color:var(--blue);} .gg{color:var(--cyan);} .cl{color:var(--red);}
+  .mt{color:var(--green);} .xa{color:var(--purple);} .or{color:var(--gold);}
+
+  /* Status Pills */
+  .st{display:inline-block; font-size:11px; padding:2px 9px; border-radius:999px; white-space:nowrap; font-weight:500;}
+  .st.ok{background:#1f4d2e; color:var(--green); border:1px solid #2e7d4f;}
+  .st.warn{background:#4d3d1f; color:var(--warn); border:1px solid #7d6a2e;}
+  .st.bad{background:#4d1f2e; color:var(--red); border:1px solid #7d2e4d;}
+  body.editing .st{cursor:pointer; outline:1px dashed var(--gold); transform:scale(1.02);}
+  body.editing .st:hover{filter:brightness(1.2);}
+
+  /* Cells in Edit Mode */
+  .cell{min-width:60px; border-radius:4px; padding:2px 4px; transition:background .15s;}
+  body.editing .cell{outline:1px dashed var(--gold); background:#25251d; cursor:text;}
+  body.editing .cell:focus{outline:1px solid var(--gold); background:#353020;}
+  body.editing thead th::after{content:" ✎"; color:var(--gold); font-size:11px;}
+  body.editing [data-editable]{outline:1px dashed var(--gold); background:#25251d; cursor:text;}
+
+  /* Highlight negative cash */
+  .neg-val{color:var(--red); font-weight:600;}
+
+  /* Cards */
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin:12px 0;}
+  .card ul{margin:4px 0 0 18px; color:var(--txt); font-size:13.5px;}
+  .card li{margin:5px 0;}
+  .card li b{color:var(--gold2);}
+
+  /* Company Card Mode (Alternative View) */
+  #company-card-view{display:none; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:16px; margin:16px 0;}
+  .comp-card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:12px;}
+  .comp-card-header{display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); padding-bottom:8px;}
+  .comp-card-title{font-size:18px; font-weight:700;}
+  .comp-metric-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; background:var(--panel2); padding:10px; border-radius:8px;}
+  .comp-metric-item{text-align:center;}
+  .comp-metric-item span{font-size:11px; color:var(--sub); display:block;}
+  .comp-metric-item strong{font-size:13px;}
+  .comp-detail-box{font-size:12.5px; color:var(--txt); background:var(--panel2); border-radius:8px; padding:8px 10px; line-height:1.5;}
+  .comp-detail-box b{color:var(--gold2); display:inline-block; min-width:65px;}
+
+  /* Macro Grid */
+  .mstat{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin:10px 0 16px;}
+  .mc{background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:10px 12px; text-align:center;}
+  .mc b{display:block; font-size:11.5px; color:var(--sub); font-weight:600;}
+  .mc em{display:block; font-style:normal; font-size:16px; margin-top:4px; font-weight:700;}
+  .mc em.t-ok{color:var(--green);} .mc em.t-warn{color:var(--warn);} .mc em.t-bad{color:var(--red);}
+  .sval{cursor:text; border-radius:4px; padding:1px 4px;}
+
+  .quote{background:linear-gradient(135deg,#17140c,#1a1710); border:1px solid #5d4a1e; border-radius:12px;
+         padding:18px 20px; margin-top:34px; font-size:14px;}
+  .quote p{color:var(--gold2); font-weight:700; margin-bottom:8px;}
+  .quote ul{margin-left:20px;} .quote li{margin:6px 0; color:var(--txt);}
+  .quote li::marker{color:var(--gold);}
+  .hl{color:var(--gold2); font-weight:600;}
+
+  .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--panel2);
+         border:1px solid var(--green); color:var(--green); font-size:13px; padding:8px 22px;
+         border-radius:999px; opacity:0; transition:opacity .25s, transform .25s; pointer-events:none; z-index:999;
+         box-shadow:0 6px 20px rgba(0,0,0,0.5);}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(-5px);}
+  footer{margin-top:40px; border-top:1px solid var(--line); padding-top:16px; color:var(--sub); font-size:12px; text-align:center;}
+
+  /* Print optimization */
+  @media print{
+    .toolbar-sticky-wrapper, .filter-bar, footer, .toast, #b-edit{display:none !important;}
+    body{background:#fff; color:#000;}
+    .wrap{max-width:100%; padding:0;}
+    th, td{border-color:#ccc; color:#000; font-size:10pt;}
+    th{background:#f0f0f0;}
+    .card, .quote, .comp-card{border:1px solid #aaa; page-break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="badge">🐵 大聖財務雷達 PRO</span>
+    <h1><span class="star">✦</span> 六大AI龍頭財務追蹤</h1>
+    <div class="sub">現金流 × 預期收益 × 發債情形 × 資產負債｜單一檔案、離線可用、可編輯、自動存檔</div>
+    <div class="meta" id="t-asof" data-editable="asOf"></div>
+  </header>
+
+  <!-- Sticky Quick Action Bar -->
+  <div class="toolbar-sticky-wrapper">
+    <div class="toolbar-panel">
+      <div class="tool-group">
+        <button class="btn act" id="b-edit">✏️ 編輯模式</button>
+        <button class="btn" id="b-save">💾 儲存 (Ctrl+S)</button>
+        <button class="btn" id="b-view-toggle">🏢 公司全景檢視</button>
+      </div>
+      <div class="tool-group">
+        <button class="btn" id="b-export">📤 JSON</button>
+        <button class="btn" id="b-export-csv">📊 匯出 CSV</button>
+        <button class="btn" id="b-import">📥 匯入</button>
+        <button class="btn" id="b-print">🖨️ 列印/PDF</button>
+        <button class="btn danger" id="b-reset">♻️ 重設</button>
+        <input type="file" id="f-import" accept=".json,application/json" hidden>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Filter Chips -->
+  <div class="filter-bar">
+    <span class="filter-lbl">公司過濾：</span>
+    <span class="f-chip active" data-filter="ALL">全部 (6)</span>
+    <span class="f-chip" data-filter="NVDA">NVIDIA</span>
+    <span class="f-chip" data-filter="MSFT">微軟</span>
+    <span class="f-chip" data-filter="GOOGL">Alphabet</span>
+    <span class="f-chip" data-filter="META">Meta</span>
+    <span class="f-chip" data-filter="AMZN">亞馬遜</span>
+    <span class="f-chip" data-filter="ORCL">甲骨文</span>
+  </div>
+
+  <div class="stored" id="t-stored"></div>
+
+  <div class="ticker">
+    <span class="t">本季關鍵</span>
+    <span class="msg" id="t-ticker" data-editable="ticker"></span>
+  </div>
+
+  <!-- Alternative: Company Card Grid View -->
+  <div id="company-card-view"></div>
+
+  <!-- Standard Multi-Table View -->
+  <div id="table-view-container">
+    <h2>⚡ 營收體質速覽</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>公司</th><th>最新財報季</th><th>營收（年增）</th><th>淨利</th><th>自由現金流</th><th>資金體質</th></tr></thead>
+        <tbody id="tb-over"></tbody>
+      </table>
+    </div>
+
+    <h2>① 現金流</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>公司</th><th>營運現金流</th><th>資本支出</th><th>自由現金流</th><th>現金流警訊</th></tr></thead>
+        <tbody id="tb-cash"></tbody>
+      </table>
+    </div>
+
+    <h2>② 預期收益 / 財測</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>公司</th><th>最新財測 / 引導</th><th>資本支出計畫</th><th>一句話展望</th></tr></thead>
+        <tbody id="tb-out"></tbody>
+      </table>
+    </div>
+
+    <h2>③ 發債情形（2025～2026）</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>公司</th><th>最新發債動作</th><th>存量債務</th><th>發債態度</th></tr></thead>
+        <tbody id="tb-bonds"></tbody>
+      </table>
+    </div>
+
+    <h2>④ 資產負債（最新季）</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>公司</th><th>現金＋有價證券</th><th>負債</th><th>淨現金地位</th><th>體質評語</th></tr></thead>
+        <tbody id="tb-bs"></tbody>
+      </table>
+    </div>
+
+    <h2>⑤ 產能目標 vs 終端變現（金流循環自檢）</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>公司</th><th>產能側（蓋到哪）</th><th>變現側（收不收回來）</th><th>金流循環風險</th></tr></thead>
+        <tbody id="tb-cap"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <h3>🧭 這張表的讀法</h3>
+    <ul>
+      <li><b>產能側</b>＝供給放話：資本支出、GW 目標、積壓訂單——這些是「未來營收」不是現收現金。</li>
+      <li><b>變現側</b>＝需求證據：營收增速、DSO、預付/自帶設備比例——判斷「蓋完能不能收回錢」。</li>
+      <li><b>循環風險</b>＝兩側讀完的落點：賣方擔保越多、客戶越集中、預付越高，代表出貨愈快愈要盯違約。</li>
+    </ul>
+  </div>
+
+  <h2>⑥ 宏觀觀察台（油價・利率・Fed・關稅）</h2>
+  <div class="mstat" id="m-stats"></div>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>面向</th><th>最新動態</th><th>方向</th><th>對六大AI的影響</th><th>警戒線</th></tr></thead>
+      <tbody id="tb-macro"></tbody>
+    </table>
+  </div>
+
+  <div class="quote">
+    <p>🐵 大聖點評（一線之隔的領悟）</p>
+    <ul id="t-quote"></ul>
+  </div>
+
+  <footer id="t-foot"></footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+const esc = s => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+function toast(msg){
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove("show"), 2200);
+}
+
+const DEFAULT = {
+  asOf: "資料日期：2026-09-13｜財報基準：NVDA FY27Q2(7/26)・MSFT FY26全年(6/30)・GOOGL／META／AMZN 2026Q2(6/30)",
+  ticker: "六大龍頭 2026 資本支出合計上看 7,500 億美元(+77%)；Alphabet／Meta／亞馬遜／甲骨文自由現金流轉負，連 NVIDIA 都睽違5年重返債市｜🔭 宏觀台：10Y 4.9%、Fed 9/16 升息機率 90%、油價破百",
+  quote: [
+    "<b>燒錢難解：</b>六大龍頭把「過去的印鈔機」租給未來——資本支出合計約 7,500 億美元，僅約 2,100 億進當期損益，其餘全部躺進資產負債表逐年攤提。",
+    "<b>獲利含金量下滑：</b>Alphabet(+990億)、亞馬遜(Anthropic +534億)、NVIDIA(+78億)本季淨利全靠未實現投資收益撐場，看 GAAP EPS 前先拆掉這層美顏濾鏡。",
+    "<b>從淨現金轉向槓桿：</b>Meta 12個月內長債 360→840 億、Alphabet 一年內 160→1,000 億、甲骨文舉債 1,346 億＋FCF -237 億，連 NVIDIA 都發 200~250 億債。",
+    "<b>甲骨文是金字塔尖端：</b>RPO 6,380億 但逾半來自 OpenAI 一家；客戶預付購機、自帶 GPU——這已經不是雲服務，是「替別人蓋軍火庫還替別人背彈藥費」。",
+    "<b>三位一體盯法：</b>與其盯營收，不如盯 應收帳款(DSO)、回購是否喊停、發債節奏——這三樣才是 AI 投資循環能否閉合的風向計。"
+  ],
+  macro: {
+    stats: [
+      {k:"10Y 美債", v:"4.90%", tone:"bad"},
+      {k:"30Y 美債", v:"5.25%", tone:"bad"},
+      {k:"Fed 聯邦利率", v:"3.75%", tone:"warn"},
+      {k:"9/16 升息機率", v:"90%", tone:"bad"},
+      {k:"WTI 原油", v:">100 美元", tone:"bad"},
+      {k:"全美柴油", v:"破6美元紀錄", tone:"bad"}
+    ],
+    rows: [
+      { name:"美債10Y", mTone:"bad", mDir:"高檔上行", mNow:"4.90%（9/10）｜2023年11月以來新高", mImp:"再融資成本全面上升：甲骨文每年400億滾債首當其衝", mLine:"破 5.2% ＝ AI 融資斷鏈警報" },
+      { name:"美債30Y", mTone:"bad", mDir:"高檔", mNow:"5.25%｜站上 2023 年高點", mImp:"亞馬遜2066債、Alphabet百年債都在鎖「今天」的貴", mLine:"破 5.5% ＝ 長期資本計畫冰封" },
+      { name:"Fed 方針", mTone:"bad", mDir:"轉鷹", mNow:"9/16 升息機率 71→90%；基準利率 3.75%", mImp:"貼現率升＝AI盛宴估值先蹲", mLine:"一季內升息≥2 次 ＝ 循環轉折確認" },
+      { name:"能源／油價", mTone:"bad", mDir:"走升", mNow:"WTI 破百；柴油破 6 美元歷史紀錄", mImp:"電價＝資料中心最大變動成本，直接灌進營運成本", mLine:"油價回落 85 以下 ＝ 壓力緩解" },
+      { name:"美國通膨", mTone:"bad", mDir:"黏滯", mNow:"核心CPI 8月 +0.3%（月增）超預期", mImp:"通膨不下來＝Fed 無法轉鴿，AI 借貸成本居高不下", mLine:"核心月增回 0.2% 以下 ＝ 風向轉好" },
+      { name:"關稅戰線", mTone:"warn", mDir:"升級中", mNow:"改走301調查；60國課10~12.5%、美加50%對峙", mImp:"記憶體／HBM 漲價已令微軟資本支出+250億、亞馬遜+200億", mLine:"9月底川習會破局 ＝ 供應鏈再漲一波" }
+    ]
+  },
+  companies: [
+    {
+      name:"NVIDIA", ticker:"NVDA", cls:"co",
+      status:"淨現金印鈔機", statusTone:"ok",
+      report:"FY27 Q2（7/26）", rev:"962億（+106%）", ni:"597億", fcf:"213億",
+      ocf:"Q2 241億（H1 744億）", capex:"Q2 27億（輕資產）", csf:"Q2 213億（季減56%）",
+      cwarn:"應收帳款增至631億、DSO 45→60天，留意收現節奏",
+      olGuide:"Q3 FY27 營收 1,080億±2%", olCapex:"自有 CapEx 僅7.9億；號召5,000億第三方資金",
+      olNote:"需求仍遠大於供給；先進封裝與電力為主要交貨瓶頸",
+      boAction:"2026/6 睽違5年首發債 200~250億（認購達850億）", boDebt:"長債約75億（D/E 17%）", boTone:"建立流動性標竿，不影響AA評等",
+      bsCash:"現金224億＋有價證券769億", bsDebt:"總債務約75億、總資產2,068億", bsNet:"淨現金水位聯盟最高", bsVerdict:"體質最充沛，財務彈性無虞",
+      capCn:"2026 CapEx 號召5,000億第三方資金＋自擔保1,085億", capCash:"營收+106%仍加速；但DSO增至60天、應收帳631億", capRisk:"高（需求風險部分回流自身）", capTone:"warn"
+    },
+    {
+      name:"微軟", ticker:"MSFT", cls:"gg",
+      status:"營運現金雄壯", statusTone:"ok",
+      report:"FY26 全年（6/30）", rev:"2,990億（Q3 +18%）", ni:"1,337億", fcf:"670億",
+      ocf:"FY26 1,829億（+34%）", capex:"FY26 1,159億", csf:"FY26 670億（年減6%）",
+      cwarn:"Copilot 變現慢（企業僅約3%買授權）",
+      olGuide:"CY26 CapEx 調升至1,900億（記憶體漲價+250億）", olCapex:"Azure 增速維持 39~40%",
+      olNote:"雲端積壓訂單逾6,000億，產能仍受限",
+      boAction:"相對保守：FY26 淨償還債務約30億", boDebt:"總債約403億（對比4,424億權益）", boTone:"以營運現金為主扛開銷，槓桿最低",
+      bsCash:"現金209億、總資產7,584億", bsDebt:"總債務403億、流動負債1,688億", bsNet:"淨槓桿極低", bsVerdict:"體質最穩，靠本業現金流直扛資本開支",
+      capCn:"CY26 資本支出1,900億；Azure 積壓訂單逾6,000億", capCash:"FY26 營業現金1,829億歷史最強；Copilot 變現稍緩", capRisk:"低（本業現金充沛）", capTone:"ok"
+    },
+    {
+      name:"Alphabet", ticker:"GOOGL", cls:"cl",
+      status:"現金厚但長債飆", statusTone:"warn",
+      report:"2026 Q2（6/30）", rev:"1,198億（+24%）", ni:"1,121億（含未實現收益）", fcf:"-59億",
+      ocf:"Q2 391億（TTM 1,857億）", capex:"Q2 449億", csf:"Q2 -59億，史上首見負值",
+      cwarn:"淨利含990億未實現投資收益，GAAP EPS被大幅拉高",
+      olGuide:"FY26 資本支出 1,950~2,050億", olCapex:"2027 計畫顯著加碼",
+      olNote:"雲端Q2 +82%、訂單積壓逾5,000億；Gemini 商用擴張",
+      boAction:"2026發行全球債323億（含100年債）；12個月債務160億→約1,000億", boDebt:"長期債務982億", boTone:"營運現金、債市、股本同步融資",
+      bsCash:"現金＋有價證券 2,425億", bsDebt:"長債982億", bsNet:"淨現金約1,400億", bsVerdict:"現金底氣深，但FCF轉負且債務增長快",
+      capCn:"FY26 CapEx 約2,000億；雲端積壓訂單逾5,000億", capCash:"雲端+82%、RPO 5,195億快速轉化；惟單季FCF轉負", capRisk:"中（現金庫存充足，留意優先股股息）", capTone:"warn"
+    },
+    {
+      name:"Meta", ticker:"META", cls:"mt",
+      status:"自由現金被榨乾", statusTone:"bad",
+      report:"2026 Q2（6/30）", rev:"608億（+28%）", ni:"159億（年減14%）", fcf:"7.8億",
+      ocf:"Q2 319億", capex:"Q2 311億（年增翻倍）", csf:"Q2 僅 7.8億（年減91%）",
+      cwarn:"庫藏股暫停；單季認列訴訟24億；營業利益率降至31%",
+      olGuide:"Q3營收610~640億；費用1,650~1,690億", olCapex:"FY26 資本支出 1,300~1,450億",
+      olNote:"Advantage+ AI 廣告年化破750億，但基建無天花板",
+      boAction:"2025/10 發債300億；2026再加250億投等債", boDebt:"長債837億（2023年才360億）", boTone:"CFO明言將擴大發債與專案合作支應",
+      bsCash:"現金約903億", bsDebt:"長債837億", bsNet:"淨現金僅剩約66億", bsVerdict:"淨現金堡壘消失，完全轉為高槓桿 AI 模式",
+      capCn:"FY26 CapEx 1,300~1,450億；無自營雲，全押內部廣告", capCash:"廣告+27%有實績；但FCF幾近歸零，無第二曲線", capRisk:"中高（回購暫停、現金幾被基建吃光）", capTone:"bad"
+    },
+    {
+      name:"亞馬遜", ticker:"AMZN", cls:"xa",
+      status:"重資產轉型期", statusTone:"warn",
+      report:"2026 Q2（6/30）", rev:"2,006億（+20%）", ni:"626億（含Anthropic 534億）", fcf:"-76億",
+      ocf:"TTM 1,614億", capex:"Q2 542億", csf:"TTM -76億（轉負）",
+      cwarn:"淨利含 Anthropic 未實現收益534億；CapEx 上修至 2,200億",
+      olGuide:"Q3 營收1,970~2,020億；全年CapEx創歷史新高", olCapex:"AWS Q2 +37%、積壓訂單4,960億",
+      olNote:"2026資本支出估需至2027~2028逐步收成",
+      boAction:"2026連發美歐債逾千億（最長至2066年），承諾今年不再發債", boDebt:"總債務約1,289億", boTone:"坦承為世紀豪賭，以債爭取建置時效",
+      bsCash:"現金約1,000億", bsDebt:"總債務1,289億", bsNet:"淨負債約129億", bsVerdict:"複製當年AWS重資產突圍，但承擔長期融資成本",
+      capCn:"FY26 CapEx 2,200億；AWS 積壓訂單近5,000億", capCash:"AWS年化營收1,690億；但單季入不敷出FCF轉負", capRisk:"中高（變現回收時程較長）", capTone:"warn"
+    },
+    {
+      name:"甲骨文", ticker:"ORCL", cls:"or",
+      status:"極限槓桿豪賭", statusTone:"bad",
+      report:"FY26 全年（5/31）", rev:"674億（+17%）", ni:"170億", fcf:"-237億",
+      ocf:"FY26 320億（+54%）", capex:"FY26 557億（+162%）", csf:"FY26 -237億",
+      cwarn:"RPO 6,380億逾半來自OpenAI；客戶預付或自帶GPU",
+      olGuide:"FY27 營收目標900億；CapEx 上看950億", olCapex:"Stargate 德州廠90天完工3/4",
+      olNote:"Q1 FY27 營收預估 +27~29%，產能集中釋放",
+      boAction:"FY26舉債430億＋現增；FY27再籌400億；承諾2026底前不再發新債", boDebt:"總債務1,346億、現金313億", boTone:"以債養機，財報後股價兩度回檔9~10%",
+      bsCash:"現金313億", bsDebt:"總債務1,346億", bsNet:"淨負債破千億", bsVerdict:"終極高壓樣板：FCF深度赤字＋客戶過度集中",
+      capCn:"FY27 CapEx 衝950億；Stargate 100GW目標", capCash:"雲IaaS +93%，但客戶預付帶機、單一客戶敞口過大", capRisk:"極高（單一客戶依存＋高額借款）", capTone:"bad"
+    }
+  ]
+};
+
+/* —— 本地儲存模組 —— */
+const DBNAME="ai-finance-db", KEY="finance-data-v2";
+const canIDB = ("indexedDB" in window);
+function idb() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open(DBNAME, 2);
+    r.onupgradeneeded = e => { if (!e.target.result.objectStoreNames.contains("kv")) e.target.result.createObjectStore("kv"); };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function idbSet(pair) {
+  const db = await idb();
+  return new Promise(res => {
+    const t = db.transaction("kv","readwrite");
+    pair.forEach(([k,v]) => t.objectStore("kv").put(v,k));
+    t.oncomplete = res;
+  });
+}
+async function idbGet(k) {
+  try {
+    const db = await idb();
+    return await new Promise(res => {
+      const r = db.transaction("kv").objectStore("kv").get(k);
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => res(undefined);
+    });
+  } catch { return undefined; }
+}
+
+let DATA = DEFAULT;
+let currentFilter = "ALL";
+let isCardView = false;
+let isDirty = false;
+let editing = false;
+
+function deep(o){ return JSON.parse(JSON.stringify(o)); }
+
+/* —— 格式化輔助 —— */
+function formatFCF(valStr) {
+  const s = String(valStr);
+  if (s.includes("-") || s.includes("負")) {
+    return `<span class="neg-val">${esc(s)}</span>`;
+  }
+  return esc(s);
+}
+
+function pill(status, tone, type, index) {
+  return `<span class="st ${tone}" data-pill-type="${type}" data-pill-idx="${index}">${esc(status)}</span>`;
+}
+function cell(text, key, compIdx) {
+  return `<td class="cell" data-k="${key}" data-idx="${compIdx}">${esc(text)}</td>`;
+}
+
+/* —— 渲染核心 —— */
+function render() {
+  document.getElementById("t-asof").innerHTML = "🕒 " + esc(DATA.asOf);
+  document.getElementById("t-ticker").textContent = DATA.ticker;
+  document.getElementById("t-quote").innerHTML = DATA.quote.map((q, idx) => `<li data-quote-idx="${idx}" class="q-item">${q}</li>`).join("");
+  document.getElementById("t-foot").innerHTML = `🐵 大聖整理｜離線單檔案版本｜資料更新基準：${esc(DATA.asOf)}｜最新數據以各公司 SEC 10-K/10-Q 申報為準。`;
+
+  // 篩選公司
+  const filtered = DATA.companies.filter(c => currentFilter === "ALL" || c.ticker === currentFilter);
+
+  // 渲染 6 大表格
+  const tr = (fn) => filtered.map((c, i) => {
+    const origIdx = DATA.companies.findIndex(x => x.ticker === c.ticker);
+    return `<tr data-ticker="${c.ticker}"><td class="${c.cls}">${esc(c.name)} <span style="color:var(--sub);font-size:11px;">${esc(c.ticker)}</span></td>${fn(c, origIdx)}</tr>`;
+  }).join("");
+
+  document.getElementById("tb-over").innerHTML = tr((c, i) =>
+    cell(c.report,"report",i) + cell(c.rev,"rev",i) + cell(c.ni,"ni",i) +
+    `<td class="cell" data-k="fcf" data-idx="${i}">${formatFCF(c.fcf)}</td>` +
+    `<td>${pill(c.status, c.statusTone, "status", i)}</td>`
+  );
+
+  document.getElementById("tb-cash").innerHTML = tr((c, i) =>
+    cell(c.ocf,"ocf",i) + cell(c.capex,"capex",i) +
+    `<td class="cell" data-k="csf" data-idx="${i}">${formatFCF(c.csf)}</td>` +
+    cell(c.cwarn,"cwarn",i)
+  );
+
+  document.getElementById("tb-out").innerHTML = tr((c, i) =>
+    cell(c.olGuide,"olGuide",i) + cell(c.olCapex,"olCapex",i) + cell(c.olNote,"olNote",i)
+  );
+
+  document.getElementById("tb-bonds").innerHTML = tr((c, i) =>
+    cell(c.boAction,"boAction",i) + cell(c.boDebt,"boDebt",i) + cell(c.boTone,"boTone",i)
+  );
+
+  document.getElementById("tb-bs").innerHTML = tr((c, i) =>
+    cell(c.bsCash,"bsCash",i) + cell(c.bsDebt,"bsDebt",i) + cell(c.bsNet,"bsNet",i) + cell(c.bsVerdict,"bsVerdict",i)
+  );
+
+  document.getElementById("tb-cap").innerHTML = tr((c, i) =>
+    cell(c.capCn,"capCn",i) + cell(c.capCash,"capCash",i) +
+    `<td>${pill(c.capRisk, c.capTone, "capTone", i)}</td>`
+  );
+
+  // 渲染單一公司全景卡片模式
+  renderCompanyCards(filtered);
+
+  // 渲染宏觀觀察台
+  const MS = DATA.macro;
+  document.getElementById("m-stats").innerHTML = MS.stats.map((s, i) =>
+    `<div class="mc"><b>${esc(s.k)}</b><em class="sval t-${s.tone}" data-mstat-idx="${i}">${esc(s.v)}</em></div>`
+  ).join("");
+
+  document.getElementById("tb-macro").innerHTML = MS.rows.map((r, i) =>
+    `<tr><td><b>${esc(r.name)}</b></td><td class="cell" data-mk="mNow" data-midx="${i}">${esc(r.mNow)}</td><td>${pill(r.mDir, r.mTone, "mTone", i)}</td><td class="cell" data-mk="mImp" data-midx="${i}">${esc(r.mImp)}</td><td class="cell" data-mk="mLine" data-midx="${i}">${esc(r.mLine)}</td></tr>`
+  ).join("");
+
+  updateStoredStatus();
+  attachPillClickEvents();
+  if (editing) makeEditable(true);
+}
+
+/* —— 渲染單一公司卡片 —— */
+function renderCompanyCards(list) {
+  const container = document.getElementById("company-card-view");
+  container.innerHTML = list.map(c => `
+    <div class="comp-card">
+      <div class="comp-card-header">
+        <div class="comp-card-title ${c.cls}">${esc(c.name)} <span style="font-size:13px; color:var(--sub);">${esc(c.ticker)}</span></div>
+        <span class="st ${c.statusTone}">${esc(c.status)}</span>
+      </div>
+      <div class="comp-metric-grid">
+        <div class="comp-metric-item"><span>營收 (年增)</span><strong>${esc(c.rev)}</strong></div>
+        <div class="comp-metric-item"><span>最新淨利</span><strong>${esc(c.ni)}</strong></div>
+        <div class="comp-metric-item"><span>自由現金流</span><strong>${formatFCF(c.fcf)}</strong></div>
+      </div>
+      <div class="comp-detail-box"><b>營運現金</b>${esc(c.ocf)}</div>
+      <div class="comp-detail-box"><b>資本支出</b>${esc(c.capex)}</div>
+      <div class="comp-detail-box"><b>資產負債</b>現金: ${esc(c.bsCash)} / 債務: ${esc(c.bsDebt)}</div>
+      <div class="comp-detail-box"><b>發債狀況</b>${esc(c.boAction)}</div>
+      <div class="comp-detail-box"><b>產能與循環</b>${esc(c.capCn)} → <strong>風險: ${esc(c.capRisk)}</strong></div>
+    </div>
+  `).join("");
+}
+
+/* —— 儲存與狀態提示 —— */
+async function persist() {
+  await idbSet([[KEY, DATA]]);
+  localStorage.setItem(KEY, JSON.stringify(DATA));
+  isDirty = false;
+  updateStoredStatus();
+}
+
+function updateStoredStatus() {
+  const el = document.getElementById("t-stored");
+  el.innerHTML = `儲存引擎：<b>${canIDB ? "IndexedDB" : "localStorage"}</b> ｜ 追蹤企業：${DATA.companies.length} 家 ｜ 編輯狀態：${isDirty ? "<span style='color:var(--warn)'>● 未存檔變更</span>" : "<b style='color:var(--green)'>✔ 已同步</b>"}`;
+}
+
+/* —— 收集畫面編輯結果 (Rebuild) —— */
+function rebuild() {
+  // 頂部中繼資料
+  const elAsof = document.getElementById("t-asof");
+  if (elAsof) DATA.asOf = elAsof.textContent.replace("🕒 ", "").trim();
+  const elTicker = document.getElementById("t-ticker");
+  if (elTicker) DATA.ticker = elTicker.textContent.trim();
+
+  // 點評收集
+  const quotes = document.querySelectorAll("#t-quote li");
+  quotes.forEach((li, idx) => {
+    if (DATA.quote[idx] !== undefined) DATA.quote[idx] = li.innerHTML.trim();
+  });
+
+  // 表格內 cell 收集
+  document.querySelectorAll("td.cell[data-k]").forEach(td => {
+    const k = td.getAttribute("data-k");
+    const idx = parseInt(td.getAttribute("data-idx"), 10);
+    if (DATA.companies[idx] && DATA.companies[idx][k] !== undefined) {
+      DATA.companies[idx][k] = td.textContent.trim();
+    }
+  });
+
+  // 宏觀快照收集
+  document.querySelectorAll(".mc em.sval").forEach(em => {
+    const idx = parseInt(em.getAttribute("data-mstat-idx"), 10);
+    if (DATA.macro.stats[idx]) DATA.macro.stats[idx].v = em.textContent.trim();
+  });
+
+  // 宏觀表格收集
+  document.querySelectorAll("td.cell[data-mk]").forEach(td => {
+    const mk = td.getAttribute("data-mk");
+    const midx = parseInt(td.getAttribute("data-midx"), 10);
+    if (DATA.macro.rows[midx] && DATA.macro.rows[midx][mk] !== undefined) {
+      DATA.macro.rows[midx][mk] = td.textContent.trim();
+    }
+  });
+}
+
+/* —— 狀態 Pill 點擊循環切換 (ok -> warn -> bad) —— */
+function attachPillClickEvents() {
+  document.querySelectorAll(".st[data-pill-type]").forEach(el => {
+    el.onclick = () => {
+      if (!editing) return;
+      const type = el.getAttribute("data-pill-type");
+      const idx = parseInt(el.getAttribute("data-pill-idx"), 10);
+      const tones = ["ok", "warn", "bad"];
+      
+      if (type === "status") {
+        const currTone = DATA.companies[idx].statusTone;
+        const next = tones[(tones.indexOf(currTone) + 1) % tones.length];
+        DATA.companies[idx].statusTone = next;
+      } else if (type === "capTone") {
+        const currTone = DATA.companies[idx].capTone;
+        const next = tones[(tones.indexOf(currTone) + 1) % tones.length];
+        DATA.companies[idx].capTone = next;
+      } else if (type === "mTone") {
+        const currTone = DATA.macro.rows[idx].mTone;
+        const next = tones[(tones.indexOf(currTone) + 1) % tones.length];
+        DATA.macro.rows[idx].mTone = next;
+      }
+      isDirty = true;
+      render();
+    };
+  });
+}
+
+/* —— 切換可編輯狀態 —— */
+function makeEditable(enable) {
+  const selector = "td.cell, #m-stats .sval, [data-editable], #t-quote li";
+  document.querySelectorAll(selector).forEach(el => {
+    if (enable) {
+      el.setAttribute("contenteditable", "true");
+      el.oninput = () => { isDirty = true; updateStoredStatus(); };
+    } else {
+      el.removeAttribute("contenteditable");
+      el.oninput = null;
+    }
+  });
+}
+
+/* —— 匯出 CSV 模組 —— */
+function exportCSV() {
+  rebuild();
+  let csv = "\uFEFF"; // UTF-8 BOM
+  csv += "公司,代號,最新財報季,營收,淨利,自由現金流,營運現金流,資本支出,現金及有價證券,總債務,產能風險\n";
+  DATA.companies.forEach(c => {
+    const row = [
+      c.name, c.ticker, c.report, c.rev, c.ni, c.fcf, c.ocf, c.capex, c.bsCash, c.bsDebt, c.capRisk
+    ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(",");
+    csv += row + "\n";
+  });
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `AI-Finance-Radar-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast("已匯出 CSV 財務摘要試算表");
+}
+
+/* —— 事件監聽 —— */
+document.getElementById("b-edit").addEventListener("click", () => {
+  editing = !editing;
+  document.body.classList.toggle("editing", editing);
+  const b = document.getElementById("b-edit");
+  b.classList.toggle("act", editing);
+  b.textContent = editing ? "✔ 完成編輯" : "✏️ 編輯模式";
+  makeEditable(editing);
+  if (!editing) {
+    rebuild();
+    persist();
+    render();
+    toast("已儲存編輯內容 ✔");
+  }
+});
+
+document.getElementById("b-save").addEventListener("click", () => {
+  rebuild();
+  persist();
+  render();
+  toast("已儲存至本機快取 ✔");
+});
+
+document.getElementById("b-view-toggle").addEventListener("click", () => {
+  isCardView = !isCardView;
+  document.getElementById("table-view-container").style.display = isCardView ? "none" : "block";
+  document.getElementById("company-card-view").style.display = isCardView ? "grid" : "none";
+  document.getElementById("b-view-toggle").textContent = isCardView ? "📊 表格對比檢視" : "🏢 公司全景檢視";
+  toast(isCardView ? "已切換至單一公司全景卡片" : "已切換至橫向對比表格");
+});
+
+document.getElementById("b-export").addEventListener("click", () => {
+  rebuild();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(DATA, null, 2)], { type: "application/json" }));
+  a.download = `ai-finance-data-${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+  toast("已匯出完整 JSON 備份");
+});
+
+document.getElementById("b-export-csv").addEventListener("click", exportCSV);
+
+document.getElementById("b-print").addEventListener("click", () => {
+  window.print();
+});
+
+document.getElementById("b-import").addEventListener("click", () => document.getElementById("f-import").click());
+document.getElementById("f-import").addEventListener("change", e => {
+  const f = e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const obj = JSON.parse(rd.result);
+      if (!obj.companies || !obj.companies.length) throw new Error("格式錯誤");
+      DATA = deep(obj); render(); persist(); toast("匯入成功 ✔");
+    } catch { toast("匯入失敗：格式不符合規範"); }
+  };
+  rd.readAsText(f);
+  e.target.value = "";
+});
+
+document.getElementById("b-reset").addEventListener("click", () => {
+  if (confirm("確定重設為初始預設資料？現有本機修改將會被完全覆蓋。")) {
+    DATA = deep(DEFAULT); render(); persist(); toast("已恢復原廠預設數據 ✔");
+  }
+});
+
+// 公司快速過濾標籤
+document.querySelectorAll(".f-chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    document.querySelectorAll(".f-chip").forEach(c => c.classList.remove("active"));
+    chip.classList.add("active");
+    currentFilter = chip.getAttribute("data-filter");
+    render();
+  });
+});
+
+// 快捷鍵支援 Ctrl+S / Cmd+S
+window.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+    e.preventDefault();
+    rebuild();
+    persist();
+    render();
+    toast("已透過快捷鍵存檔 ✔");
+  }
+});
+
+// 防呆提示
+window.addEventListener("beforeunload", e => {
+  if (isDirty) {
+    e.preventDefault();
+    e.returnValue = "您有尚未儲存的修改，確定要離開嗎？";
+  }
+});
+
+/* —— 初始化加載 —— */
+(async () => {
+  let saved = await idbGet(KEY);
+  if (!saved) {
+    try { saved = JSON.parse(localStorage.getItem(KEY)); } catch { saved = null; }
+  }
+  if (saved && saved.companies) {
+    DATA = saved;
+  }
+  render();
+})();
+</script>
+</body>
+</html>
