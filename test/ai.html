@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI動態速報｜大聖整理</title>
+<link rel="icon" href="data:,">
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2333; --line:#2d3548;
+    --txt:#e6edf3; --sub:#9aa7b8; --gold:#e8b339; --gold2:#f5d48a;
+    --red:#ff6b6b; --green:#5dd39e; --blue:#58a6ff; --purple:#bc8cff; --cyan:#39d3c2;
+    --header-h: 84px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html{scroll-behavior:smooth;}
+  body{font-family:"Segoe UI","Microsoft JhengHei","PingFang TC",system-ui,sans-serif;
+       background:linear-gradient(180deg,#0b0e14 0%,var(--bg) 40%); color:var(--txt); line-height:1.7;}
+
+  /* 凍結置頂 Header */
+  .sticky-nav{
+    position:sticky; top:0; z-index:1000;
+    background:rgba(13, 17, 23, 0.88);
+    backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    border-bottom:1px solid var(--line);
+    padding:8px 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .nav-inner{
+    max-width:1000px; margin:0 auto;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .nav-top{
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+  .brand-group{
+    display:flex; align-items:center; gap:8px;
+  }
+  .badge{
+    display:inline-flex; align-items:center; gap:4px;
+    background:linear-gradient(90deg,#573e10,#7a5914); color:var(--gold2);
+    border:1px solid #b8902f; font-size:11px; padding:1px 8px; border-radius:999px; letter-spacing:1px;
+  }
+  h1{
+    font-size:17px; font-weight:700; letter-spacing:0.5px; display:inline-flex; align-items:center; gap:4px; margin:0;
+  }
+  h1 .star{color:var(--gold);}
+  .meta-brief{
+    color:var(--sub); font-size:11.5px; display:flex; align-items:center; gap:6px;
+  }
+  .meta-brief b{color:var(--gold2); font-weight:600;}
+  .meta-brief .dot{display:inline-block; width:3px; height:3px; border-radius:50%; background:var(--sub);}
+
+  /* 緊湊錨點導航 */
+  .anchor{
+    display:flex; align-items:center; gap:6px; overflow-x:auto; padding-bottom:2px;
+    scrollbar-width:none; -ms-overflow-style:none;
+  }
+  .anchor::-webkit-scrollbar{display:none;}
+  .anchor a{
+    font-size:12px; color:var(--blue); text-decoration:none; border:1px solid var(--line);
+    padding:2px 10px; border-radius:999px; background:var(--panel2); white-space:nowrap;
+    transition:all 0.2s ease; display:inline-flex; align-items:center; gap:3px;
+  }
+  .anchor a:hover{
+    color:#fff; background:#242f45; border-color:var(--blue);
+  }
+
+  /* 內文主體 */
+  .wrap{max-width:1000px; margin:0 auto; padding:16px 16px 60px;}
+  
+  /* 錨點跳轉時防止被置頂導航遮擋 */
+  section, h2{
+    scroll-margin-top: calc(var(--header-h) + 12px);
+  }
+
+  h2{font-size:20px; margin:32px 0 12px; padding-left:10px; border-left:4px solid var(--gold);}
+  h3{font-size:16px; margin:22px 0 10px; color:var(--gold2);}
+
+  /* 跑馬資訊列 */
+  .ticker{display:flex; align-items:center; gap:10px; background:var(--panel2); border:1px solid var(--line);
+          border-radius:8px; padding:7px 12px; margin-bottom:18px; font-size:12.5px; overflow:hidden;}
+  .ticker .t{flex-shrink:0; background:var(--gold); color:#111; font-weight:700; padding:1px 8px; border-radius:4px; font-size:11px; letter-spacing:0.5px;}
+  .ticker .msg{overflow:hidden; white-space:nowrap; text-overflow:ellipsis; color:var(--gold2);}
+
+  /* 表格優化 */
+  .table-wrap{
+    width:100%; overflow-x:auto; background:var(--panel); border:1px solid var(--line);
+    border-radius:10px; margin:12px 0;
+  }
+  table{width:100%; border-collapse:collapse; font-size:13.5px; white-space:nowrap;}
+  th{background:var(--panel2); text-align:left; padding:9px 12px; color:var(--gold2);
+     font-weight:600; border-bottom:1px solid var(--line);}
+  td{padding:9px 12px; border-bottom:1px solid #202736; vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:rgba(255,255,255,0.025);}
+  td:first-child{font-weight:600;}
+  
+  .co{color:var(--blue);} .cl{color:var(--red);} .gg{color:var(--cyan);}
+  .xa{color:var(--purple);} .mt{color:var(--green);}
+
+  .tag{display:inline-block; font-size:11px; padding:1px 6px; border-radius:4px; margin-right:4px; vertical-align:middle;}
+  .tag.new{background:#1f4d2e; color:var(--green); border:1px solid #2e7d4f;}
+  .tag.lock{background:#4d1f2e; color:#ff9db0; border:1px solid #7d2e4d;}
+  .tag.open{background:#1f334d; color:var(--blue); border:1px solid #2e5f7d;}
+  .tag.hot{background:#4d2f1f; color:#ffb07d; border:1px solid #7d5f2e;}
+
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin:12px 0;}
+  .card ul{margin:4px 0 0 18px; color:var(--txt); font-size:13.5px;}
+  .card li{margin:5px 0;}
+  .card li b{color:var(--gold2);}
+
+  .grid2{display:grid; grid-template-columns:1fr; gap:12px;}
+  @media(min-width:640px){.grid2{grid-template-columns:1fr 1fr;}}
+
+  .note{background:#171d12; border:1px dashed #52631f; border-radius:8px; padding:10px 14px;
+        font-size:12.5px; color:#c6d19e; margin-top:8px;}
+  
+  .quote{background:linear-gradient(135deg,#17140c,#1a1710); border:1px solid #5d4a1e; border-radius:10px;
+         padding:16px 18px; margin-top:32px; font-size:14px;}
+  .quote p{color:var(--gold2); font-weight:600; margin-bottom:6px;}
+  .quote ul{margin-left:18px;} .quote li{margin:5px 0; color:var(--txt);}
+  .quote li::marker{color:var(--gold);}
+
+  footer{margin-top:36px; border-top:1px solid var(--line); padding-top:16px;
+         color:var(--sub); font-size:12px; text-align:center;}
+  .hl{color:var(--gold2); font-weight:600;}
+  .down{color:#ff9db0;} .free{color:var(--green);}
+
+  /* 回到頂部按鈕 */
+  .back-top{
+    position:fixed; bottom:20px; right:20px; z-index:99;
+    background:var(--panel2); border:1px solid var(--line); color:var(--gold2);
+    width:36px; height:36px; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; text-decoration:none; font-size:14px; opacity:0.8;
+    box-shadow:0 4px 10px rgba(0,0,0,0.5); transition:opacity 0.2s, transform 0.2s;
+  }
+  .back-top:hover{opacity:1; transform:translateY(-2px); border-color:var(--gold);}
+
+  @media(max-width:640px){
+    :root{ --header-h: 74px; }
+    .wrap{padding:12px 12px 50px;}
+    .brand-group h1{font-size:15px;}
+    .meta-brief span.hide-m{display:none;}
+    td,th{font-size:12px; padding:7px 9px;}
+    h2{font-size:17px; margin:24px 0 10px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- 凍結頂欄 Header -->
+<header class="sticky-nav">
+  <div class="nav-inner">
+    <div class="nav-top">
+      <div class="brand-group">
+        <span class="badge">🐵 大聖情報局</span>
+        <h1><span class="star">✦</span> AI動態速報</h1>
+      </div>
+      <div class="meta-brief">
+        <span>更新：<b>2026-09-08</b></span>
+        <span class="dot"></span>
+        <span class="hide-m">模型發布・免費限制・監管新規</span>
+      </div>
+    </div>
+    <nav class="anchor" aria-label="章節導航">
+      <a href="#focus">⚡ 焦點</a>
+      <a href="#table">📊 速覽榜</a>
+      <a href="#openai">🅰️ OpenAI</a>
+      <a href="#anthropic">🅱️ Anthropic</a>
+      <a href="#google">🅲 Google</a>
+      <a href="#xai">🅳 xAI</a>
+      <a href="#open">🅴 開源</a>
+      <a href="#reg">🔒 限制總表</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- 本篇新增跑馬 -->
+  <div class="ticker">
+    <span class="t">本篇新增</span>
+    <span class="msg">GPT-6 Astra 全解析・K2 Horizon 訓練資料首度開源・NYC AI 教育禁令・Apple 換帥・DLSS 5 上市・Qwen4 架構預覽</span>
+  </div>
+
+  <section id="focus">
+    <h2>🔥 本週焦點（09-01 ～ 09-08）</h2>
+    <div class="card">
+      <ul>
+        <li><b class="hl">09-03 GPT-6 Astra 登場：</b>OpenAI 稱「AGI 時代來臨」；首列 <span class="down">Critical 網安風險等級</span>，先給 Daybreak 網安計畫企業，付費用戶 / API / AWS 數日後跟上。定價 $10/$50（1.05M 上下文）。</li>
+        <li><b class="hl">09-05 K2 Horizon 開源歷史級突破：</b>阿布達比 IFM 一次釋出 6 個模型（0.9B～375B），<b>連同權重、程式碼、訓練資料與日誌全公開</b>（Apache 2.0）——今年首次真正的「全開源」。</li>
+        <li><b class="hl">08-31 Sony／Warner 告 Anthropic：</b>指控非法以 BT 下載海量歌詞樂譜訓練 Claude（含 Beatles／Taylor Swift 等），求償每件最高 $150,000，CEO Amodei 與合夥人 Ben Mann 被列被告。</li>
+        <li><b class="hl">09-02 紐約公立學校禁 AI：</b>全美最大學區下達一年禁令，2-K 至 8 年級<b>禁用所有對學生的生成式 AI（含 AI 家教）</b>；高中另設 AI 素養課與 5 間試點校。</li>
+        <li><b class="hl">08-26 Qwen4 架構預覽：</b>阿里釋出 Qwen3.8-Flash-Next（125B／6B active），部分權重設計可放<b>系統 RAM</b> 而非 GPU 記憶體，為 Qwen4 鋪路。</li>
+        <li><b class="hl">09-01 Apple 換帥：</b>John Ternus 接任 CEO，Tim Cook 轉任執行董事長——庫克時代八年來首次交棒。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="table">
+    <h2>⚡ 速覽榜：各陣營旗艦最新況</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>陣營</th><th>最新旗艦 / 代表作</th><th>發布日</th><th>API 定價（每百萬 token 入/出）</th></tr></thead>
+        <tbody>
+        <tr><td class="co">OpenAI</td><td><span class="tag new">新</span>GPT-6 Astra</td><td>2026-09-03</td><td>$10 / $50（1.05M 上下文）</td></tr>
+        <tr><td class="cl">Anthropic</td><td><span class="tag new">新</span>Claude Fable 5.1／Mythos 5.1</td><td>2026-09-01</td><td>$10 / $50（快取讀取 $0.25）</td></tr>
+        <tr><td class="gg">Google</td><td><span class="tag new">新</span>Gemini 3.8 Flash（含 3.8 Cyber）</td><td>2026-09-02</td><td>Flash 系列 $0.30 起</td></tr>
+        <tr><td class="xa">xAI</td><td><span class="tag new">新</span>Grok 4.6</td><td>2026-08-12</td><td>$2 / $6（500K 上下文）</td></tr>
+        <tr><td class="mt">Meta</td><td>Muse Spark 1.3（封閉）＋ Muse Glimmer（開源）</td><td>2026-09-02／08-10</td><td>Glimmer 約 $0.35 / $1.50</td></tr>
+        <tr><td class="mt">開源黑馬</td><td><span class="tag open">全開源</span>K2 Horizon（0.9B–375B 六連發）</td><td>2026-09-03</td><td>Apache 2.0＋訓練資料全公開</td></tr>
+        <tr><td class="mt">開源黑馬</td><td>DeepSeek V4-Flash-0731</td><td>2026-07-31</td><td class="down">$0.14 / $0.28（價格殺手）</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="openai">
+    <h2>🅰️ OpenAI｜GPT-6 Astra 登場，先過政府與網安這道關</h2>
+    <div class="card">
+      <ul>
+        <li><b>2026-09-03 GPT-6 Astra：</b>OpenAI 稱「世上最強 computer-use 模型」，亦為首個被官方列為「<span class="hl">Critical 風險等級</span>」的模型；OSWorld 2.0 衝上 <b>72.6%</b>（每任務約 40 分鐘，比 Sol 快近一半）、DeepSWE v1.1 <b>74.1%</b>、ExploitBench <b>100%</b>。</li>
+        <li><b>資安門控（Daybreak）：</b>Astra 最強的網安攻防能力採認證制，第一天先給 Daybreak 網安計畫企業；付費用戶 / API / AWS Bedrock / Azure 數日後陸續放出。<span class="down">免費版與 API Free tier 完全不支援。</span></li>
+        <li><b>新架構「recurrent depth」爭議：</b>採用迴圈式 transformer（looped transformer）提升效率，但也「遮蔽部分思考鏈」（chain of thought），引發 AI 安全專家疑慮——<b>我們看到更強的任務完成度，卻看不到它為何這樣想。</b></li>
+        <li><b>2026-07-08 GPT-5.6 Sol／Terra／Luna：</b>原本僅限少數信賴夥伴，約兩週後才全球公開；8 月起 Luna 成為免費版預設。</li>
+        <li><b>公司戰報：</b>ChatGPT 2026-06 突破 <b>10 億月活</b>；Codex 週活 <b>500 萬</b>；06-08 遞交 S-1，目標估值 <b>$830B–$1T</b>。</li>
+      </ul>
+    </div>
+    <div class="note">📌 免費課金點：強模型全往付費端收——Astra 只給 Plus 以上、API Free tier 直接無緣；最新模型發布前先請政府目測（30 天自願預審），免費版拿到手時往往已是「半舊旗艦」。</div>
+  </section>
+
+  <section id="anthropic">
+    <h2>🅱️ Anthropic｜Fable 5.1 倍數級進化，卻捲入音樂版權戰</h2>
+    <div class="card">
+      <ul>
+        <li><b>2026-09-01 Fable 5.1／Mythos 5.1：</b>官方稱「世上最強 coding 與知識工作模型」；Terminal-Bench-Science 分數 <b>24.7 → 52.6</b>（自報，尚待獨立複測）；API 照舊 $10/$50，<span class="down">快取讀取降到 $0.25</span>。</li>
+        <li><b>Mythos 5.1</b> 是「<span class="hl">可信存取 twin</span>」：僅授權客戶可用，強制 30 天資料保留——高風險能力愈鎖愈緊。</li>
+        <li><span class="tag hot">爭議</span><b>08-31 音樂版權訴訟：</b>Sony Music 與 Warner Chappell 於加州聯邦法院提告，指控 Anthropic 透過 BT 下載等「公然盜版」方式取得數萬首歌詞與樂譜訓練 Claude；求償每件最高 <b>$150,000</b>，CEO Dario Amodei 與合夥人 Benjamin Mann 被點名。Anthropic 回應「這是重複提告，將強力抗辯」。</li>
+        <li><b>前案脈絡：</b>去年因作者集體訴訟（Bartz 案）被判賠 <b>$15 億</b>；法官認為「用版權資料訓練」合法，但「以盜版方式取得」不合法——此案把戰火從「取得」燒到「輸出」端。</li>
+        <li><b>9/14 里程碑：</b>Claude Code 週用量上限將較目前下修 17%（回到 5 月前水準的 +25%）。</li>
+      </ul>
+    </div>
+    <div class="note">📌 免費課金點：免費方案永遠拿「Sonnet 級」；Fable／Mythos／Opus 高階全部僅限付費。版權官司懸而未決，商用開源前「法務永遠比工程師先動手」。</div>
+  </section>
+
+  <section id="google">
+    <h2>🅲 Google｜Gemini 3.8 Flash 上線，Cyber 版優先給政府</h2>
+    <div class="card">
+      <ul>
+        <li><b>2026-09-02 Gemini 3.8 Flash ＋ 3.8 Flash Cyber：</b>多模態新品；3.8 給 <b>AI Pro／Ultra 訂閱者</b>（App／AI Mode 搜尋／Sheets）；Cyber 版走 <span class="hl">Fairwind Program</span>，優先開放政府機構、關鍵基礎設施維運者與軟體維護者。</li>
+        <li><b>2026-05-19 Google I/O：</b>Gemini 3.5 Flash（新家族首作）與 <b>Gemini Omni</b>（「任何輸入 → 任何輸出」多模態里程碑）。</li>
+        <li>七月新增 <b>Gemini 3.6 Flash／3.5 Flash-Lite／3.6 Thinking</b>；5 大廠中 Pro 軌最寂靜——<b>Gemini 3.5 Pro 官方延後</b>，Pro 頂規仍停留在 3.1 Pro。</li>
+        <li><b>生態布局：</b>Android 17 系統級整合；Gemini 進駐數百萬輛車；與 SpaceX 簽 <b>$920M／月</b> Colossus 算力合約至 2029。</li>
+      </ul>
+    </div>
+    <div class="note">📌 免費課金點：免費版用 2.5 Flash／舊 Flash 系；<strong>3.8 Flash 直接鎖死 Pro/Ultra</strong>，Cyber 更只給政府與關鍵機構——「免費送舊款、新款收費、頂規政商專屬」三段式最明顯。</div>
+  </section>
+
+  <section id="xai">
+    <h2>🅳 xAI｜Grok 4.6 扛旗，Grok 5 還在練功</h2>
+    <div class="card">
+      <ul>
+        <li><b>2026-08-12 Grok 4.6：</b>Opus 級旗艦，500K 上下文，專攻 coding 與 agentic；API $2/$6（cached 輸入 $0.50）——<span class="hl">對標高階但明顯更便宜</span>。</li>
+        <li><b>性價比焦點：</b>媒體引 xAI 數據稱 Grok Build 完成一次 coding task 約 <b>$2.49</b>，等同任務在 Claude Fable 5 環境約 <b>$11.80</b>——<span class="down">號稱省 80%</span>，但換來較高的幻覺率。</li>
+        <li><b>2026-07-16 Grok 4.5：</b>「編碼、Agent、知識工作」主力，可在 API 調整推理努力（低／中／高）。</li>
+        <li><b>Grok 5 傳聞：</b>目標 ~6 兆參數 MoE、1.5M 上下文、原生多模態；截至 9 月仍在訓練（馬斯克暗示 Grok 4.7 視窗，但尚無 model id）。</li>
+      </ul>
+    </div>
+    <div class="note">📌 免費課金點：Grok 4.5／4.6 與 Grok Bot 都要 <strong>SuperGrok 或 X Premium+</strong>；免費版只能摸舊版 Grok，額度低、得忍受推廣位。</div>
+  </section>
+
+  <section id="open">
+    <h2>🅴 Meta／開源陣營｜訓練資料歷史性開源，開源定義被重新點燃</h2>
+    <div class="card">
+      <ul>
+        <li><span class="tag open">重磅</span><b>09-03 K2 Horizon（IFM／MBZUAI）：</b>阿布達比研究機構一次釋出<b>六個模型（0.9B～375B）</b>，權重＋程式碼＋<span class="hl">訓練資料＋checkpoint＋日誌全公開</span>（Apache 2.0）——被譽為 2026 年首度真正符合「開源」定義的發布。<b>訓練資料正是各家死守、唯獨它願意給的關鍵。</b></li>
+        <li><b>Meta：</b>Llama 4 仍是開源主力；<b>04-08 Muse Spark</b> 成首個封閉權重前沿模型，9/2 出 1.3；<b>08-10 Muse Glimmer</b>（30B 稠密多模態、Apache 2.0、128K）單張消費級 GPU 可跑——「封閉與開源雙面下注」。</li>
+        <li><b>DeepSeek：</b>07-31 V4-Flash-0731 正式版 $0.14/$0.28 超低定價，Terminal-Bench 2.1 61.8 → 82.7。</li>
+        <li><b>Qwen 最勤勞：</b>3.5 → 3.6 → 3.8 連發；<b>08-26 Qwen3.8-Flash-Next 預覽 Qwen4 架構</b>——125B 總參數僅 6B active，且 <span class="hl">51B 元件設計跑在系統 RAM</span>（省 GPU 記憶體）。旗艦 Gradio 權重也開（2.4T）。</li>
+        <li><span class="tag hot">警訊</span><b>「開源權重」正在變質：</b>今夏多次釋出不再用 Apache——Qwen3.8-Max 用自有授權、Kimi K3 用改良 MIT、GLM-5.3 授權未明；Open Source Initiative 直言「權重檔無法審計，MIT/Apache 是寫給可讀的原始碼」。</li>
+      </ul>
+    </div>
+    <div class="note">📌 免費課金點：開源陣營最佛——但「下載得到」不等於「免費商用」；現在連授權都開始分化。真免費成本在硬體與技術，商用前法務必審一遍。</div>
+  </section>
+
+  <section id="reg">
+    <h2>🔒 免費使用限制總表（截至 2026-09-08）</h2>
+    <div class="grid2">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>平台</th><th>免費用戶拿到的</th><th>被鎖在付費牆後的</th></tr></thead>
+          <tbody>
+          <tr><td class="co">ChatGPT</td><td class="free">GPT-5.x 舊代（Luna 預設）</td><td class="down">GPT-6 Astra、GPT-5.6 高配</td></tr>
+          <tr><td class="cl">Claude</td><td class="free">Sonnet 5（預設）</td><td class="down">Fable／Mythos、Opus 全系</td></tr>
+          <tr><td class="gg">Gemini</td><td class="free">2.5 Flash 舊系</td><td class="down">3.8 Flash、Cyber 版（政商專屬）</td></tr>
+          <tr><td class="xa">Grok</td><td class="free">舊版 Grok（低額度）</td><td class="down">4.5／4.6、Grok Bot</td></tr>
+          <tr><td class="mt">開源陣營</td><td class="free">權重自架（K2 Horizon 全開源）</td><td class="down">需硬體；商用授權要審</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3>🧭 全球監管進入「執法期」</h3>
+        <ul>
+          <li><b>EU AI Act：</b>8/2 高風險系統過渡期結束，9 月起歐盟 AI 辦公室展開<b>首波實地稽核</b>（HR 履歷篩選、信用評估、醫療分流）；9/15 前超大 GPAI 模型需交首份關鍵風險評估。</li>
+          <li><b>美國：</b>無聯邦法，加州 <b>SB 1047</b> 州長 9/30 前決定簽署或否決；9/3 通過 <b>Adam's Law</b>（強化青少年聊天機器人安全測試）待簽。</li>
+          <li><b>巴西：</b>9/16 參議院就 Bill 2338 終表決（仿 EU AI Act）；<b>印度</b> 9/21 起審議 Digital India Act 生成式 AI 責任條款。</li>
+          <li><b>趨勢：</b>「先內測、再政商、後公開」成標配；開源因結構可審計反而成為監管爭議中心。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="quote">
+    <p>🐵 大聖點評（一線之隔的領悟）</p>
+    <ul>
+      <li><b>免費午餐正在縮水：</b>2026 的免費版等於「舊旗艦體驗卡」——新版一律先鎖付費、再鎖政商專屬；連 API Free tier 都被 Astra 拔掉。</li>
+      <li><b>「開源」二字正在被考驗：</b>各家只放權重、不放資料，OSI 直言無法審計；直到 K2 Horizon 把訓練資料與日誌全攤開，才有人真正交卷。免費背後的代價不是錢，是看得見與看不見。</li>
+      <li><b>法律戰火燒向訓練資料：</b>Sony／Warner 一狀把 Anthropic 拖進億元訴訟，AI 訓練的「資料來源」成為下一個未解題——取得方式與授權，比模型本身更致命。</li>
+      <li><b>教育界第一個大迴轉：</b>NYC 禁 AI 家教、限螢幕時間，是美國最大學區對「AI 進校園」的正面回應——科技巨頭口中的「不可避免」，未必是所有人的答案。</li>
+      <li><b>給你的實用提醒：</b>老規矩——動嘴之前先看日期，新聞標題會騙人；商用開源模型，法務永遠比工程師先動手。</li>
+    </ul>
+  </div>
+
+  <footer>
+    🐵 大聖整理｜本頁純手寫單一 HTML（無 CDN、無框架），file:// 與 https:// 皆可開啟｜資料擷取自公開新聞（2026-09-08），僅供參考，最新消息請以官方為準。
+  </footer>
+
+</div>
+
+<!-- 回到頂部按鈕 -->
+<a href="#" class="back-top" title="回到頂部">▲</a>
+
+</body>
+</html>
