@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TempFile 檔案上傳工具</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+            --success: #16a34a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .upload-card {
+            background: var(--card);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            width: 100%;
+            max-width: 520px;
+            padding: 32px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        p.desc {
+            color: #64748b;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .drop-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 36px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: #f8fafc;
+        }
+
+        .drop-zone.dragover {
+            border-color: var(--primary);
+            background-color: #eef2ff;
+        }
+
+        .drop-zone svg {
+            width: 48px;
+            height: 48px;
+            stroke: #94a3b8;
+            fill: none;
+            margin-bottom: 12px;
+        }
+
+        .drop-zone span {
+            display: block;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        .drop-zone small {
+            color: #94a3b8;
+            margin-top: 4px;
+            display: block;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-info {
+            display: none;
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+
+        .form-group {
+            margin-top: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #334155;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+            background-color: #fff;
+        }
+
+        select:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-upload {
+            width: 100%;
+            margin-top: 24px;
+            padding: 12px;
+            background-color: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-upload:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-upload:disabled {
+            background-color: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        .progress-box {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            background-color: #e2e8f0;
+            border-radius: 6px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: var(--primary);
+            transition: width 0.1s linear;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 6px;
+        }
+
+        /* 結果顯示區塊 */
+        .result-box {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+        }
+
+        .result-box.error {
+            background-color: #fef2f2;
+            border-color: #fecaca;
+        }
+
+        .result-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-bottom: 12px;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .result-box.error .result-title {
+            color: #dc2626;
+        }
+
+        .link-row {
+            display: flex;
+            gap: 8px;
+            margin: 10px 0 14px 0;
+        }
+
+        .link-row input {
+            flex: 1;
+            padding: 10px 12px;
+            font-size: 0.9rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: #fff;
+            color: #1e293b;
+            outline: none;
+        }
+
+        .link-btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
+
+        .btn-copy {
+            background-color: var(--primary);
+            color: #fff;
+        }
+
+        .btn-copy:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-open {
+            background-color: #fff;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+        }
+
+        .btn-open:hover {
+            background-color: #f1f5f9;
+        }
+
+        .meta-list {
+            list-style: none;
+            font-size: 0.82rem;
+            color: #475569;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
+            line-height: 1.6;
+        }
+
+        .meta-list li strong {
+            color: #1e293b;
+        }
+    </style>
+</head>
+<body>
+
+<div class="upload-card">
+    <h2>檔案上傳工具</h2>
+    <p class="desc">直接上傳檔案至 tempfile.org</p>
+
+    <!-- 拖曳與選擇區域 -->
+    <div class="drop-zone" id="dropZone">
+        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <span>點擊選擇檔案，或將檔案拖曳至此</span>
+        <small>支援任何格式 (如 PDF、圖片、壓縮檔等)</small>
+        <input type="file" id="fileInput">
+    </div>
+
+    <!-- 選中的檔案資訊 -->
+    <div class="file-info" id="fileInfo"></div>
+
+    <!-- 過期時間設定 -->
+    <div class="form-group">
+        <label for="expiryHours">檔案保留時數 (Expiry Hours)</label>
+        <select id="expiryHours">
+            <option value="1">1 小時</option>
+            <option value="6">6 小時</option>
+            <option value="24" selected>24 小時 (1天)</option>
+            <option value="72">72 小時 (3天)</option>
+            <option value="168">168 小時 (7天)</option>
+        </select>
+    </div>
+
+    <!-- 上傳按鈕 -->
+    <button class="btn-upload" id="uploadBtn" disabled>開始上傳</button>
+
+    <!-- 上傳進度條 -->
+    <div class="progress-box" id="progressBox">
+        <div class="progress-bar-bg">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-text">
+            <span id="progressPercent">0%</span>
+            <span id="progressStatus">上傳中...</span>
+        </div>
+        <button class="link-btn btn-open" id="cancelBtn" style="width:100%; margin-top:10px;">取消上傳</button>
+    </div>
+
+    <!-- 結果展示區塊 -->
+    <div class="result-box" id="resultBox">
+        <div class="result-title" id="resultTitle">上傳成功！</div>
+        <div id="resultContent"></div>
+        <button class="link-btn btn-open" id="resetBtn" style="width:100%; margin-top:14px;">上傳另一個檔案</button>
+    </div>
+</div>
+
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const expiryHours = document.getElementById('expiryHours');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const progressBox = document.getElementById('progressBox');
+    const progressBar = document.getElementById('progressBar');
+    const progressPercent = document.getElementById('progressPercent');
+    const progressStatus = document.getElementById('progressStatus');
+    const resultBox = document.getElementById('resultBox');
+    const resultTitle = document.getElementById('resultTitle');
+    const resultContent = document.getElementById('resultContent');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    let selectedFile = null;
+    let currentXhr = null;
+
+    function formatBytes(bytes) {
+        if (!bytes || bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // 避免檔名含特殊字元時被當成 HTML 解析（安全性防護）
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str == null ? '' : String(str);
+        return div.innerHTML;
+    }
+
+    // 防止使用者拖曳檔案未命中 drop zone 時，被瀏覽器直接開啟該檔案
+    ['dragover', 'drop'].forEach(type => {
+        window.addEventListener(type, (e) => {
+            if (e.target !== dropZone && !dropZone.contains(e.target)) {
+                e.preventDefault();
+            }
+        });
+    });
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    ['dragleave', 'dragend'].forEach(type => {
+        dropZone.addEventListener(type, () => dropZone.classList.remove('dragover'));
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length > 0) {
+            handleFile(e.dataTransfer.files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFile(e.target.files[0]);
+        }
+    });
+
+    function handleFile(file) {
+        selectedFile = file;
+        fileInfo.style.display = 'block';
+        fileInfo.innerHTML = `<strong>已選檔案：</strong> ${escapeHtml(file.name)} (${formatBytes(file.size)})`;
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = '開始上傳';
+        resultBox.style.display = 'none';
+    }
+
+    // 重置介面，方便連續上傳多個檔案
+    function resetUploader() {
+        selectedFile = null;
+        fileInput.value = '';
+        fileInfo.style.display = 'none';
+        fileInfo.innerHTML = '';
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = '開始上傳';
+        progressBox.style.display = 'none';
+        resultBox.style.display = 'none';
+    }
+
+    resetBtn.addEventListener('click', resetUploader);
+
+    uploadBtn.addEventListener('click', () => {
+        if (!selectedFile) return;
+
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = '上傳中...';
+        progressBox.style.display = 'block';
+        progressBar.style.width = '0%';
+        progressPercent.textContent = '0%';
+        progressStatus.textContent = `上傳中... (0 / ${formatBytes(selectedFile.size)})`;
+        resultBox.style.display = 'none';
+
+        const formData = new FormData();
+        formData.append('files', selectedFile);
+        formData.append('expiryHours', expiryHours.value);
+
+        const xhr = new XMLHttpRequest();
+        currentXhr = xhr;
+        xhr.open('POST', 'https://tempfile.org/api/upload/local', true);
+        xhr.timeout = 10 * 60 * 1000; // 10 分鐘逾時，避免無回應時無限卡住
+
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                progressBar.style.width = percent + '%';
+                progressPercent.textContent = percent + '%';
+                if (percent >= 100) {
+                    progressStatus.textContent = '伺服器處理中...';
+                } else {
+                    progressStatus.textContent = `上傳中... (${formatBytes(e.loaded)} / ${formatBytes(e.total)})`;
+                }
+            }
+        };
+
+        xhr.onload = function() {
+            currentXhr = null;
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = '開始上傳';
+            progressStatus.textContent = '上傳完成';
+            resultBox.style.display = 'block';
+
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resultBox.className = 'result-box';
+                resultTitle.innerHTML = '✅ 上傳成功！';
+
+                try {
+                    const res = JSON.parse(xhr.responseText);
+                    
+                    // 從回傳結構取得檔案資訊 (相容 files 陣列)
+                    const fileItem = (res.files && res.files.length > 0) ? res.files[0] : null;
+                    const downloadUrl = fileItem ? fileItem.url : (res.url || '');
+
+                    if (downloadUrl) {
+                        // 轉換過期時間為可讀日期
+                        let expireText = '未提供';
+                        if (fileItem && fileItem.expiryTime) {
+                            expireText = new Date(Number(fileItem.expiryTime)).toLocaleString();
+                        }
+
+                        resultContent.innerHTML = `
+                            <div style="font-size:0.875rem; font-weight:600; color:#334155;">下載網址：</div>
+                            <div class="link-row">
+                                <input type="text" id="dlInput" value="${escapeHtml(downloadUrl)}" readonly>
+                                <button class="link-btn btn-copy" id="copyBtn" onclick="copyLink()">複製連結</button>
+                                <a href="${escapeHtml(downloadUrl)}" target="_blank" rel="noopener noreferrer" class="link-btn btn-open">開啟</a>
+                            </div>
+                            <ul class="meta-list">
+                                <li><strong>檔案名稱：</strong> ${escapeHtml(fileItem?.name || selectedFile.name)}</li>
+                                <li><strong>檔案大小：</strong> ${formatBytes(fileItem?.size || selectedFile.size)}</li>
+                                <li><strong>有效期限：</strong> ${expireText}</li>
+                            </ul>
+                        `;
+                    } else {
+                        resultContent.innerHTML = `<pre style="white-space: pre-wrap; font-size:12px;">${JSON.stringify(res, null, 2)}</pre>`;
+                    }
+                } catch(e) {
+                    resultContent.textContent = xhr.responseText;
+                }
+            } else {
+                resultBox.className = 'result-box error';
+                resultTitle.innerHTML = `❌ 上傳失敗 (狀態碼: ${xhr.status})`;
+                resultContent.textContent = xhr.responseText || '伺服器回應錯誤，請稍後再試。';
+            }
+        };
+
+        xhr.onerror = function() {
+            currentXhr = null;
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = '開始上傳';
+            resultBox.style.display = 'block';
+            resultBox.className = 'result-box error';
+            resultTitle.innerHTML = '❌ 網路請求失敗';
+            resultContent.innerHTML = '無法連線至上傳伺服器，請檢查網路連線。';
+        };
+
+        xhr.ontimeout = function() {
+            currentXhr = null;
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = '開始上傳';
+            resultBox.style.display = 'block';
+            resultBox.className = 'result-box error';
+            resultTitle.innerHTML = '❌ 上傳逾時';
+            resultContent.innerHTML = '伺服器長時間無回應，請確認網路狀況後再試一次。';
+        };
+
+        xhr.onabort = function() {
+            currentXhr = null;
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = '開始上傳';
+            progressBox.style.display = 'none';
+            resultBox.style.display = 'block';
+            resultBox.className = 'result-box error';
+            resultTitle.innerHTML = '⚠️ 已取消上傳';
+            resultContent.innerHTML = '您已手動取消本次上傳。';
+        };
+
+        xhr.send(formData);
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        if (currentXhr) {
+            currentXhr.abort();
+        }
+    });
+
+    // 複製連結並切換按鈕文字
+    function copyLink() {
+        const copyInput = document.getElementById('dlInput');
+        const copyBtn = document.getElementById('copyBtn');
+        copyInput.select();
+        navigator.clipboard.writeText(copyInput.value).then(() => {
+            const originalText = copyBtn.textContent;
+            copyBtn.textContent = '✔ 已複製！';
+            copyBtn.style.backgroundColor = '#16a34a';
+            setTimeout(() => {
+                copyBtn.textContent = originalText;
+                copyBtn.style.backgroundColor = '';
+            }, 2000);
+        });
+    }
+</script>
+
+</body>
+</html>
