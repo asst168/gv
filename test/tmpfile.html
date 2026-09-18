@@ -29,36 +29,36 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            padding: 20px;
+            padding: 16px;
         }
 
         .upload-card {
             background: var(--card);
-            border-radius: 16px;
+            border-radius: 14px;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
             width: 100%;
-            max-width: 520px;
-            padding: 32px;
+            max-width: 420px;
+            padding: 20px;
         }
 
         h2 {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 700;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             text-align: center;
         }
 
         p.desc {
             color: #64748b;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 16px;
         }
 
         .drop-zone {
             border: 2px dashed #cbd5e1;
-            border-radius: 12px;
-            padding: 36px 20px;
+            border-radius: 10px;
+            padding: 20px 16px;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -71,23 +71,25 @@
         }
 
         .drop-zone svg {
-            width: 48px;
-            height: 48px;
+            width: 32px;
+            height: 32px;
             stroke: #94a3b8;
             fill: none;
-            margin-bottom: 12px;
+            margin-bottom: 6px;
         }
 
         .drop-zone span {
             display: block;
             font-weight: 500;
+            font-size: 0.9rem;
             color: #475569;
         }
 
         .drop-zone small {
             color: #94a3b8;
-            margin-top: 4px;
+            margin-top: 2px;
             display: block;
+            font-size: 0.78rem;
         }
 
         input[type="file"] {
@@ -96,32 +98,32 @@
 
         .file-info {
             display: none;
-            margin-top: 16px;
-            padding: 12px 16px;
+            margin-top: 10px;
+            padding: 8px 12px;
             background: #f1f5f9;
             border-radius: 8px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             word-break: break-all;
         }
 
         .form-group {
-            margin-top: 20px;
+            margin-top: 12px;
         }
 
         label {
             display: block;
-            font-size: 0.875rem;
+            font-size: 0.8rem;
             font-weight: 600;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             color: #334155;
         }
 
         select {
             width: 100%;
-            padding: 10px 12px;
+            padding: 8px 10px;
             border: 1px solid var(--border);
             border-radius: 8px;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             outline: none;
             background-color: #fff;
         }
@@ -132,13 +134,13 @@
 
         .btn-upload {
             width: 100%;
-            margin-top: 24px;
-            padding: 12px;
+            margin-top: 14px;
+            padding: 10px;
             background-color: var(--primary);
             color: #fff;
             border: none;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.2s;
@@ -155,7 +157,7 @@
 
         .progress-box {
             display: none;
-            margin-top: 20px;
+            margin-top: 12px;
         }
 
         .progress-bar-bg {
@@ -184,9 +186,9 @@
         /* 結果顯示區塊 */
         .result-box {
             display: none;
-            margin-top: 20px;
-            padding: 20px;
-            border-radius: 12px;
+            margin-top: 12px;
+            padding: 14px;
+            border-radius: 10px;
             background-color: #f0fdf4;
             border: 1px solid #bbf7d0;
         }
@@ -198,8 +200,8 @@
 
         .result-title {
             font-weight: 700;
-            font-size: 1.05rem;
-            margin-bottom: 12px;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
             color: var(--success);
             display: flex;
             align-items: center;
@@ -212,14 +214,14 @@
 
         .link-row {
             display: flex;
-            gap: 8px;
-            margin: 10px 0 14px 0;
+            gap: 6px;
+            margin: 8px 0 10px 0;
         }
 
         .link-row input {
             flex: 1;
-            padding: 10px 12px;
-            font-size: 0.9rem;
+            padding: 8px 10px;
+            font-size: 0.85rem;
             border: 1px solid #cbd5e1;
             border-radius: 8px;
             background: #fff;
@@ -228,11 +230,11 @@
         }
 
         .link-btn {
-            padding: 10px 16px;
+            padding: 8px 14px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 0.875rem;
+            font-size: 0.82rem;
             font-weight: 600;
             transition: all 0.2s;
             text-decoration: none;
@@ -263,13 +265,13 @@
 
         .meta-list {
             list-style: none;
-            font-size: 0.82rem;
+            font-size: 0.78rem;
             color: #475569;
             background: rgba(255, 255, 255, 0.7);
             border-radius: 8px;
-            padding: 10px 14px;
+            padding: 8px 12px;
             border: 1px solid #e2e8f0;
-            line-height: 1.6;
+            line-height: 1.5;
         }
 
         .meta-list li strong {
@@ -281,7 +283,7 @@
 
 <div class="upload-card">
     <h2>檔案上傳工具</h2>
-    <p class="desc">直接上傳檔案至 tempfile.org</p>
+    <p class="desc">直接上傳檔案至tempfile.org (單檔上限：100MB)</p>
 
     <!-- 拖曳與選擇區域 -->
     <div class="drop-zone" id="dropZone">
@@ -291,7 +293,7 @@
             <line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
         <span>點擊選擇檔案，或將檔案拖曳至此</span>
-        <small>支援任何格式 (如 PDF、圖片、壓縮檔等)</small>
+        <small>支援任何格式 (如PDF、圖片、壓縮檔等)</small>
         <input type="file" id="fileInput">
     </div>
 
@@ -322,14 +324,14 @@
             <span id="progressPercent">0%</span>
             <span id="progressStatus">上傳中...</span>
         </div>
-        <button class="link-btn btn-open" id="cancelBtn" style="width:100%; margin-top:10px;">取消上傳</button>
+        <button class="link-btn btn-open" id="cancelBtn" style="width:100%; margin-top:8px;">取消上傳</button>
     </div>
 
     <!-- 結果展示區塊 -->
     <div class="result-box" id="resultBox">
         <div class="result-title" id="resultTitle">上傳成功！</div>
         <div id="resultContent"></div>
-        <button class="link-btn btn-open" id="resetBtn" style="width:100%; margin-top:14px;">上傳另一個檔案</button>
+        <button class="link-btn btn-open" id="resetBtn" style="width:100%; margin-top:10px;">上傳另一個檔案</button>
     </div>
 </div>
 
