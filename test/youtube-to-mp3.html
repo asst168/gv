@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>隨身 YouTube 轉 MP3</title>
+<style>
+  :root {
+    --bg: #0f1220; --card: #1b2036; --line: #2c3352; --text: #e8eaf6;
+    --muted: #9aa3c0; --gold: #f5c542; --good: #4ade80; --bad: #f87171;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 16px; min-height: 100vh;
+    background: radial-gradient(1200px 600px at 50% -10%, #2b2a45 0%, var(--bg) 60%);
+    color: var(--text);
+    font-family: "Segoe UI", "Microsoft JhengHei", system-ui, sans-serif;
+  }
+  .wrap { max-width: 520px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 20px; }
+  header h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: 2px; color: var(--gold); }
+  header p { margin: 0; color: var(--muted); font-size: 14px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px; box-shadow: 0 8px 28px rgba(0,0,0,.35); margin-bottom: 16px;
+  }
+  form { display: flex; gap: 8px; flex-wrap: wrap; }
+  input[type=text] {
+    flex: 1 1 200px; min-width: 0; padding: 12px 14px; border-radius: 10px;
+    border: 1px solid var(--line); background: #0d1020; color: var(--text);
+    font-size: 16px; /* 16px 可避免 iPhone 自動放大 */ outline: none;
+  }
+  input[type=text]:focus { border-color: var(--gold); }
+  button {
+    padding: 12px 18px; border: 0; border-radius: 10px; cursor: pointer;
+    background: var(--gold); color: #1a1606; font-size: 15px; font-weight: 700; white-space: nowrap;
+  }
+  button:hover { filter: brightness(1.08); }
+  button.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); font-weight: 400; }
+  button.small { padding: 6px 12px; font-size: 13px; border-radius: 8px; }
+  .meta { display: grid; grid-template-columns: 120px 1fr; gap: 12px; margin-top: 16px; align-items: start; }
+  .meta img { width: 120px; height: 68px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); background: #0d1020; }
+  .meta .t { font-weight: 600; font-size: 14px; line-height: 1.4; margin-bottom: 3px; word-break: break-all; }
+  .meta .s { font-size: 12px; color: var(--muted); }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 14px; line-height: 1.7; word-break: break-all; }
+  .hint b { color: var(--gold); }
+  .note.err { color: var(--bad); }
+  .note.ok  { color: var(--good); }
+  .hist-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 14px; color: var(--muted); }
+  .hist-item { display: flex; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+  .hist-item .name { flex: 1; min-width: 0; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 22px; line-height: 1.8; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>隨身 YouTube 轉 MP3</h1>
+    <p>貼上網址 → 按轉檔 → 下載完成 · 本頁免安裝免後端</p>
+  </header>
+
+  <div class="card">
+    <form id="f">
+      <input id="url" type="text" placeholder="貼上 YouTube 影片網址…" autocomplete="off" autofocus>
+      <button type="button" id="pasteBtn" class="ghost">貼上</button>
+      <button type="submit">轉檔</button>
+    </form>
+
+    <div id="meta" class="meta" hidden>
+      <img id="mImg" alt="">
+      <div><div class="t" id="mTitle"></div><div class="s" id="mSub"></div></div>
+    </div>
+
+    <div id="hint" class="hint">
+      網址支援：<b>watch?v=</b>、<b>youtu.be/</b>、<b>shorts/</b>、<b>music.youtube.com</b>。
+      按「轉檔」後會於新分頁開啟轉檔器；選好音質按 <b>Convert</b>，若有人機驗證勾選一下即可。
+    </div>
+  </div>
+
+  <div class="card" id="histCard" hidden>
+    <div class="hist-head"><span>最近轉過</span><button type="button" id="clearBtn" class="ghost small">清空</button></div>
+    <div id="hist"></div>
+  </div>
+
+  <footer>
+    轉檔服務由第三方免費提供（Vevioz），檔案僅供個人合法使用<br>
+    本頁離線也可開，連網才能轉檔
+  </footer>
+</div>
+
+<script>
+// ===== 設定區（轉檔站改網址只需改這裡）=====
+const CONVERTER = 'https://api.vevioz.com/';
+const INFO_URL  = 'https://api.vevioz.com/api/v1/info?url=';
+const HIST_KEY  = 'yt2mp3_history';
+const HIST_MAX  = 10;
+
+const $ = s => document.querySelector(s);
+const YT_ID_RE = /(?:youtu\.be\/|(?:[a-z0-9-]+\.)?youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/|v\/))([A-Za-z0-9_-]{11})/;
+
+function getVideoId(input) {
+  const s = (input || '').trim();
+  if (!s) return null;
+  if (/^[A-Za-z0-9_-]{11}$/.test(s)) return s;
+  const m = s.match(YT_ID_RE);
+  return m ? m[1] : null;
+}
+
+function fmtDuration(sec) {
+  sec = Math.round(sec || 0);
+  if (!sec) return '';
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  return h ? h + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0')
+           : m + ':' + String(s).padStart(2, '0');
+}
+
+function setHint(html) { $('#hint').innerHTML = html; }
+
+// ===== 歷史紀錄（localStorage，失敗就當沒有）=====
+function loadHist() {
+  try { return JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch (e) { return []; }
+}
+function saveHist(list) {
+  try { localStorage.setItem(HIST_KEY, JSON.stringify(list)); } catch (e) {}
+}
+function addHist(id, title) {
+  let list = loadHist().filter(x => x.id !== id);
+  list.unshift({ id, title: title || id });
+  saveHist(list.slice(0, HIST_MAX));
+  renderHist();
+}
+function renderHist() {
+  const list = loadHist(), box = $('#hist');
+  box.textContent = '';
+  $('#histCard').hidden = !list.length;
+  list.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'hist-item';
+    const name = document.createElement('div');
+    name.className = 'name'; name.textContent = item.title; name.title = item.title;
+    const go = document.createElement('button');
+    go.className = 'small'; go.textContent = '轉檔';
+    go.onclick = () => { $('#url').value = item.id; openConverter(item.id); };
+    const del = document.createElement('button');
+    del.className = 'ghost small'; del.textContent = '刪';
+    del.onclick = () => { saveHist(loadHist().filter(x => x.id !== item.id)); renderHist(); };
+    row.append(name, go, del);
+    box.appendChild(row);
+  });
+}
+
+// ===== 影片預覽（縮圖固定可用；標題/片長抓不到就略過）=====
+let curId = null, curTitle = '';
+async function showPreview(id) {
+  curId = id; curTitle = '';
+  $('#mImg').src = 'https://i.ytimg.com/vi/' + id + '/mqdefault.jpg';
+  $('#mTitle').textContent = id;
+  $('#mSub').textContent = '';
+  $('#meta').hidden = false;
+
+  const watch = 'https://www.youtube.com/watch?v=' + id;
+  const [oe, ve] = await Promise.allSettled([
+    fetch('https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent(watch)).then(r => r.json()),
+    fetch(INFO_URL + encodeURIComponent(watch)).then(r => r.json())
+  ]);
+  if (curId !== id) return; // 使用者已換影片，丟棄舊結果
+  const o = oe.status === 'fulfilled' ? oe.value : {};
+  const v = ve.status === 'fulfilled' && ve.value && ve.value.data ? ve.value.data : {};
+  curTitle = o.title || v.title || '';
+  if (curTitle) $('#mTitle').textContent = curTitle;
+  const sub = [o.author_name || v.channel || '', fmtDuration(v.duration) ? '片長 ' + fmtDuration(v.duration) : '']
+    .filter(Boolean).join(' · ');
+  $('#mSub').textContent = sub;
+}
+
+// ===== 開啟轉檔器 =====
+// 開新分頁到轉檔器（需在使用者點擊的同一時間呼叫，避免被彈出視窗攔截）
+function openConverter(id) {
+  const url = CONVERTER + encodeURIComponent(id);
+  const win = window.open(url, '_blank');
+  if (win) { try { win.opener = null; } catch (e) {} }
+  setHint(win
+    ? '轉檔器已在新分頁開啟。若沒看到，請手動前往：<b>' + url + '</b>'
+    : '彈出視窗被攔截，請手動前往轉檔器：<b>' + url + '</b>');
+  showPreview(id).then(() => addHist(id, curTitle));
+  addHist(id, curTitle); // 先記一筆，標題抓到後再更新
+}
+
+// ===== 事件 =====
+$('#f').addEventListener('submit', e => {
+  e.preventDefault();
+  const id = getVideoId($('#url').value);
+  if (!id) {
+    setHint('<span class="note err">認不出影片編號，請貼上完整的 YouTube 網址（或直接貼 11 碼影片 ID）。</span>');
+    return;
+  }
+  openConverter(id);
+});
+
+// 貼上網址就自動顯示預覽（不必先按轉檔）
+let timer;
+$('#url').addEventListener('input', () => {
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    const id = getVideoId($('#url').value);
+    if (id && id !== curId) showPreview(id);
+    else if (!id) { curId = null; $('#meta').hidden = true; }
+  }, 300);
+});
+
+// 一鍵貼上剪貼簿
+$('#pasteBtn').addEventListener('click', async () => {
+  try {
+    const txt = await navigator.clipboard.readText();
+    $('#url').value = txt.trim();
+    $('#url').dispatchEvent(new Event('input'));
+    if (!getVideoId(txt)) setHint('<span class="note err">剪貼簿內沒有 YouTube 網址。</span>');
+  } catch (e) {
+    setHint('瀏覽器不允許讀取剪貼簿，請在輸入框按 <b>Ctrl+V</b>（手機長按貼上）。');
+  }
+});
+
+
+$('#clearBtn').addEventListener('click', () => { saveHist([]); renderHist(); });
+
+// 支援 ?url=網址 預先帶入（可搭配書籤或手機分享）
+(function init() {
+  renderHist();
+  const q = new URLSearchParams(location.search).get('url');
+  if (q) { $('#url').value = q; $('#url').dispatchEvent(new Event('input')); }
+})();
+</script>
+</body>
+</html>
