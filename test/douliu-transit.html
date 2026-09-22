@@ -19,6 +19,8 @@ section{background:var(--card);border:1px solid var(--bd);border-radius:16px;ove
 .hd{padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--bd)}
 .hd b{font-size:15px}.dot{width:10px;height:10px;border-radius:50%}
 .bar{padding:8px 12px;display:flex;gap:6px;align-items:center;border-bottom:1px solid var(--bd)}
+.bar.types{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.bar.types button{flex-shrink:0;white-space:nowrap}
 .bar .n{margin-left:auto;color:var(--mut);font-size:12px}
 .box{max-height:560px;overflow:auto}
 table{width:100%;border-collapse:collapse;font-size:14px}
@@ -97,6 +99,12 @@ const pad = n => String(n).padStart(2, "0");
 const nm = x => (x && typeof x === "object") ? (x.Zh_tw || x.En || "") : (x || "");
 const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const hm2min = t => { const m = /^(\d{1,2}):(\d{2})/.exec(t || ""); return m ? (+m[1]) * 60 + (+m[2]) : null; };
+// 官方車種名稱常帶落落長的括號說明，簡化成常見短稱，手機才顯示得下
+function shortType(t) {
+  if (!t) return "";
+  const s = t.replace(/[（(][^）)]*[）)]/g, "").trim();
+  return s || t;
+}
 
 const st = { day: 0, past: false, dir: { tra: "all", hsr: "all" }, rows: { tra: null, hsr: null }, err: { tra: "", hsr: "" }, delay: {}, mode: null, upd: {}, raw: {}, type: "all" };
 
@@ -157,7 +165,7 @@ function normalize(json, stationId, isTra, stName) {
       if (hm2min(t) !== null && !seen.has(key) && dest !== stName) {
         seen.add(key);
         const a = isTra ? Number(cur.Direction) === 0 : Number(cur.Direction) === 1;
-        out.push({ no: String(cur.TrainNo), type: nm(cur.TrainTypeName), dest, a, time: t.slice(0, 5), m: hm2min(t) });
+        out.push({ no: String(cur.TrainNo), type: shortType(nm(cur.TrainTypeName)), dest, a, time: t.slice(0, 5), m: hm2min(t) });
       }
     }
     for (const k in n) { const v = n[k]; if (v && typeof v === "object" && !("Zh_tw" in v)) walk(v, cur); }
@@ -207,7 +215,7 @@ function render(kind) {
   const dirs = DIRS[kind];
   let head = `<div class="hd"><span class="dot" style="background:${color}"></span><b>${isTra ? "台鐵 · " + CFG.tra.name + "站" : "高鐵 · " + CFG.hsr.name + "站"}</b></div>
     <div class="bar">${dirs.map(([v, t]) => `<button data-k="${kind}" data-d="${v}" class="${st.dir[kind] === v ? "on" : ""}"${isTra && v !== "all" ? ' title="西部幹線：順行=往北，逆行=往南"' : ""}>${t}</button>`).join("")}<span class="n" id="n-${kind}"></span></div>`;
-  if (isTra && rows) { const ts = [...new Set(rows.map(r => r.type || "?"))]; head += `<div class="bar">${["all", ...ts].map(t => `<button data-t="${t}" class="${st.type === t ? "on" : ""}">${t === "all" ? "全車種" : t}</button>`).join("")}</div>`; }
+  if (isTra && rows) { const ts = [...new Set(rows.map(r => r.type || "?"))]; head += `<div class="bar types">${["all", ...ts].map(t => `<button data-t="${t}" class="${st.type === t ? "on" : ""}">${t === "all" ? "全車種" : t}</button>`).join("")}</div>`; }
   if (st.err[kind] && !rows) { el.innerHTML = head + `<div class="msg">⚠ 無法取得資料：${st.err[kind]}<br>本頁不再顯示模擬資料，請確認金鑰或 proxy 是否正常。</div>`; return; }
   if (!rows) { el.innerHTML = head + `<div class="msg" style="color:var(--mut)">載入中…</div>`; return; }
   const n = now(), today = st.day === 0;
