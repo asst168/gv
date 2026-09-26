@@ -1,0 +1,2889 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#d84c35">
+  <meta name="description" content="零依賴、純離線運作的攤商智慧點餐系統，支援桌號/電話末3碼專用觸控小鍵盤、語音叫號、kiosk.json 自動載入與備份還原">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍱</text></svg>">
+  <title>用餐小站｜自助點餐機</title>
+  <style>
+    :root {
+      --bg: #f6f3ee;
+      --panel: #ffffff;
+      --panel-soft: #fcfbf8;
+      --ink: #201b17;
+      --ink-light: #524942;
+      --muted: #83766b;
+      --line: #e6dfd5;
+      --line-subtle: #f0ebe3;
+      --brand: #d84c35;
+      --brand-dark: #b63a25;
+      --brand-soft: #fef0ec;
+      --brand-glow: rgba(216, 76, 53, 0.18);
+      --green: #248255;
+      --green-soft: #eaf6ef;
+      --amber: #b87515;
+      --amber-soft: #fdf5e7;
+      --danger: #be3a3a;
+      --danger-soft: #fdf0f0;
+      --shadow-sm: 0 4px 12px rgba(60, 40, 20, 0.05);
+      --shadow-md: 0 10px 25px rgba(60, 40, 20, 0.08);
+      --shadow-lg: 0 20px 48px rgba(35, 20, 10, 0.16);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
+      line-height: 1.5;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 5% 0%, rgba(255, 255, 255, 0.95), transparent 450px),
+        radial-gradient(circle at 95% 100%, rgba(216, 76, 53, 0.06), transparent 500px),
+        var(--bg);
+      padding-bottom: env(safe-area-inset-bottom, 20px);
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+      color: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: all 0.15s ease;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+      filter: grayscale(40%);
+    }
+
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline: 3px solid var(--brand);
+      outline-offset: 2px;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    /* 頂部導航列 */
+    .app-shell {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: clamp(14px, 2.5vw, 28px);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding: 12px 18px;
+      background: var(--panel);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .brand-logo {
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      color: #fff;
+      font-size: 24px;
+      font-weight: 900;
+      border-radius: 14px;
+      box-shadow: 0 6px 14px var(--brand-glow);
+    }
+
+    .brand-titles {
+      min-width: 0;
+    }
+
+    .brand-tag {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--brand-dark);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1.store-name {
+      margin: 0;
+      font-size: clamp(20px, 2.5vw, 26px);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      background: var(--green-soft);
+      color: var(--green);
+      border: 1px solid rgba(36, 130, 85, 0.2);
+    }
+
+    .status-badge::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 3px rgba(36, 130, 85, 0.2);
+    }
+
+    .btn-secondary {
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      color: var(--ink);
+    }
+
+    .btn-secondary:hover {
+      background: #eee8de;
+    }
+
+    .btn-secondary:active {
+      transform: translateY(1px);
+    }
+
+    /* 主要版面切分 */
+    .workspace {
+      display: grid;
+      grid-template-columns: 1fr 390px;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* 左側菜單區 */
+    .menu-panel {
+      padding: clamp(18px, 2.5vw, 28px);
+      min-height: calc(100vh - 160px);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .step-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: clamp(22px, 2.8vw, 28px);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+
+    /* 分類標籤列 */
+    .category-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 18px;
+      scrollbar-width: thin;
+    }
+
+    .category-tab {
+      min-height: 40px;
+      padding: 9px 18px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 800;
+      background: var(--bg);
+      color: var(--muted);
+      border: 1px solid var(--line);
+      white-space: nowrap;
+    }
+
+    .category-tab.active {
+      background: var(--brand);
+      color: #fff;
+      border-color: var(--brand);
+      box-shadow: 0 4px 10px var(--brand-glow);
+    }
+
+    .category-tab:active {
+      transform: scale(0.95);
+    }
+
+    /* 菜單網格卡片 */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .menu-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 140px;
+      padding: 16px;
+      background: var(--panel-soft);
+      border: 2px solid var(--line);
+      border-radius: var(--radius-lg);
+      text-align: left;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.02);
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .menu-card:hover {
+      border-color: #f1b3a8;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .menu-card:active {
+      transform: translateY(1px) scale(0.98);
+    }
+
+    .menu-card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .menu-card-avatar {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+      border-radius: 12px;
+      background: var(--brand-soft);
+      color: var(--brand-dark);
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .menu-card-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .menu-card-name {
+      font-size: 18px;
+      font-weight: 900;
+      margin: 0 0 2px;
+      letter-spacing: -0.02em;
+      word-break: break-word;
+    }
+
+    .menu-card-category {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .menu-card-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px dashed var(--line-subtle);
+    }
+
+    .menu-card-price {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--brand-dark);
+    }
+
+    .menu-card-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      background: var(--brand-soft);
+      color: var(--brand-dark);
+      border: 1px solid rgba(216, 76, 53, 0.2);
+    }
+
+    .menu-card:hover .menu-card-btn {
+      background: var(--brand);
+      color: #fff;
+    }
+
+    /* 購物車數量徽章 */
+    .menu-item-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--brand);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+      min-width: 26px;
+      height: 26px;
+      padding: 0 6px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 4px 8px var(--brand-glow);
+      border: 2px solid #fff;
+      animation: badgePop 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+
+    @keyframes badgePop {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* 右側購物車 */
+    .cart-panel {
+      position: sticky;
+      top: 16px;
+      padding: 22px;
+      max-height: calc(100vh - 32px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .cart-count-badge {
+      display: grid;
+      place-items: center;
+      min-width: 32px;
+      height: 32px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: var(--ink);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .cart-clear-btn {
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      background: transparent;
+      border-radius: var(--radius-sm);
+    }
+
+    .cart-clear-btn:hover {
+      color: var(--danger);
+      background: var(--danger-soft);
+    }
+
+    /* 內用/外帶 切換標籤 */
+    .dining-type-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin: 14px 0;
+      background: var(--bg);
+      padding: 4px;
+      border-radius: var(--radius-md);
+    }
+
+    .dining-btn {
+      min-height: 44px;
+      padding: 10px 8px;
+      border-radius: calc(var(--radius-md) - 2px);
+      font-size: 14px;
+      font-weight: 800;
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .dining-btn.active {
+      background: #fff;
+      color: var(--ink);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+
+    .dining-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* 購物車品項列表 */
+    .cart-list {
+      flex: 1;
+      overflow-y: auto;
+      max-height: 250px;
+      margin: 8px 0;
+      padding-right: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .cart-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+    }
+
+    .cart-item-title {
+      font-size: 15px;
+      font-weight: 900;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cart-item-price {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .cart-qty-ctrl {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .qty-btn {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .qty-btn:active {
+      background: #f0eae1;
+      transform: scale(0.92);
+    }
+
+    .qty-val {
+      min-width: 24px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .empty-cart-view {
+      display: grid;
+      place-items: center;
+      min-height: 140px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius-md);
+      background: var(--panel-soft);
+      padding: 16px;
+    }
+
+    /* 顧客資訊填寫 (桌號或電話) */
+    .customer-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line-subtle);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-label span.req {
+      color: var(--brand);
+      font-size: 11px;
+    }
+
+    /* 觸控可點選輸入框樣式 */
+    .input-touch-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-box {
+      width: 100%;
+      height: 46px;
+      padding: 0 12px;
+      background: #fff;
+      border: 2px solid var(--line);
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      transition: all 0.15s ease;
+    }
+
+    .input-box:focus {
+      border-color: var(--brand);
+    }
+
+    .input-box.highlight {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-align: center;
+      cursor: pointer;
+      background: #fffdfb;
+    }
+
+    .input-box.highlight:hover {
+      border-color: var(--brand);
+      background: #fff8f5;
+    }
+
+    .touch-indicator-btn {
+      position: absolute;
+      right: 8px;
+      height: 32px;
+      padding: 0 10px;
+      background: var(--brand-soft);
+      color: var(--brand-dark);
+      border: 1px solid rgba(216, 76, 53, 0.2);
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      pointer-events: none;
+    }
+
+    textarea.input-box {
+      height: 54px;
+      padding: 8px 12px;
+      resize: none;
+      font-size: 14px;
+    }
+
+    /* 購物車結算列 */
+    .cart-summary {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .cart-total-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .cart-total-label {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .cart-total-price {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--brand-dark);
+      letter-spacing: -0.02em;
+    }
+
+    .btn-submit {
+      width: 100%;
+      height: 52px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      color: #fff;
+      font-size: 17px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 6px 16px var(--brand-glow);
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      filter: brightness(1.05);
+    }
+
+    .btn-submit:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    /* 手機端底部浮動購物車 Bar */
+    .mobile-cart-bar {
+      display: none;
+      position: fixed;
+      bottom: 16px;
+      left: 14px;
+      right: 14px;
+      z-index: 30;
+      background: var(--ink);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 999px;
+      box-shadow: var(--shadow-lg);
+      align-items: center;
+      justify-content: space-between;
+      animation: slideUp 0.25s ease;
+    }
+
+    .mobile-cart-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mobile-cart-count {
+      background: var(--brand);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 900;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+    }
+
+    .mobile-cart-total {
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .mobile-cart-btn {
+      background: #fff;
+      color: var(--ink);
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    /* 彈跳視窗共用樣式 */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(20, 15, 10, 0.55);
+      backdrop-filter: blur(6px);
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      animation: fadeIn 0.15s ease;
+    }
+
+    .modal-card {
+      background: var(--panel);
+      width: min(480px, 100%);
+      border-radius: var(--radius-xl);
+      padding: 26px;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid rgba(255,255,255,0.4);
+      position: relative;
+      animation: popIn 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* ==========================================================================
+       專用觸控虛擬小鍵盤樣式
+       ========================================================================== */
+    .touch-keypad-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      background: rgba(15, 10, 5, 0.6);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      animation: fadeIn 0.15s ease;
+    }
+
+    .touch-keypad-sheet {
+      background: #ffffff;
+      width: min(500px, 100%);
+      border-radius: 28px 28px 0 0;
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.22);
+      padding: 20px 22px calc(20px + env(safe-area-inset-bottom, 12px));
+      animation: slideUpKeypad 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    @keyframes slideUpKeypad {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .keypad-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .keypad-title {
+      font-size: 17px;
+      font-weight: 900;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .keypad-close-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--bg);
+      color: var(--muted);
+      font-size: 18px;
+      font-weight: 900;
+      display: grid;
+      place-items: center;
+    }
+
+    .keypad-close-btn:hover {
+      background: #e9e2d7;
+      color: var(--ink);
+    }
+
+    .keypad-close-btn:active {
+      transform: scale(0.9);
+    }
+
+    .keypad-screen {
+      background: var(--bg);
+      border: 2px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      text-align: center;
+      position: relative;
+    }
+
+    .keypad-screen-val {
+      font-size: 36px;
+      font-weight: 1000;
+      letter-spacing: 0.18em;
+      color: var(--brand-dark);
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .keypad-screen-hint {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .keypad-quick-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .keypad-quick-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .keypad-quick-row {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+
+    .keypad-quick-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .quick-chip {
+      padding: 8px 14px;
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .quick-chip:active {
+      background: var(--brand-soft);
+      color: var(--brand-dark);
+      border-color: var(--brand);
+    }
+
+    .keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .keypad-btn {
+      height: 58px;
+      font-size: 24px;
+      font-weight: 900;
+      background: #fbf9f6;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      color: var(--ink);
+      box-shadow: 0 3px 0 var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .keypad-btn:active {
+      transform: translateY(2px);
+      box-shadow: none;
+      background: #eee6dc;
+    }
+
+    .keypad-btn.action-clear {
+      font-size: 16px;
+      color: var(--danger);
+      background: var(--danger-soft);
+      border-color: rgba(190, 58, 58, 0.2);
+    }
+
+    .keypad-btn.action-backspace {
+      font-size: 20px;
+      color: var(--amber);
+      background: var(--amber-soft);
+      border-color: rgba(184, 117, 21, 0.2);
+    }
+
+    .keypad-confirm-btn {
+      height: 52px;
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      color: #fff;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 900;
+      box-shadow: 0 4px 12px var(--brand-glow);
+    }
+
+    .keypad-confirm-btn:active {
+      transform: translateY(1px);
+    }
+
+    /* 取餐完成畫面 */
+    .success-badge {
+      text-align: center;
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+    }
+
+    .ticket-number {
+      font-size: clamp(68px, 18vw, 108px);
+      font-weight: 1000;
+      text-align: center;
+      color: var(--brand-dark);
+      line-height: 1;
+      margin: 12px 0 6px;
+      letter-spacing: -0.05em;
+    }
+
+    .ticket-type-label {
+      text-align: center;
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      color: var(--ink);
+    }
+
+    .receipt-box {
+      background: var(--bg);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      margin: 14px 0;
+      font-size: 14px;
+      line-height: 1.6;
+      border: 1px dashed var(--line);
+    }
+
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .receipt-row + .receipt-row {
+      margin-top: 4px;
+      padding-top: 4px;
+      border-top: 1px solid var(--line-subtle);
+    }
+
+    .auto-reset-timer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 14px;
+    }
+
+    /* 店家管理後台全螢幕對話框 */
+    .manager-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background: var(--bg);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .manager-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--panel);
+      padding: 14px clamp(16px, 3vw, 32px);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .manager-content {
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: clamp(16px, 3vw, 30px);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* 今日營收儀表板 */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .stat-card {
+      background: var(--panel);
+      padding: 16px 20px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .stat-val {
+      font-size: 26px;
+      font-weight: 900;
+      margin-top: 4px;
+    }
+
+    .stat-val.revenue { color: var(--brand-dark); }
+    .stat-val.pending { color: var(--amber); }
+    .stat-val.done { color: var(--green); }
+
+    /* 後台兩欄排版 */
+    .manager-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .admin-card {
+      background: var(--panel);
+      padding: 20px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .admin-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .admin-card-title {
+      font-size: 18px;
+      font-weight: 900;
+      margin: 0;
+    }
+
+    /* 訂單篩選標籤 */
+    .order-filter-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .filter-btn {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+
+    .filter-btn.active {
+      background: var(--ink);
+      color: #fff;
+      border-color: var(--ink);
+    }
+
+    .filter-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* 訂單列表卡片 */
+    .orders-queue {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .order-item-card {
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: border-color 0.15s;
+    }
+
+    .order-item-card.is-done {
+      background: #f7faf7;
+      border-color: #d8eadc;
+      opacity: 0.85;
+    }
+
+    .order-item-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .order-call-tag {
+      font-size: 26px;
+      font-weight: 1000;
+      color: var(--brand-dark);
+      letter-spacing: -0.04em;
+    }
+
+    .order-time-badge {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .order-customer-info {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--ink-light);
+      background: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--line-subtle);
+    }
+
+    .order-food-list {
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .order-note-box {
+      font-size: 12px;
+      color: var(--amber);
+      background: var(--amber-soft);
+      padding: 6px 10px;
+      border-radius: 6px;
+      border-left: 3px solid var(--amber);
+    }
+
+    .order-actions-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 6px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--line-subtle);
+    }
+
+    .order-actions-btns {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-call {
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      border-radius: 6px;
+      background: var(--brand-soft);
+      color: var(--brand-dark);
+      border: 1px solid rgba(216, 76, 53, 0.2);
+    }
+
+    .btn-call:hover {
+      background: var(--brand);
+      color: #fff;
+    }
+
+    .btn-complete {
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 800;
+      border-radius: 6px;
+      background: var(--green);
+      color: #fff;
+    }
+
+    .btn-delete {
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 6px;
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    /* 菜單編輯器 */
+    .menu-editor-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+      max-height: 360px;
+      overflow-y: auto;
+    }
+
+    .editor-item-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) 90px 75px auto;
+      gap: 6px;
+      align-items: center;
+      background: #fff;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+    }
+
+    .editor-item-row input, .editor-item-row select {
+      height: 34px;
+      padding: 0 6px;
+      font-size: 13px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+    }
+
+    /* 同步與備份卡片區 */
+    .sync-card {
+      background: #faf6f0;
+      border: 1px solid #ebd9c8;
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sync-btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    /* 輕提示 Toast */
+    .toast-notice {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      z-index: 100;
+      background: var(--ink);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 800;
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+
+    .toast-notice.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* 響應式調整 */
+    @media (max-width: 980px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .cart-panel {
+        position: static;
+        max-height: none;
+      }
+
+      .mobile-cart-bar {
+        display: flex;
+      }
+
+      .manager-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .app-shell {
+        padding: 10px;
+      }
+
+      .topbar {
+        padding: 10px 14px;
+        margin-bottom: 12px;
+      }
+
+      .menu-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .editor-item-row {
+        grid-template-columns: 1fr 80px;
+      }
+
+      .editor-item-row .row-actions {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+
+      .sync-btn-group {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-shell">
+    <!-- 頂部品牌導航 -->
+    <header class="topbar">
+      <div class="brand-wrap">
+        <div class="brand-logo" id="brandLogo" aria-hidden="true">🍱</div>
+        <div class="brand-titles">
+          <div class="brand-tag">離線營運・即時點餐</div>
+          <h1 class="store-name" id="storeNameDisplay">用餐小站</h1>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span class="status-badge" title="支援本機 kiosk.json 自動載入與安全同步">離線就緒</span>
+        <button id="openManagerBtn" class="btn-secondary" type="button">⚙️ 店家後台</button>
+      </div>
+    </header>
+
+    <!-- 主操作工作區 -->
+    <main class="workspace">
+      <!-- 左側：菜單區 -->
+      <section class="panel menu-panel" aria-labelledby="menuHeading">
+        <div class="panel-header">
+          <div>
+            <div class="step-badge">STEP 1</div>
+            <h2 class="panel-title" id="menuHeading">美味餐點</h2>
+          </div>
+          <div id="menuCountTag" class="status-badge" style="background:#f4ece2; color:var(--muted); border-color:#e4dacf;">6 項供應中</div>
+        </div>
+
+        <!-- 菜單分類篩選 -->
+        <nav class="category-tabs" id="categoryTabs" aria-label="餐點分類"></nav>
+
+        <!-- 菜單網格列表 -->
+        <div class="menu-grid" id="menuGrid"></div>
+      </section>
+
+      <!-- 右側：購物車區 -->
+      <aside class="panel cart-panel" id="cartPanel" aria-labelledby="cartHeading">
+        <div class="cart-header">
+          <div>
+            <div class="step-badge">STEP 2</div>
+            <h2 style="margin:0; font-size:22px; font-weight:900;" id="cartHeading">點餐清單</h2>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button id="clearCartBtn" class="cart-clear-btn" type="button" title="清空購物車">清空</button>
+            <div class="cart-count-badge" id="cartCountBadge">0</div>
+          </div>
+        </div>
+
+        <!-- 內用 / 外帶切換 -->
+        <div class="dining-type-selector" role="radiogroup" aria-label="用餐模式">
+          <button type="button" class="dining-btn active" id="dineInBtn" role="radio" aria-checked="true">🍽️ 內用</button>
+          <button type="button" class="dining-btn" id="takeOutBtn" role="radio" aria-checked="false">🥡 外帶</button>
+        </div>
+
+        <!-- 餐點列表 -->
+        <div class="cart-list" id="cartList"></div>
+        <div class="empty-cart-view" id="emptyCartView">
+          <div>
+            <div style="font-size:32px; margin-bottom:4px;">🛒</div>
+            <strong>尚未選取餐點</strong>
+            <div style="font-size:12px; color:var(--muted); margin-top:2px;">請點擊左側餐點加入清單</div>
+          </div>
+        </div>
+
+        <!-- 填寫用餐資訊 -->
+        <div class="customer-fields">
+          <!-- 桌號輸入區塊 -->
+          <div class="form-group" id="tableGroup">
+            <label class="form-label" for="tableInput">
+              <span>桌號標示</span>
+              <span class="req">點擊開啟觸控鍵盤 ⌨️</span>
+            </label>
+            <div class="input-touch-wrapper">
+              <input class="input-box highlight" id="tableInput" type="text" maxlength="6" placeholder="點我輸入桌號" autocomplete="off" readonly>
+              <div class="touch-indicator-btn" aria-hidden="true">⌨️ 觸控輸入</div>
+            </div>
+          </div>
+
+          <!-- 電話末3碼輸入區塊 -->
+          <div class="form-group" id="phoneGroup" hidden>
+            <label class="form-label" for="phoneInput">
+              <span>電話末 3 碼（取餐核對）</span>
+              <span class="req">點擊開啟觸控鍵盤 ⌨️</span>
+            </label>
+            <div class="input-touch-wrapper">
+              <input class="input-box highlight" id="phoneInput" type="tel" maxlength="3" placeholder="點我輸入 3 位數" readonly>
+              <div class="touch-indicator-btn" aria-hidden="true">⌨️ 數字鍵盤</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="orderNoteInput">
+              <span>備註需求（選填）</span>
+              <span style="font-size:11px; color:var(--muted);">少冰/不要辣/醬多</span>
+            </label>
+            <textarea class="input-box" id="orderNoteInput" maxlength="60" placeholder="若有特殊客製請在此註記"></textarea>
+          </div>
+        </div>
+
+        <!-- 結帳金額與送出按鈕 -->
+        <div class="cart-summary">
+          <div class="cart-total-row">
+            <span class="cart-total-label">總計金額</span>
+            <span class="cart-total-price" id="cartTotalPrice">NT$0</span>
+          </div>
+          <button class="btn-submit" id="submitOrderBtn" type="button" disabled>
+            <span>確認訂單與取號</span>
+            <span id="submitOrderTotal">NT$0</span>
+          </button>
+        </div>
+      </aside>
+    </main>
+
+    <!-- 手機端浮動購物車 Bar -->
+    <div class="mobile-cart-bar" id="mobileCartBar">
+      <div class="mobile-cart-info">
+        <div class="mobile-cart-count" id="mobileCartCount">0</div>
+        <div class="mobile-cart-total" id="mobileCartTotal">NT$0</div>
+      </div>
+      <button class="mobile-cart-btn" id="mobileCartOpenBtn" type="button">查看清單 ➔</button>
+    </div>
+  </div>
+
+  <!-- 彈窗：專屬螢幕虛擬觸控數字鍵盤 (針對桌號與電話末3碼) -->
+  <div class="touch-keypad-overlay" id="touchKeypadModal" hidden>
+    <div class="touch-keypad-sheet" role="dialog" aria-modal="true" aria-labelledby="keypadHeadingText">
+      <div class="keypad-header">
+        <div class="keypad-title" id="keypadTitle">
+          <span id="keypadIcon">🍽️</span>
+          <span id="keypadHeadingText">請點擊螢幕輸入桌號</span>
+        </div>
+        <button type="button" class="keypad-close-btn" id="closeKeypadBtn" aria-label="關閉鍵盤">✕</button>
+      </div>
+
+      <!-- 螢幕即時輸入預覽 -->
+      <div class="keypad-screen">
+        <div class="keypad-screen-val" id="keypadDisplayVal">_</div>
+        <div class="keypad-screen-hint" id="keypadDisplayHint">點擊下方按鈕即可輸入</div>
+      </div>
+
+      <!-- 桌號專用英文字母與快捷選桌 -->
+      <div class="keypad-quick-wrap" id="keypadQuickWrap">
+        <div class="keypad-quick-label">桌號字首 / 快速選桌：</div>
+        <div class="keypad-quick-row">
+          <button type="button" class="quick-chip" data-quick="A">A 區</button>
+          <button type="button" class="quick-chip" data-quick="B">B 區</button>
+          <button type="button" class="quick-chip" data-quick="C">C 區</button>
+          <button type="button" class="quick-chip" data-quick="1">1 桌</button>
+          <button type="button" class="quick-chip" data-quick="2">2 桌</button>
+          <button type="button" class="quick-chip" data-quick="3">3 桌</button>
+          <button type="button" class="quick-chip" data-quick="5">5 桌</button>
+          <button type="button" class="quick-chip" data-quick="6">6 桌</button>
+          <button type="button" class="quick-chip" data-quick="8">8 桌</button>
+          <button type="button" class="quick-chip" data-quick="10">10 桌</button>
+        </div>
+      </div>
+
+      <!-- 觸控數字按鈕網格 -->
+      <div class="keypad-grid" id="keypadGrid">
+        <button type="button" class="keypad-btn" data-key="1">1</button>
+        <button type="button" class="keypad-btn" data-key="2">2</button>
+        <button type="button" class="keypad-btn" data-key="3">3</button>
+
+        <button type="button" class="keypad-btn" data-key="4">4</button>
+        <button type="button" class="keypad-btn" data-key="5">5</button>
+        <button type="button" class="keypad-btn" data-key="6">6</button>
+
+        <button type="button" class="keypad-btn" data-key="7">7</button>
+        <button type="button" class="keypad-btn" data-key="8">8</button>
+        <button type="button" class="keypad-btn" data-key="9">9</button>
+
+        <button type="button" class="keypad-btn action-clear" data-key="clear">清除</button>
+        <button type="button" class="keypad-btn" data-key="0">0</button>
+        <button type="button" class="keypad-btn action-backspace" data-key="backspace">⌫ 刪除</button>
+      </div>
+
+      <!-- 完成按鈕 -->
+      <button type="button" class="keypad-confirm-btn" id="confirmKeypadBtn">✓ 輸入完成</button>
+    </div>
+  </div>
+
+  <!-- 彈窗：訂單確認預覽 -->
+  <div class="modal-overlay" id="confirmModal" hidden>
+    <div class="modal-card">
+      <div class="step-badge">STEP 3</div>
+      <h2 style="margin:0 0 10px; font-size:22px; font-weight:900;">訂單確認</h2>
+      <p style="margin:0 0 16px; font-size:14px; color:var(--muted);">請再次核對品項與金額，確認後將正式產生取餐號碼。</p>
+
+      <div class="receipt-box" id="confirmReceiptBox"></div>
+
+      <div style="display:flex; gap:10px; margin-top:18px;">
+        <button id="cancelConfirmBtn" class="btn-secondary" style="flex:1; height:46px;" type="button">返回修改</button>
+        <button id="finalSubmitBtn" class="btn-submit" style="flex:1.2; height:46px;" type="button">確認取號</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 彈窗：點餐完成取號單 -->
+  <div class="modal-overlay" id="successModal" hidden>
+    <div class="modal-card" style="text-align:center;">
+      <div class="success-badge">🎉 點餐完成</div>
+      <div class="ticket-number" id="ticketNumberDisplay">001</div>
+      <div class="ticket-type-label" id="ticketTypeDisplay">內用・桌號 1</div>
+
+      <div class="receipt-box" id="successReceiptBox" style="text-align:left;"></div>
+
+      <div style="display:flex; gap:10px; margin-top:20px;">
+        <button id="nextCustomerBtn" class="btn-submit" style="width:100%; height:50px;" type="button">完成 / 下一位點餐</button>
+      </div>
+
+      <div class="auto-reset-timer" id="autoResetTimer">本畫面將於 <span id="countdownSec">15</span> 秒後自動返回</div>
+    </div>
+  </div>
+
+  <!-- 彈窗：後台密碼驗證 -->
+  <div class="modal-overlay" id="pinModal" hidden>
+    <div class="modal-card" style="max-width:380px;">
+      <h2 style="margin:0 0 8px; font-size:20px; font-weight:900;">🔐 管理者身分驗證</h2>
+      <p style="margin:0 0 16px; font-size:13px; color:var(--muted);">請輸入後台 PIN 碼以檢視營收與管理設定。</p>
+
+      <form id="pinForm">
+        <input class="input-box highlight" id="pinInput" type="password" inputmode="numeric" maxlength="8" placeholder="預設 1234" autofocus>
+        <div id="pinErrorMsg" style="color:var(--danger); font-size:12px; font-weight:800; min-height:18px; margin-top:6px;"></div>
+
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button id="cancelPinBtn" class="btn-secondary" style="flex:1; height:44px;" type="button">取消</button>
+          <button class="btn-submit" style="flex:1; height:44px;" type="submit">進入後台</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 全螢幕：店家管理後台 -->
+  <div class="manager-overlay" id="managerOverlay" hidden>
+    <header class="manager-topbar">
+      <div>
+        <div style="font-size:12px; font-weight:800; color:var(--brand-dark);">店家專屬中控台</div>
+        <h2 style="margin:0; font-size:22px; font-weight:900;">訂單與營收管理</h2>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button id="voiceTestBtn" class="btn-secondary" type="button" title="測試語音叫號功能">🔊 測試叫號語音</button>
+        <button id="closeManagerBtn" class="btn-submit" style="width:auto; height:38px; padding:0 16px; font-size:13px;" type="button">返回點餐前台</button>
+      </div>
+    </header>
+
+    <div class="manager-content">
+      <!-- 統計數據 -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">今日累計營收</div>
+          <div class="stat-val revenue" id="todayRevenue">NT$0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">今日訂單總數</div>
+          <div class="stat-val" id="todayTotalOrders">0 筆</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">待製作訂單</div>
+          <div class="stat-val pending" id="todayPendingOrders">0 筆</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">已完成出餐</div>
+          <div class="stat-val done" id="todayCompletedOrders">0 筆</div>
+        </div>
+      </section>
+
+      <!-- 主要管理區：訂單佇列 vs 菜單與店名設定 -->
+      <div class="manager-grid">
+        <!-- 左：即時出餐訂單列表 -->
+        <section class="admin-card">
+          <div class="admin-card-head">
+            <h3 class="admin-card-title">出餐清單佇列</h3>
+            <div style="display:flex; gap:8px;">
+              <button id="exportCsvBtn" class="btn-secondary" type="button" style="font-size:12px; padding:5px 10px;">📊 匯出今日 CSV</button>
+              <button id="resetAllOrdersBtn" class="btn-delete" type="button" style="font-size:12px; padding:5px 10px;">清空今日紀錄</button>
+            </div>
+          </div>
+
+          <div class="order-filter-bar" role="tablist">
+            <button class="filter-btn active" data-filter="all" type="button">全部訂單 (<span id="countAll">0</span>)</button>
+            <button class="filter-btn" data-filter="pending" type="button">待製作 (<span id="countPending">0</span>)</button>
+            <button class="filter-btn" data-filter="completed" type="button">已完成 (<span id="countCompleted">0</span>)</button>
+          </div>
+
+          <div class="orders-queue" id="ordersQueue"></div>
+        </section>
+
+        <!-- 右：菜單編輯與系統維護 -->
+        <section class="admin-card">
+          <div class="admin-card-head">
+            <h3 class="admin-card-title">店家與菜單設定</h3>
+          </div>
+
+          <!-- 店名與密碼 -->
+          <form id="storeSettingsForm" style="display:grid; grid-template-columns:1fr 1fr auto; gap:8px; align-items:end; margin-bottom:18px;">
+            <div class="form-group">
+              <label class="form-label" for="cfgStoreName">店域名稱</label>
+              <input class="input-box" id="cfgStoreName" maxlength="25" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cfgPin">管理 PIN 碼</label>
+              <input class="input-box" id="cfgPin" type="password" maxlength="8" required>
+            </div>
+            <button class="btn-secondary" type="submit" style="height:42px;">儲存</button>
+          </form>
+
+          <!-- 菜單項目列表管理 -->
+          <h4 style="margin:16px 0 8px; font-size:14px; font-weight:800; color:var(--muted);">菜單項目調整（即時生效）</h4>
+          <div class="menu-editor-list" id="menuEditorList"></div>
+
+          <!-- 新增菜單項目 -->
+          <form id="addMenuForm" style="display:grid; grid-template-columns:1fr 85px 85px auto; gap:6px; align-items:end; padding-top:12px; border-top:1px dashed var(--line);">
+            <div class="form-group">
+              <label class="form-label" for="newFoodName">餐點名稱</label>
+              <input class="input-box" id="newFoodName" placeholder="例如：滷肉飯" required maxlength="18">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="newFoodPrice">價格</label>
+              <input class="input-box" id="newFoodPrice" type="number" min="0" step="5" value="60" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="newFoodCategory">類別</label>
+              <select class="input-box" id="newFoodCategory">
+                <option value="主食">主食</option>
+                <option value="小菜">小菜</option>
+                <option value="湯品">湯品</option>
+                <option value="飲料">飲料</option>
+              </select>
+            </div>
+            <button class="btn-submit" type="submit" style="height:42px; padding:0 12px; font-size:13px;">新增</button>
+          </form>
+
+          <!-- kiosk.json 同步、備份與還原中心 -->
+          <div style="margin-top:20px; padding-top:14px; border-top:1px solid var(--line);">
+            <div class="sync-card">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong style="font-size:13px; color:var(--ink);">kiosk.json 同步與備份中心</strong>
+                <span style="font-size:11px; color:var(--muted);" id="kioskJsonStatus">預設儲存點</span>
+              </div>
+              <div class="sync-btn-group">
+                <button id="saveToJsonFileBtn" class="btn-secondary" type="button" title="直接儲存回原目錄 kiosk.json 或下載">
+                  💾 儲存至 kiosk.json
+                </button>
+                <button id="fetchServerJsonBtn" class="btn-secondary" type="button" title="從同目錄 kiosk.json 載入最新菜單">
+                  🔄 載入預設 (JSON)
+                </button>
+              </div>
+              <div class="sync-btn-group">
+                <button id="restoreJsonBtn" class="btn-secondary" style="font-size:12px;" type="button">
+                  📥 從檔案還原...
+                </button>
+                <button id="backupJsonBtn" class="btn-secondary" style="font-size:12px;" type="button">
+                  📦 下載日期備份檔
+                </button>
+              </div>
+              <input type="file" id="restoreFileInput" accept=".json,application/json" hidden>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 訊息通知 -->
+  <div class="toast-notice" id="toastNotice" role="status" aria-live="polite"></div>
+
+  <!-- 點餐機邏輯 -->
+  <script>
+    'use strict';
+
+    /* ==========================================================================
+       狀態與預設設定
+       ========================================================================== */
+    const STORAGE_KEY = 'stall_kiosk_data_v2';
+
+    const DEFAULT_MENU = [
+      { id: 'item-1', name: '招牌雞腿便當', price: 95, category: '主食', enabled: true },
+      { id: 'item-2', name: '酥炸排骨便當', price: 90, category: '主食', enabled: true },
+      { id: 'item-3', name: '古早味控肉飯', price: 85, category: '主食', enabled: true },
+      { id: 'item-4', name: '手切滷肉便當', price: 75, category: '主食', enabled: true },
+      { id: 'item-5', name: '燙季節時蔬', price: 40, category: '小菜', enabled: true },
+      { id: 'item-6', name: '古早味紅茶', price: 25, category: '飲料', enabled: true }
+    ];
+
+    let state = {
+      storeName: '用餐小站',
+      pin: '1234',
+      nextTicket: 1,
+      menu: [...DEFAULT_MENU],
+      orders: []
+    };
+
+    let cart = []; // [{ id, name, price, quantity }]
+    let diningMode = 'dine-in'; // 'dine-in' | 'take-out'
+    let currentCategory = 'all';
+    let currentOrderFilter = 'all';
+    let autoResetInterval = null;
+    let toastTimeout = null;
+    let jsonFileHandle = null; // Chromium File System Access API Handle 快取
+    let isPlacingOrder = false; // 防止觸控延遲造成重複送出訂單
+
+    // 觸控鍵盤內部暫存狀態
+    let keypadTarget = 'table'; // 'table' | 'phone'
+    let keypadBuffer = '';
+
+    /* ==========================================================================
+       DOM 快取
+       ========================================================================== */
+    const $ = id => document.getElementById(id);
+    const UI = {
+      storeNameDisplay: $('storeNameDisplay'),
+      menuHeading: $('menuHeading'),
+      menuCountTag: $('menuCountTag'),
+      categoryTabs: $('categoryTabs'),
+      menuGrid: $('menuGrid'),
+
+      cartPanel: $('cartPanel'),
+      cartCountBadge: $('cartCountBadge'),
+      cartList: $('cartList'),
+      emptyCartView: $('emptyCartView'),
+      clearCartBtn: $('clearCartBtn'),
+      dineInBtn: $('dineInBtn'),
+      takeOutBtn: $('takeOutBtn'),
+      tableGroup: $('tableGroup'),
+      phoneGroup: $('phoneGroup'),
+      tableInput: $('tableInput'),
+      phoneInput: $('phoneInput'),
+      orderNoteInput: $('orderNoteInput'),
+      cartTotalPrice: $('cartTotalPrice'),
+      submitOrderBtn: $('submitOrderBtn'),
+      submitOrderTotal: $('submitOrderTotal'),
+
+      mobileCartBar: $('mobileCartBar'),
+      mobileCartCount: $('mobileCartCount'),
+      mobileCartTotal: $('mobileCartTotal'),
+      mobileCartOpenBtn: $('mobileCartOpenBtn'),
+
+      // 觸控鍵盤
+      touchKeypadModal: $('touchKeypadModal'),
+      keypadIcon: $('keypadIcon'),
+      keypadHeadingText: $('keypadHeadingText'),
+      keypadDisplayVal: $('keypadDisplayVal'),
+      keypadDisplayHint: $('keypadDisplayHint'),
+      keypadQuickWrap: $('keypadQuickWrap'),
+      closeKeypadBtn: $('closeKeypadBtn'),
+      confirmKeypadBtn: $('confirmKeypadBtn'),
+      keypadGrid: $('keypadGrid'),
+
+      confirmModal: $('confirmModal'),
+      confirmReceiptBox: $('confirmReceiptBox'),
+      cancelConfirmBtn: $('cancelConfirmBtn'),
+      finalSubmitBtn: $('finalSubmitBtn'),
+
+      successModal: $('successModal'),
+      ticketNumberDisplay: $('ticketNumberDisplay'),
+      ticketTypeDisplay: $('ticketTypeDisplay'),
+      successReceiptBox: $('successReceiptBox'),
+      nextCustomerBtn: $('nextCustomerBtn'),
+      countdownSec: $('countdownSec'),
+
+      openManagerBtn: $('openManagerBtn'),
+      pinModal: $('pinModal'),
+      pinForm: $('pinForm'),
+      pinInput: $('pinInput'),
+      pinErrorMsg: $('pinErrorMsg'),
+      cancelPinBtn: $('cancelPinBtn'),
+
+      managerOverlay: $('managerOverlay'),
+      closeManagerBtn: $('closeManagerBtn'),
+      voiceTestBtn: $('voiceTestBtn'),
+      todayRevenue: $('todayRevenue'),
+      todayTotalOrders: $('todayTotalOrders'),
+      todayPendingOrders: $('todayPendingOrders'),
+      todayCompletedOrders: $('todayCompletedOrders'),
+      ordersQueue: $('ordersQueue'),
+      countAll: $('countAll'),
+      countPending: $('countPending'),
+      countCompleted: $('countCompleted'),
+      exportCsvBtn: $('exportCsvBtn'),
+      resetAllOrdersBtn: $('resetAllOrdersBtn'),
+
+      storeSettingsForm: $('storeSettingsForm'),
+      cfgStoreName: $('cfgStoreName'),
+      cfgPin: $('cfgPin'),
+      menuEditorList: $('menuEditorList'),
+      addMenuForm: $('addMenuForm'),
+      newFoodName: $('newFoodName'),
+      newFoodPrice: $('newFoodPrice'),
+      newFoodCategory: $('newFoodCategory'),
+
+      // kiosk.json 模組
+      saveToJsonFileBtn: $('saveToJsonFileBtn'),
+      fetchServerJsonBtn: $('fetchServerJsonBtn'),
+      backupJsonBtn: $('backupJsonBtn'),
+      restoreJsonBtn: $('restoreJsonBtn'),
+      restoreFileInput: $('restoreFileInput'),
+      kioskJsonStatus: $('kioskJsonStatus'),
+
+      toastNotice: $('toastNotice')
+    };
+
+    /* ==========================================================================
+       輔助函式 (音效、語音、工具)
+       ========================================================================== */
+    function formatCurrency(num) {
+      return `NT$${Number(num || 0).toLocaleString('zh-TW', { maximumFractionDigits: 0 })}`;
+    }
+
+    function formatTime(timestamp) {
+      return new Date(timestamp).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+
+    function showToast(msg) {
+      clearTimeout(toastTimeout);
+      UI.toastNotice.textContent = msg;
+      UI.toastNotice.classList.add('show');
+      toastTimeout = setTimeout(() => {
+        UI.toastNotice.classList.remove('show');
+      }, 2200);
+    }
+
+    function triggerHaptic() {
+      if (navigator.vibrate) {
+        navigator.vibrate(12);
+      }
+    }
+
+    function playBeep(freq = 600, duration = 0.08) {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        // 音訊降級
+      }
+    }
+
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'zh-TW';
+        utterance.rate = 1.0;
+        utterance.pitch = 1.1;
+        window.speechSynthesis.speak(utterance);
+      } else {
+        showToast(`廣播：${text}`);
+      }
+    }
+
+    /* ==========================================================================
+       資料持久化與 kiosk.json 整合模組
+       ========================================================================== */
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.warn('LocalStorage save failed', e);
+      }
+    }
+
+    // 異步載入狀態：優先 LocalStorage -> 次嘗試 fetch kiosk.json -> 降級 DEFAULT_MENU
+    async function loadStateAsync() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          state = {
+            storeName: parsed.storeName || '用餐小站',
+            pin: parsed.pin || '1234',
+            nextTicket: parsed.nextTicket || 1,
+            menu: Array.isArray(parsed.menu) && parsed.menu.length ? parsed.menu : [...DEFAULT_MENU],
+            orders: Array.isArray(parsed.orders) ? parsed.orders : []
+          };
+          return;
+        } catch (e) {
+          console.warn('LocalStorage 解析失敗，嘗試從 kiosk.json 讀取', e);
+        }
+      }
+
+      // 若尚未有 LocalStorage 紀錄，自動嘗試抓取同目錄下的 kiosk.json 作為預設資料
+      await fetchKioskJsonFromServer(false);
+    }
+
+    // 從同層目錄 fetch 讀取 kiosk.json
+    async function fetchKioskJsonFromServer(showNotice = true) {
+      try {
+        const response = await fetch('./kiosk.json', { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP 狀態碼: ${response.status}`);
+
+        const remoteData = await response.json();
+        if (remoteData && Array.isArray(remoteData.menu)) {
+          state.storeName = remoteData.storeName || state.storeName;
+          state.pin = remoteData.pin || state.pin;
+          state.menu = remoteData.menu;
+          if (remoteData.nextTicket && state.orders.length === 0) {
+            state.nextTicket = remoteData.nextTicket;
+          }
+          saveState();
+          initAppUI();
+          if (UI.managerOverlay && !UI.managerOverlay.hidden) {
+            renderOrdersQueue();
+            renderMenuEditor();
+          }
+          if (showNotice) showToast('已成功從 kiosk.json 載入最新設定！');
+          if (UI.kioskJsonStatus) UI.kioskJsonStatus.textContent = '已連接 kiosk.json';
+          return true;
+        }
+      } catch (err) {
+        console.info('無法直接 fetch kiosk.json（若是 file:// 協定受瀏覽器同源阻擋屬正常現象）:', err);
+        if (showNotice) {
+          alert('無法直接讀取同目錄的 kiosk.json。\n\n原因：瀏覽器在 file:// 模式下預設阻擋本地檔案讀取。\n解決方案：\n1. 點擊「📥 從檔案還原」手動選擇 kiosk.json\n2. 或透過簡易本機伺服器開啟 (如 python -m http.server 8080)');
+        }
+      }
+      return false;
+    }
+
+    // 儲存至 kiosk.json (現代 File System API 直接覆寫優先，降級為傳統下載)
+    async function saveToKioskJsonFile() {
+      const exportData = {
+        version: '2.0.0',
+        updatedAt: new Date().toISOString(),
+        storeName: state.storeName,
+        pin: state.pin,
+        nextTicket: state.nextTicket,
+        menu: state.menu,
+        orders: state.orders
+      };
+      const jsonString = JSON.stringify(exportData, null, 2);
+
+      // 若支援 Chromium 原生 File System Access API
+      if ('showSaveFilePicker' in window) {
+        try {
+          const handle = jsonFileHandle || await window.showSaveFilePicker({
+            suggestedName: 'kiosk.json',
+            types: [{
+              description: 'JSON 資料檔',
+              accept: { 'application/json': ['.json'] }
+            }]
+          });
+          jsonFileHandle = handle;
+
+          const writable = await handle.createWritable();
+          await writable.write(jsonString);
+          await writable.close();
+
+          saveState();
+          showToast('✓ 已成功覆寫儲存至 kiosk.json！');
+          if (UI.kioskJsonStatus) UI.kioskJsonStatus.textContent = '已直接同步至本機檔案';
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return; // 使用者按取消
+          console.warn('File System API 存取受阻，切換傳統下載模式', err);
+        }
+      }
+
+      // 降級處理：傳統瀏覽器下載
+      const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'kiosk.json');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast('已匯出 kiosk.json (請覆蓋至本機目錄)');
+    }
+
+    // 還原 JSON 資料 (具備保留今日訂單之安全選項)
+    function restoreKioskJson(jsonData) {
+      if (!jsonData || !Array.isArray(jsonData.menu)) {
+        alert('檔案格式錯誤：未找到有效的菜單 (menu) 陣列。');
+        return;
+      }
+
+      const hasOrders = state.orders.length > 0;
+      let keepOrders = false;
+
+      if (hasOrders) {
+        keepOrders = confirm(
+          `偵測到系統目前已有 ${state.orders.length} 筆今日訂單。\n\n【確定】：僅更新菜單與店名（保留今日訂單與號碼計數）\n【取消】：完全覆蓋（以該備份檔的舊紀錄為準）`
+        );
+      }
+
+      state.storeName = jsonData.storeName || state.storeName;
+      state.pin = jsonData.pin || state.pin;
+      state.menu = jsonData.menu;
+
+      if (!keepOrders) {
+        state.orders = Array.isArray(jsonData.orders) ? jsonData.orders : [];
+        state.nextTicket = jsonData.nextTicket || 1;
+      }
+
+      saveState();
+      initAppUI();
+      renderOrdersQueue();
+      renderMenuEditor();
+      showToast(keepOrders ? '菜單已更新（已保留今日訂單）' : '資料已完整還原！');
+    }
+
+    /* ==========================================================================
+       專屬螢幕虛擬觸控小鍵盤邏輯
+       ========================================================================== */
+    function openKeypad(targetType) {
+      keypadTarget = targetType; // 'table' | 'phone'
+      triggerHaptic();
+      playBeep(700, 0.05);
+
+      if (keypadTarget === 'table') {
+        keypadBuffer = UI.tableInput.value.trim();
+        UI.keypadIcon.textContent = '🍽️';
+        UI.keypadHeadingText.textContent = '請觸控輸入內用桌號';
+        UI.keypadDisplayHint.textContent = '支援字母 (A/B/C) 與桌號快速鍵';
+        UI.keypadQuickWrap.hidden = false;
+      } else {
+        keypadBuffer = UI.phoneInput.value.trim();
+        UI.keypadIcon.textContent = '🥡';
+        UI.keypadHeadingText.textContent = '請觸控輸入電話末 3 碼';
+        UI.keypadDisplayHint.textContent = '請輸入 3 位數字作為外帶取餐憑證';
+        UI.keypadQuickWrap.hidden = true;
+      }
+
+      updateKeypadScreen();
+      UI.touchKeypadModal.hidden = false;
+    }
+
+    function closeKeypad() {
+      UI.touchKeypadModal.hidden = true;
+    }
+
+    function updateKeypadScreen() {
+      if (keypadTarget === 'table') {
+        UI.keypadDisplayVal.textContent = keypadBuffer || '_';
+      } else {
+        const chars = keypadBuffer.split('');
+        const c1 = chars[0] || '_';
+        const c2 = chars[1] || '_';
+        const c3 = chars[2] || '_';
+        UI.keypadDisplayVal.textContent = `${c1}  ${c2}  ${c3}`;
+      }
+    }
+
+    function handleKeypadInput(key) {
+      triggerHaptic();
+      playBeep(620, 0.04);
+
+      if (key === 'clear') {
+        keypadBuffer = '';
+      } else if (key === 'backspace') {
+        keypadBuffer = keypadBuffer.slice(0, -1);
+      } else {
+        if (keypadTarget === 'table') {
+          if (keypadBuffer.length < 6) {
+            keypadBuffer += key;
+          }
+        } else {
+          if (keypadBuffer.length < 3 && /^\d$/.test(key)) {
+            keypadBuffer += key;
+          }
+        }
+      }
+
+      updateKeypadScreen();
+
+      if (keypadTarget === 'phone' && keypadBuffer.length === 3) {
+        playBeep(850, 0.08);
+      }
+    }
+
+    function commitKeypadValue() {
+      triggerHaptic();
+      playBeep(800, 0.08);
+
+      if (keypadTarget === 'table') {
+        UI.tableInput.value = keypadBuffer;
+      } else {
+        UI.phoneInput.value = keypadBuffer;
+      }
+
+      closeKeypad();
+      checkCanSubmit();
+    }
+
+    /* ==========================================================================
+       前台點餐 UI 渲染與邏輯
+       ========================================================================== */
+    function renderCategories() {
+      const categories = ['all', ...new Set(state.menu.map(i => i.category || '一般'))];
+      UI.categoryTabs.innerHTML = categories.map(cat => {
+        const label = cat === 'all' ? '全部餐點' : cat;
+        const active = cat === currentCategory ? 'active' : '';
+        return `<button class="category-tab ${active}" data-cat="${cat}" type="button">${label}</button>`;
+      }).join('');
+    }
+
+    function renderMenu() {
+      const activeItems = state.menu.filter(item => {
+        if (!item.enabled) return false;
+        if (currentCategory === 'all') return true;
+        return (item.category || '一般') === currentCategory;
+      });
+
+      UI.menuCountTag.textContent = `${activeItems.length} 項供應中`;
+
+      if (activeItems.length === 0) {
+        UI.menuGrid.innerHTML = `
+          <div style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius-lg);">
+            此分類目前沒有供應中的餐點
+          </div>
+        `;
+        return;
+      }
+
+      UI.menuGrid.innerHTML = activeItems.map(item => {
+        const inCartItem = cart.find(c => c.id === item.id);
+        const qtyBadge = inCartItem ? `<span class="menu-item-badge">${inCartItem.quantity}</span>` : '';
+        const initial = item.name ? item.name.charAt(0) : '餐';
+
+        return `
+          <article class="menu-card" data-menu-id="${item.id}" role="button" tabindex="0" aria-label="點擊加入 ${item.name}，價格 ${item.price} 元">
+            ${qtyBadge}
+            <div class="menu-card-top">
+              <div class="menu-card-avatar" aria-hidden="true">${initial}</div>
+              <div class="menu-card-info">
+                <h3 class="menu-card-name">${item.name}</h3>
+                <span class="menu-card-category">${item.category || '一般'}</span>
+              </div>
+            </div>
+            <div class="menu-card-bottom">
+              <div class="menu-card-price">${formatCurrency(item.price)}</div>
+              <div class="menu-card-btn">＋ 加入</div>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function renderCart() {
+      const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
+      const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+      UI.cartCountBadge.textContent = totalQty;
+      UI.cartTotalPrice.textContent = formatCurrency(totalPrice);
+      UI.submitOrderTotal.textContent = formatCurrency(totalPrice);
+
+      UI.mobileCartCount.textContent = totalQty;
+      UI.mobileCartTotal.textContent = formatCurrency(totalPrice);
+
+      if (cart.length === 0) {
+        UI.emptyCartView.hidden = false;
+        UI.cartList.hidden = true;
+        UI.submitOrderBtn.disabled = true;
+      } else {
+        UI.emptyCartView.hidden = true;
+        UI.cartList.hidden = false;
+        checkCanSubmit();
+
+        UI.cartList.innerHTML = cart.map(item => `
+          <div class="cart-item">
+            <div style="min-width:0;">
+              <div class="cart-item-title">${item.name}</div>
+              <div class="cart-item-price">${formatCurrency(item.price)} / 份</div>
+            </div>
+            <div class="cart-qty-ctrl">
+              <button class="qty-btn" data-cart-action="minus" data-id="${item.id}" type="button" aria-label="減少數量">−</button>
+              <span class="qty-val">${item.quantity}</span>
+              <button class="qty-btn" data-cart-action="plus" data-id="${item.id}" type="button" aria-label="增加數量">＋</button>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function checkCanSubmit() {
+      if (cart.length === 0) {
+        UI.submitOrderBtn.disabled = true;
+        return;
+      }
+
+      if (diningMode === 'dine-in') {
+        const tableVal = UI.tableInput.value.trim();
+        UI.submitOrderBtn.disabled = !tableVal;
+      } else {
+        const phoneVal = UI.phoneInput.value.trim();
+        UI.submitOrderBtn.disabled = !(/^\d{3}$/.test(phoneVal));
+      }
+    }
+
+    function addToCart(itemId) {
+      const food = state.menu.find(m => m.id === itemId);
+      if (!food || !food.enabled) return;
+
+      triggerHaptic();
+      playBeep(650, 0.06);
+
+      const existing = cart.find(c => c.id === itemId);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({
+          id: food.id,
+          name: food.name,
+          price: food.price,
+          quantity: 1
+        });
+      }
+
+      renderCart();
+      renderMenu();
+      showToast(`已加入「${food.name}」`);
+    }
+
+    function updateCartItem(id, action) {
+      const idx = cart.findIndex(c => c.id === id);
+      if (idx === -1) return;
+
+      triggerHaptic();
+      playBeep(520, 0.05);
+
+      if (action === 'plus') {
+        cart[idx].quantity += 1;
+      } else if (action === 'minus') {
+        cart[idx].quantity -= 1;
+        if (cart[idx].quantity <= 0) {
+          cart.splice(idx, 1);
+        }
+      }
+      renderCart();
+      renderMenu();
+    }
+
+    function clearCart() {
+      if (cart.length === 0) return;
+      cart = [];
+      renderCart();
+      renderMenu();
+      showToast('已清空購物車');
+    }
+
+    /* ==========================================================================
+       訂單流程：確認與送出
+       ========================================================================== */
+    function openConfirmModal() {
+      if (cart.length === 0) return;
+
+      const totalPrice = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
+      const typeLabel = diningMode === 'dine-in' 
+        ? `🍽️ 內用（桌號：${UI.tableInput.value.trim()}）` 
+        : `🥡 外帶（取餐核對碼：${UI.phoneInput.value.trim()}）`;
+      const note = UI.orderNoteInput.value.trim() || '無特殊需求';
+
+      const itemsHtml = cart.map(i => `
+        <div class="receipt-row">
+          <span>${i.name} × ${i.quantity}</span>
+          <strong>${formatCurrency(i.price * i.quantity)}</strong>
+        </div>
+      `).join('');
+
+      UI.confirmReceiptBox.innerHTML = `
+        <div style="font-weight:900; margin-bottom:8px; color:var(--brand-dark);">${typeLabel}</div>
+        <div style="margin-bottom:8px;">${itemsHtml}</div>
+        <div class="receipt-row" style="font-weight:900; font-size:16px;">
+          <span>應付金額</span>
+          <span style="color:var(--brand-dark);">${formatCurrency(totalPrice)}</span>
+        </div>
+        <div style="font-size:12px; color:var(--muted); margin-top:8px;">備註：${note}</div>
+      `;
+
+      UI.confirmModal.hidden = false;
+    }
+
+    function placeOrder() {
+      if (isPlacingOrder) return; // 防止快速連點造成重複下單
+      isPlacingOrder = true;
+
+      const ticketNum = String(state.nextTicket).padStart(3, '0');
+      const order = {
+        id: `ord_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        ticket: ticketNum,
+        diningMode,
+        tableNo: diningMode === 'dine-in' ? UI.tableInput.value.trim() : null,
+        phoneTail: diningMode === 'take-out' ? UI.phoneInput.value.trim() : null,
+        note: UI.orderNoteInput.value.trim(),
+        items: [...cart],
+        total: cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
+        status: 'pending',
+        createdAt: Date.now()
+      };
+
+      state.orders.push(order);
+      state.nextTicket += 1;
+      saveState();
+
+      UI.confirmModal.hidden = true;
+      showSuccessModal(order);
+
+      // 清空前台購物車
+      cart = [];
+      UI.orderNoteInput.value = '';
+      if (diningMode === 'take-out') UI.phoneInput.value = '';
+      renderCart();
+      renderMenu();
+
+      playBeep(880, 0.15);
+      triggerHaptic();
+    }
+
+    function showSuccessModal(order) {
+      UI.ticketNumberDisplay.textContent = order.ticket;
+      UI.ticketTypeDisplay.textContent = order.diningMode === 'dine-in'
+        ? `🍽️ 內用・桌號 ${order.tableNo}`
+        : `🥡 外帶・電話末 3 碼 ${order.phoneTail}`;
+
+      const itemsSummary = order.items.map(i => `${i.name} × ${i.quantity}`).join('、');
+      UI.successReceiptBox.innerHTML = `
+        <div class="receipt-row">
+          <span>餐點內容</span>
+          <strong style="text-align:right;">${itemsSummary}</strong>
+        </div>
+        <div class="receipt-row">
+          <span>合計金額</span>
+          <strong>${formatCurrency(order.total)}</strong>
+        </div>
+        ${order.note ? `<div class="receipt-row"><span>備註</span><span>${order.note}</span></div>` : ''}
+      `;
+
+      UI.successModal.hidden = false;
+
+      // 15 秒倒數自動關閉 (Kiosk 模式)
+      let sec = 15;
+      UI.countdownSec.textContent = sec;
+      clearInterval(autoResetInterval);
+      autoResetInterval = setInterval(() => {
+        sec -= 1;
+        UI.countdownSec.textContent = sec;
+        if (sec <= 0) {
+          closeSuccessModal();
+        }
+      }, 1000);
+    }
+
+    function closeSuccessModal() {
+      clearInterval(autoResetInterval);
+      UI.successModal.hidden = true;
+      isPlacingOrder = false;
+    }
+
+    /* ==========================================================================
+       店家後台：營收、訂單佇列、語音叫號
+       ========================================================================== */
+    function renderManagerStats() {
+      const totalRev = state.orders.reduce((sum, o) => sum + o.total, 0);
+      const pendingCount = state.orders.filter(o => o.status === 'pending').length;
+      const completedCount = state.orders.filter(o => o.status === 'completed').length;
+
+      UI.todayRevenue.textContent = formatCurrency(totalRev);
+      UI.todayTotalOrders.textContent = `${state.orders.length} 筆`;
+      UI.todayPendingOrders.textContent = `${pendingCount} 筆`;
+      UI.todayCompletedOrders.textContent = `${completedCount} 筆`;
+
+      UI.countAll.textContent = state.orders.length;
+      UI.countPending.textContent = pendingCount;
+      UI.countCompleted.textContent = completedCount;
+    }
+
+    function renderOrdersQueue() {
+      renderManagerStats();
+
+      let filtered = [...state.orders].sort((a, b) => b.createdAt - a.createdAt);
+      if (currentOrderFilter === 'pending') {
+        filtered = filtered.filter(o => o.status === 'pending');
+      } else if (currentOrderFilter === 'completed') {
+        filtered = filtered.filter(o => o.status === 'completed');
+      }
+
+      if (filtered.length === 0) {
+        UI.ordersQueue.innerHTML = `
+          <div style="text-align:center; padding:36px; color:var(--muted); border:1px dashed var(--line); border-radius:var(--radius-md);">
+            目前無符合條件的訂單
+          </div>
+        `;
+        return;
+      }
+
+      UI.ordersQueue.innerHTML = filtered.map(order => {
+        const isDone = order.status === 'completed';
+        const itemsStr = order.items.map(i => `${i.name} × ${i.quantity}`).join('、');
+        const custStr = order.diningMode === 'dine-in' ? `內用・桌號 ${order.tableNo}` : `外帶・末 3 碼 ${order.phoneTail}`;
+
+        return `
+          <div class="order-item-card ${isDone ? 'is-done' : ''}" data-order-id="${order.id}">
+            <div class="order-item-head">
+              <div class="order-call-tag">#${order.ticket}</div>
+              <div class="order-time-badge">${formatTime(order.createdAt)} (${isDone ? '已完成' : '製作中'})</div>
+            </div>
+            <div class="order-customer-info">${custStr}</div>
+            <div class="order-food-list">${itemsStr}</div>
+            ${order.note ? `<div class="order-note-box">備註：${order.note}</div>` : ''}
+            <div class="order-actions-row">
+              <strong style="color:var(--brand-dark);">${formatCurrency(order.total)}</strong>
+              <div class="order-actions-btns">
+                <button class="btn-call" data-action="call-voice" type="button" title="用語音朗讀叫號">🔊 叫號</button>
+                ${!isDone ? `<button class="btn-complete" data-action="toggle-complete" type="button">✓ 出餐完成</button>` : `<button class="btn-secondary" data-action="toggle-complete" type="button" style="font-size:12px; padding:4px 8px;">重設待處理</button>`}
+                <button class="btn-delete" data-action="delete-order" type="button">刪除</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderMenuEditor() {
+      UI.cfgStoreName.value = state.storeName;
+      UI.cfgPin.value = state.pin;
+
+      UI.menuEditorList.innerHTML = state.menu.map((item) => `
+        <div class="editor-item-row" data-id="${item.id}">
+          <input type="text" data-field="name" value="${item.name}" placeholder="餐點名稱">
+          <input type="number" data-field="price" value="${item.price}" min="0" step="5" placeholder="價格">
+          <select data-field="category">
+            <option value="主食" ${item.category === '主食' ? 'selected' : ''}>主食</option>
+            <option value="小菜" ${item.category === '小菜' ? 'selected' : ''}>小菜</option>
+            <option value="湯品" ${item.category === '湯品' ? 'selected' : ''}>湯品</option>
+            <option value="飲料" ${item.category === '飲料' ? 'selected' : ''}>飲料</option>
+          </select>
+          <div class="row-actions" style="display:flex; gap:4px;">
+            <button class="btn-secondary" data-action="toggle-menu" style="font-size:11px; padding:4px 8px;" type="button">
+              ${item.enabled ? '供應中' : '已停售'}
+            </button>
+            <button class="btn-delete" data-action="del-menu" style="font-size:11px; padding:4px 8px;" type="button">✕</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /* ==========================================================================
+       報表匯出 (CSV)
+       ========================================================================== */
+    function exportOrdersToCsv() {
+      if (state.orders.length === 0) {
+        showToast('目前尚無訂單可匯出');
+        return;
+      }
+
+      const headers = ['訂單號', '用餐型態', '桌號或電話', '餐點內容', '備註', '總金額', '狀態', '建立時間'];
+      const rows = state.orders.map(o => [
+        `"${o.ticket}"`,
+        `"${o.diningMode === 'dine-in' ? '內用' : '外帶'}"`,
+        `"${o.diningMode === 'dine-in' ? o.tableNo : o.phoneTail}"`,
+        `"${o.items.map(i => `${i.name}x${i.quantity}`).join(';')}"`,
+        `"${o.note || ''}"`,
+        o.total,
+        `"${o.status === 'completed' ? '已完成' : '待處理'}"`,
+        `"${new Date(o.createdAt).toLocaleString('zh-TW')}"`
+      ]);
+
+      const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `營收報表_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('CSV 營收報表已成功下載');
+    }
+
+    // 傳統帶日期的 JSON 備份
+    function backupDatedJson() {
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(state, null, 2));
+      const link = document.createElement('a');
+      link.setAttribute('href', dataStr);
+      link.setAttribute('download', `kiosk_backup_${new Date().toISOString().slice(0, 10)}.json`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('日期備份檔已下載');
+    }
+
+    /* ==========================================================================
+       事件綁定與初始化
+       ========================================================================== */
+    function bindEvents() {
+      // 1. 分類與菜單點擊
+      UI.categoryTabs.addEventListener('click', e => {
+        const btn = e.target.closest('[data-cat]');
+        if (btn) {
+          currentCategory = btn.dataset.cat;
+          renderCategories();
+          renderMenu();
+        }
+      });
+
+      UI.menuGrid.addEventListener('click', e => {
+        const card = e.target.closest('[data-menu-id]');
+        if (card) {
+          addToCart(card.dataset.menuId);
+        }
+      });
+
+      UI.menuGrid.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          const card = e.target.closest('[data-menu-id]');
+          if (card) {
+            e.preventDefault();
+            addToCart(card.dataset.menuId);
+          }
+        }
+      });
+
+      // 2. 購物車數量加減
+      UI.cartList.addEventListener('click', e => {
+        const btn = e.target.closest('[data-cart-action]');
+        if (btn) {
+          updateCartItem(btn.dataset.id, btn.dataset.cartAction);
+        }
+      });
+
+      UI.clearCartBtn.addEventListener('click', clearCart);
+
+      // 3. 內用 / 外帶切換
+      UI.dineInBtn.addEventListener('click', () => {
+        diningMode = 'dine-in';
+        UI.dineInBtn.classList.add('active');
+        UI.dineInBtn.setAttribute('aria-checked', 'true');
+        UI.takeOutBtn.classList.remove('active');
+        UI.takeOutBtn.setAttribute('aria-checked', 'false');
+        UI.tableGroup.hidden = false;
+        UI.phoneGroup.hidden = true;
+        checkCanSubmit();
+      });
+
+      UI.takeOutBtn.addEventListener('click', () => {
+        diningMode = 'take-out';
+        UI.takeOutBtn.classList.add('active');
+        UI.takeOutBtn.setAttribute('aria-checked', 'true');
+        UI.dineInBtn.classList.remove('active');
+        UI.dineInBtn.setAttribute('aria-checked', 'false');
+        UI.tableGroup.hidden = true;
+        UI.phoneGroup.hidden = false;
+        checkCanSubmit();
+      });
+
+      // 4. 觸控虛擬小鍵盤開關與輸入
+      UI.tableInput.addEventListener('click', () => openKeypad('table'));
+      UI.phoneInput.addEventListener('click', () => openKeypad('phone'));
+      UI.closeKeypadBtn.addEventListener('click', closeKeypad);
+      UI.confirmKeypadBtn.addEventListener('click', commitKeypadValue);
+
+      UI.keypadGrid.addEventListener('click', e => {
+        const btn = e.target.closest('[data-key]');
+        if (btn) {
+          handleKeypadInput(btn.dataset.key);
+        }
+      });
+
+      UI.keypadQuickWrap.addEventListener('click', e => {
+        const chip = e.target.closest('[data-quick]');
+        if (chip) {
+          keypadBuffer = chip.dataset.quick;
+          updateKeypadScreen();
+          playBeep(750, 0.05);
+        }
+      });
+
+      // 5. 點餐送出流程
+      UI.submitOrderBtn.addEventListener('click', openConfirmModal);
+      UI.cancelConfirmBtn.addEventListener('click', () => UI.confirmModal.hidden = true);
+      UI.finalSubmitBtn.addEventListener('click', placeOrder);
+      UI.nextCustomerBtn.addEventListener('click', closeSuccessModal);
+
+      // 手機端視圖滾動
+      UI.mobileCartOpenBtn.addEventListener('click', () => {
+        UI.cartPanel.scrollIntoView({ behavior: 'smooth' });
+      });
+
+      // 6. 後台驗證與視窗開關
+      UI.openManagerBtn.addEventListener('click', () => {
+        UI.pinInput.value = '';
+        UI.pinErrorMsg.textContent = '';
+        UI.pinModal.hidden = false;
+        setTimeout(() => UI.pinInput.focus(), 100);
+      });
+
+      UI.cancelPinBtn.addEventListener('click', () => UI.pinModal.hidden = true);
+
+      UI.pinForm.addEventListener('submit', e => {
+        e.preventDefault();
+        if (UI.pinInput.value.trim() === state.pin) {
+          UI.pinModal.hidden = true;
+          UI.managerOverlay.hidden = false;
+          renderOrdersQueue();
+          renderMenuEditor();
+        } else {
+          UI.pinErrorMsg.textContent = '❌ PIN 碼錯誤，請重新輸入';
+          UI.pinInput.value = '';
+        }
+      });
+
+      UI.closeManagerBtn.addEventListener('click', () => {
+        UI.managerOverlay.hidden = true;
+        initAppUI();
+      });
+
+      UI.voiceTestBtn.addEventListener('click', () => {
+        speakText(`歡迎使用${state.storeName}語音系統`);
+      });
+
+      // 7. 後台訂單操作
+      UI.ordersQueue.addEventListener('click', e => {
+        const target = e.target.closest('[data-action]');
+        if (!target) return;
+
+        const card = target.closest('[data-order-id]');
+        if (!card) return;
+
+        const orderId = card.dataset.orderId;
+        const order = state.orders.find(o => o.id === orderId);
+        if (!order) return;
+
+        const action = target.dataset.action;
+
+        if (action === 'call-voice') {
+          const callMsg = order.diningMode === 'dine-in' 
+            ? `請 ${order.tableNo} 桌顧客，餐點已準備完成` 
+            : `請取餐號碼 ${order.ticket} 號，電話末三碼 ${order.phoneTail} 的顧客取餐`;
+          speakText(callMsg);
+        } else if (action === 'toggle-complete') {
+          order.status = order.status === 'completed' ? 'pending' : 'completed';
+          saveState();
+          renderOrdersQueue();
+        } else if (action === 'delete-order') {
+          if (confirm(`確定要刪除單號 #${order.ticket} 嗎？`)) {
+            state.orders = state.orders.filter(o => o.id !== orderId);
+            saveState();
+            renderOrdersQueue();
+          }
+        }
+      });
+
+      // 訂單篩選器
+      document.querySelector('.order-filter-bar').addEventListener('click', e => {
+        const btn = e.target.closest('[data-filter]');
+        if (btn) {
+          document.querySelectorAll('.order-filter-bar .filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentOrderFilter = btn.dataset.filter;
+          renderOrdersQueue();
+        }
+      });
+
+      UI.exportCsvBtn.addEventListener('click', exportOrdersToCsv);
+      UI.resetAllOrdersBtn.addEventListener('click', () => {
+        if (confirm('確定要清空今天的訂單與營收紀錄嗎？此操作不可逆！')) {
+          state.orders = [];
+          state.nextTicket = 1;
+          saveState();
+          renderOrdersQueue();
+          showToast('已重置今日所有訂單');
+        }
+      });
+
+      // 8. 後台店家與菜單設定
+      UI.storeSettingsForm.addEventListener('submit', e => {
+        e.preventDefault();
+        state.storeName = UI.cfgStoreName.value.trim();
+        state.pin = UI.cfgPin.value.trim();
+        saveState();
+        showToast('店家設定已儲存');
+      });
+
+      UI.menuEditorList.addEventListener('change', e => {
+        const row = e.target.closest('[data-id]');
+        if (!row) return;
+
+        const item = state.menu.find(m => m.id === row.dataset.id);
+        if (!item) return;
+
+        const field = e.target.dataset.field;
+        if (field === 'name') item.name = e.target.value.trim();
+        if (field === 'price') item.price = Number(e.target.value) || 0;
+        if (field === 'category') item.category = e.target.value;
+
+        saveState();
+      });
+
+      UI.menuEditorList.addEventListener('click', e => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+
+        const row = btn.closest('[data-id]');
+        if (!row) return;
+
+        const item = state.menu.find(m => m.id === row.dataset.id);
+        if (!item) return;
+
+        if (btn.dataset.action === 'toggle-menu') {
+          item.enabled = !item.enabled;
+          saveState();
+          renderMenuEditor();
+        } else if (btn.dataset.action === 'del-menu') {
+          if (confirm(`確定要刪除「${item.name}」項目嗎？`)) {
+            state.menu = state.menu.filter(m => m.id !== item.id);
+            saveState();
+            renderMenuEditor();
+          }
+        }
+      });
+
+      UI.addMenuForm.addEventListener('submit', e => {
+        e.preventDefault();
+        const name = UI.newFoodName.value.trim();
+        const price = Number(UI.newFoodPrice.value) || 0;
+        const category = UI.newFoodCategory.value;
+
+        if (!name) return;
+
+        state.menu.push({
+          id: `item_${Date.now()}`,
+          name,
+          price,
+          category,
+          enabled: true
+        });
+
+        saveState();
+        UI.newFoodName.value = '';
+        renderMenuEditor();
+        showToast(`已新增「${name}」`);
+      });
+
+      // 9. kiosk.json 儲存、同步與還原
+      UI.saveToJsonFileBtn.addEventListener('click', saveToKioskJsonFile);
+      UI.fetchServerJsonBtn.addEventListener('click', () => fetchKioskJsonFromServer(true));
+      UI.backupJsonBtn.addEventListener('click', backupDatedJson);
+
+      UI.restoreJsonBtn.addEventListener('click', () => UI.restoreFileInput.click());
+      UI.restoreFileInput.addEventListener('change', e => {
+        if (e.target.files.length > 0) {
+          const file = e.target.files[0];
+          const reader = new FileReader();
+          reader.onload = ev => {
+            try {
+              const data = JSON.parse(ev.target.result);
+              restoreKioskJson(data);
+            } catch (err) {
+              alert('解析 JSON 檔案失敗，請檢查檔案格式！');
+            }
+          };
+          reader.readAsText(file);
+          e.target.value = ''; // 清空以利下次再次選擇同名檔案
+        }
+      });
+    }
+
+    /* ==========================================================================
+       應用程式初始化
+       ========================================================================== */
+    function initAppUI() {
+      UI.storeNameDisplay.textContent = state.storeName;
+      document.title = `${state.storeName}｜自助點餐機`;
+
+      renderCategories();
+      renderMenu();
+      renderCart();
+    }
+
+    async function initApp() {
+      await loadStateAsync();
+      initAppUI();
+      bindEvents();
+    }
+
+    // 當 DOM 準備完成後啟動
+    document.addEventListener('DOMContentLoaded', () => {
+      initApp();
+    });
+  </script>
+</body>
+</html>
