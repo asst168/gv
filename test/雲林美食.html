@@ -1,0 +1,2142 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>雲林在地食光 · 20鄉鎮全制霸美食指南</title>
+  
+  <!-- PWA & Mobile Meta Tags -->
+  <meta name="theme-color" content="#1c1917">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="雲林食光">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="description" content="雲林在地美食指南，精選20鄉鎮346間排隊小吃、隱藏老店、咖啡景觀與在地私房料理。支援離線使用、即時營業狀態與隨機抽餐。">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    /* Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    :root {
+      --bg-page: #f6f3ed;
+      --bg-surface: #ffffff;
+      --bg-surface-soft: #faf7f2;
+      --bg-card-alt: #f4efe6;
+      --primary: #1c1917;
+      --primary-hover: #000000;
+      --accent: #f59e0b;
+      --accent-light: #fef3c7;
+      --accent-gold: #fde047;
+      --text-main: #292524;
+      --text-muted: #78716c;
+      --text-sub: #a8a29e;
+      --border-color: #e7e0d3;
+      --border-light: #f0eae1;
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 22px;
+      --radius-full: 9999px;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.12);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    body {
+      font-family: "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      line-height: 1.5;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      touch-action: manipulation;
+      overscroll-behavior-y: contain;
+    }
+
+    /* Scrollbar hide for slick horizontal lists */
+    ::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* App Container */
+    #app-wrapper {
+      width: 100%;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background-color: var(--bg-page);
+      transition: max-width 0.3s ease;
+    }
+
+    /* Responsive Mode: Full width on mobile, beautiful max-width on desktop */
+    @media (min-width: 768px) {
+      body {
+        padding: 0 16px 24px;
+        background-color: #ede7dc;
+      }
+      #app-wrapper.responsive-mode {
+        max-width: 1240px;
+        margin: 16px auto;
+        min-height: calc(100dvh - 32px);
+        border-radius: 28px;
+        box-shadow: 0 12px 48px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+      }
+      #app-wrapper.mobile-frame-mode {
+        max-width: 440px;
+        margin: 20px auto;
+        min-height: 880px;
+        border-radius: 36px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18), 0 0 0 12px #262422;
+        overflow: hidden;
+      }
+    }
+
+    /* Header styling */
+    .app-header {
+      background: linear-gradient(145deg, #1c1917 0%, #292524 100%);
+      color: #ffffff;
+      padding: calc(14px + var(--safe-top)) 16px 16px;
+      border-bottom-left-radius: 26px;
+      border-bottom-right-radius: 26px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      z-index: 20;
+    }
+
+    .header-bg-glow1 {
+      position: absolute;
+      right: -30px;
+      top: -30px;
+      width: 160px;
+      height: 160px;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .header-bg-glow2 {
+      position: absolute;
+      left: -40px;
+      bottom: -20px;
+      width: 130px;
+      height: 130px;
+      background: radial-gradient(circle, rgba(253, 224, 71, 0.15) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      z-index: 2;
+    }
+
+    .header-title-box h1 {
+      font-size: 21px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .header-badge-count {
+      color: var(--accent-gold);
+      background: rgba(253, 224, 71, 0.15);
+      border: 1px solid rgba(253, 224, 71, 0.3);
+      padding: 1px 8px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+    .header-sub {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.65);
+      font-weight: 500;
+      margin-top: 3px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-btn {
+      height: 38px;
+      border-radius: var(--radius-full);
+      padding: 0 12px;
+      font-size: 13px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .header-btn:active {
+      transform: scale(0.95);
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .header-btn.primary {
+      background: var(--accent-gold);
+      color: #1c1917;
+      border: none;
+      box-shadow: 0 4px 12px rgba(253, 224, 71, 0.35);
+    }
+
+    /* Sticky Control Center */
+    .sticky-controls {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(246, 243, 237, 0.94);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 14px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Search Input Row */
+    .search-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .search-input-wrap {
+      flex: 1;
+      position: relative;
+    }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 15px;
+      opacity: 0.55;
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      height: 44px;
+      padding: 0 36px 0 38px;
+      font-size: 16px; /* Prevents auto zoom on iOS Safari */
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--border-color);
+      background: #ffffff;
+      color: var(--text-main);
+      font-weight: 500;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(28, 25, 23, 0.08);
+    }
+    .search-clear-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #f0eae1;
+      border: none;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    /* Quick Filter Chips (Regions, OpenNow, Prices) */
+    .chip-scroll-row {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .filter-chip {
+      flex: none;
+      height: 34px;
+      padding: 0 13px;
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border: 1.5px solid var(--border-color);
+      background: #ffffff;
+      color: var(--text-main);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .filter-chip:active {
+      transform: scale(0.96);
+    }
+    .filter-chip.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    .filter-chip.accent-active {
+      background: #059669;
+      color: #fff;
+      border-color: #059669;
+    }
+    .filter-chip.price-active {
+      background: #d97706;
+      color: #fff;
+      border-color: #d97706;
+    }
+
+    .chip-badge {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.06);
+    }
+    .filter-chip.active .chip-badge {
+      background: rgba(255, 255, 255, 0.2);
+      color: var(--accent-gold);
+    }
+
+    /* Sub-filters row: Townships or categories scroll */
+    .sub-filter-row {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      align-items: center;
+      padding-bottom: 2px;
+    }
+    .town-pill {
+      flex: none;
+      height: 30px;
+      padding: 0 11px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid var(--border-color);
+      background: var(--bg-surface-soft);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+    .town-pill:active { transform: scale(0.95); }
+    .town-pill.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+    .town-pill-count {
+      font-size: 10px;
+      opacity: 0.75;
+    }
+
+    /* Filter Tools bar (Count + Sort dropdown + Price toggle) */
+    .filter-meta-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 2px 0;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .filter-meta-bar select {
+      height: 30px;
+      padding: 0 24px 0 10px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border-color);
+      background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2378716c' viewBox='0 0 16 16'%3E%3Cpath d='M8 11.5l-5-5h10l-5 5z'/%3E%3C/svg%3E") no-repeat right 8px center;
+      color: var(--text-main);
+      font-size: 12px;
+      font-weight: 700;
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+
+    /* Main Content Area */
+    .app-main {
+      flex: 1;
+      padding: 12px 14px 110px;
+      width: 100%;
+    }
+
+    /* Food Cards Grid (1 col on mobile, 2 on tablet, 3 on desktop) */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    @media (min-width: 640px) {
+      .cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+    }
+    @media (min-width: 1024px) {
+      .cards-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+      }
+    }
+
+    /* Food Card */
+    .food-card {
+      background: var(--bg-surface);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+    }
+    .food-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .store-name {
+      font-size: 17px;
+      font-weight: 900;
+      color: var(--text-main);
+      line-height: 1.3;
+      flex: 1;
+    }
+    .fav-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--border-color);
+      background: #fafaf9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 17px;
+      flex-shrink: 0;
+      transition: transform 0.15s ease, background 0.15s;
+    }
+    .fav-btn:active { transform: scale(0.85); }
+    .fav-btn.is-fav {
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+
+    /* Badges Row */
+    .card-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 8px;
+      align-items: center;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2.5px 8px;
+      border-radius: var(--radius-full);
+      line-height: 1.3;
+    }
+    .badge-town {
+      background: var(--bg-card-alt);
+      color: #57534e;
+    }
+    .badge-price {
+      background: #fef3c7;
+      color: #92400e;
+      font-weight: 900;
+    }
+    .badge-cat {
+      background: #f5f0e6;
+      color: #44403c;
+    }
+    .badge-status {
+      font-size: 10.5px;
+      font-weight: 800;
+    }
+    .status-open {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+    .status-closing {
+      background: #fffbeb;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+    .status-closed {
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+    .status-24h {
+      background: #f0fdf4;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+    }
+
+    /* Tags */
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 10px;
+    }
+    .tag-item {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-light);
+      background: #faf8f5;
+      color: #57534e;
+    }
+    .tag-item.highlight {
+      background: #fff7ed;
+      border-color: #fed7aa;
+      color: #c2410c;
+      font-weight: 700;
+    }
+
+    /* Card Details */
+    .card-info {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+      color: #57534e;
+    }
+    .info-line {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      line-height: 1.4;
+      cursor: pointer;
+    }
+    .info-line:hover .copyable-text {
+      text-decoration: underline;
+      color: var(--primary);
+    }
+    .info-icon { flex-shrink: 0; font-size: 13px; margin-top: 1px; }
+    .info-text {
+      flex: 1;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    /* Card Actions (Call, Navigate, Share) */
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 6px;
+    }
+    .action-btn {
+      flex: 1;
+      height: 40px;
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: 1.5px solid var(--border-color);
+    }
+    .action-btn:active { transform: scale(0.97); }
+    .action-btn.call-btn {
+      background: #ffffff;
+      color: var(--text-main);
+    }
+    .action-btn.call-btn:hover {
+      border-color: var(--primary);
+    }
+    .action-btn.call-btn.disabled {
+      background: #f5f5f4;
+      color: var(--text-sub);
+      border-color: #e7e5e4;
+      pointer-events: none;
+    }
+    .action-btn.nav-btn {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+    .action-btn.nav-btn:hover {
+      background: var(--primary-hover);
+    }
+    .action-btn.share-btn {
+      flex: 0 0 40px;
+      background: #ffffff;
+      color: var(--text-main);
+      padding: 0;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: #ffffff;
+      border-radius: var(--radius-lg);
+      border: 1.5px dashed var(--border-color);
+      margin: 20px 0;
+    }
+    .empty-icon { font-size: 44px; margin-bottom: 8px; }
+    .empty-title { font-size: 17px; font-weight: 900; margin-bottom: 4px; }
+    .empty-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+
+    /* Bottom Navigation Bar (Mobile Native App Feeling) */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      margin: 0 auto;
+      max-width: 1240px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      padding: 8px 12px calc(8px + var(--safe-bottom));
+      display: flex;
+      gap: 8px;
+      z-index: 40;
+      box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.06);
+    }
+    @media (min-width: 768px) {
+      .bottom-nav {
+        border-radius: 20px 20px 0 0;
+      }
+      #app-wrapper.mobile-frame-mode .bottom-nav {
+        position: absolute;
+        max-width: 100%;
+      }
+    }
+
+    .nav-tab-btn {
+      flex: 1;
+      height: 48px;
+      border-radius: var(--radius-full);
+      border: none;
+      background: transparent;
+      color: var(--text-sub);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      position: relative;
+    }
+    .nav-tab-btn:active { transform: scale(0.94); }
+    .nav-tab-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .nav-tab-icon { font-size: 17px; line-height: 1; }
+    .nav-tab-label {
+      font-size: 11px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .nav-count-badge {
+      font-size: 9.5px;
+      padding: 1px 5px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.06);
+    }
+    .nav-tab-btn.active .nav-count-badge {
+      background: rgba(255, 255, 255, 0.2);
+      color: var(--accent-gold);
+    }
+
+    /* Floating Action Buttons */
+    .fab-container {
+      position: fixed;
+      right: 18px;
+      bottom: calc(76px + var(--safe-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 35;
+    }
+    .fab-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .fab-btn:active { transform: scale(0.9); }
+    .fab-random {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #fff;
+    }
+    .fab-top {
+      background: var(--primary);
+      color: #fff;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+    }
+    .fab-top.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    /* Modals Overlay */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 60;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 12px;
+      animation: fadeIn 0.2s ease;
+    }
+    @media (min-width: 640px) {
+      .modal-overlay {
+        align-items: center;
+      }
+    }
+    .modal-content {
+      background: #ffffff;
+      width: 100%;
+      max-width: 480px;
+      max-height: 85vh;
+      max-height: 85dvh;
+      border-radius: 28px;
+      padding: 22px;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg-surface-soft);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    /* Random Picker Animation Styles */
+    .slot-box {
+      background: var(--bg-surface-soft);
+      border: 2px dashed #f59e0b;
+      border-radius: var(--radius-lg);
+      padding: 24px 16px;
+      text-align: center;
+      margin: 16px 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .slot-name {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--primary);
+      min-height: 34px;
+    }
+    .slot-meta {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      min-height: 20px;
+    }
+
+    /* Toast Notification */
+    .toast-box {
+      position: fixed;
+      top: calc(20px + var(--safe-top));
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: #1c1917;
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .toast-box.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Townships View Tab */
+    .region-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    .region-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .region-name {
+      font-size: 15px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .towns-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    @media (min-width: 640px) {
+      .towns-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+    .town-jump-btn {
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      background: var(--bg-surface-soft);
+      border: 1px solid var(--border-color);
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .town-jump-btn:active { transform: scale(0.96); }
+    .town-jump-btn:hover { border-color: var(--primary); background: #ffffff; }
+    .town-jump-name { font-size: 14px; font-weight: 900; }
+    .town-jump-count { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Keyframe Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { transform: translateY(40px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes pulseSoft {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .pulse-animation { animation: pulseSoft 1.8s infinite; }
+  </style>
+</head>
+<body>
+
+<div id="app-wrapper" class="responsive-mode">
+  
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-bg-glow1"></div>
+    <div class="header-bg-glow2"></div>
+    <div class="header-row">
+      <div class="header-title-box">
+        <h1>
+          <span>雲林在地食光</span>
+          <span class="header-badge-count" id="header-total-badge">346 間</span>
+        </h1>
+        <p class="header-sub">20 鄉鎮全制霸 · 離線在地美食口袋名單</p>
+      </div>
+      <div class="header-actions">
+        <!-- Mode Switcher on desktop -->
+        <button id="btn-device-toggle" class="header-btn" title="切換檢視模式" style="display:none;">
+          <span id="device-toggle-icon">📱</span>
+        </button>
+        <!-- Random food draw button -->
+        <button id="btn-header-random" class="header-btn primary" title="今天吃什麼？">
+          <span>🎲 抽一家</span>
+        </button>
+        <!-- Install PWA info -->
+        <button id="btn-header-pwa" class="header-btn" title="加入手機主畫面">
+          <span>📲</span>
+        </button>
+        <!-- Download offline HTML -->
+        <button id="btn-header-download" class="header-btn" title="下載離線檔">
+          <span>⬇️</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sticky Controls Section -->
+  <div class="sticky-controls" id="sticky-filter-bar">
+    <!-- Row 1: Search -->
+    <div class="search-row">
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" class="search-input" placeholder="搜尋店名、滷肉飯、當歸鴨、地址...">
+        <button type="button" id="search-clear-btn" class="search-clear-btn" style="display:none;">✕</button>
+      </div>
+      <!-- Open Now Quick Switch -->
+      <button type="button" id="btn-open-only" class="filter-chip" title="只看營業中">
+        <span>🟢 營業中</span>
+      </button>
+    </div>
+
+    <!-- Row 2: Region Tabs & Quick Price Filter -->
+    <div class="chip-scroll-row no-scrollbar" id="region-chips">
+      <button class="filter-chip active" data-region="all">
+        <span>🗺️ 全雲林</span>
+        <span class="chip-badge" id="badge-all">346</span>
+      </button>
+      <button class="filter-chip" data-region="mountain">
+        <span>⛰️ 山線</span>
+        <span class="chip-badge" id="badge-mountain">0</span>
+      </button>
+      <button class="filter-chip" data-region="plain">
+        <span>🌾 平原</span>
+        <span class="chip-badge" id="badge-plain">0</span>
+      </button>
+      <button class="filter-chip" data-region="coastal">
+        <span>🌊 海線</span>
+        <span class="chip-badge" id="badge-coastal">0</span>
+      </button>
+
+      <!-- Price chips inline -->
+      <button class="filter-chip" data-price="cheap" title="50元以內銅板美食">
+        <span>🪙 銅板價</span>
+      </button>
+      <button class="filter-chip" data-price="mid" title="50-100元平價美味">
+        <span>🍱 百元內</span>
+      </button>
+      <button class="filter-chip" data-price="high" title="100元以上合菜排餐">
+        <span>🍲 大餐/合菜</span>
+      </button>
+    </div>
+
+    <!-- Row 3: Township Horizontal Pill Bar -->
+    <div class="sub-filter-row no-scrollbar" id="township-pills">
+      <!-- Generated via JS -->
+    </div>
+
+    <!-- Row 4: Category Pills -->
+    <div class="sub-filter-row no-scrollbar" id="category-pills">
+      <button class="town-pill active" data-cat="all">全部種類</button>
+      <button class="town-pill" data-cat="box">米食/飯類</button>
+      <button class="town-pill" data-cat="noodle">麵食羹湯</button>
+      <button class="town-pill" data-cat="meal">簡餐合菜</button>
+      <button class="town-pill" data-cat="snack">小吃甜點</button>
+      <button class="town-pill" data-cat="coffee">咖啡輕食</button>
+      <button class="town-pill" data-cat="steak">排餐牛肉</button>
+      <button class="town-pill" data-cat="veg">蔬食素食</button>
+      <button class="town-pill" data-cat="buffet">火鍋吃到飽</button>
+    </div>
+
+    <!-- Row 5: Count & Sorting -->
+    <div class="filter-meta-bar">
+      <span id="filtered-count-text">符合 <b>346</b> 間店家</span>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <select id="sort-select" title="店家排序">
+          <option value="default">🌟 預設推薦</option>
+          <option value="price_asc">💰 價格：低至高</option>
+          <option value="price_desc">💎 價格：高至低</option>
+          <option value="town">📍 依鄉鎮分組</option>
+          <option value="name">🔤 依店名筆劃</option>
+        </select>
+        <button id="btn-reset-filters" class="town-pill" style="display:none; color:#ef4444; border-color:#fecaca; background:#fef2f2;">重設</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Container -->
+  <main class="app-main" id="main-content">
+    
+    <!-- Tab 1: Explore -->
+    <section id="tab-explore">
+      <div class="cards-grid" id="cards-container">
+        <!-- Rendered by JS -->
+      </div>
+      <!-- Load more / status indicator -->
+      <div id="loading-indicator" style="text-align:center; padding:24px 0; color:var(--text-sub); font-size:12px; display:none;">
+        <span class="pulse-animation">⚡ 載入更多在地店家...</span>
+      </div>
+    </section>
+
+    <!-- Tab 2: Favorites -->
+    <section id="tab-fav" style="display:none;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; padding:0 4px;">
+        <div style="font-weight:900; font-size:15px; display:flex; align-items:center; gap:6px;">
+          <span>❤️ 我的收藏名單</span>
+          <span id="fav-tab-count-badge" class="badge badge-price">0 間</span>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button id="btn-copy-all-fav" class="town-pill" style="background:#fff;">📋 複製清單</button>
+          <button id="btn-clear-all-fav" class="town-pill" style="color:#ef4444;">清空</button>
+        </div>
+      </div>
+      <div class="cards-grid" id="fav-cards-container">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- Tab 3: Towns Map View -->
+    <section id="tab-towns" style="display:none;">
+      <div style="background:#fff; border:1px solid var(--border-color); border-radius:var(--radius-lg); padding:16px; margin-bottom:14px;">
+        <h2 style="font-size:16px; font-weight:900;">🗺️ 雲林 20 鄉鎮美食走讀</h2>
+        <p style="font-size:12px; color:var(--text-muted); margin-top:3px;">
+          點選任何鄉鎮即可快速篩選，隨時掌握各區代表小吃與老字號！
+        </p>
+      </div>
+
+      <div id="regions-accordion">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-tab-btn active" data-tab="explore">
+      <span class="nav-tab-icon">🔍</span>
+      <span class="nav-tab-label">
+        <span>探索</span>
+        <span class="nav-count-badge" id="nav-explore-badge">346</span>
+      </span>
+    </button>
+    <button class="nav-tab-btn" data-tab="random">
+      <span class="nav-tab-icon">🎲</span>
+      <span class="nav-tab-label">吃什麼</span>
+    </button>
+    <button class="nav-tab-btn" data-tab="fav">
+      <span class="nav-tab-icon">❤️</span>
+      <span class="nav-tab-label">
+        <span>收藏</span>
+        <span class="nav-count-badge" id="nav-fav-badge">0</span>
+      </span>
+    </button>
+    <button class="nav-tab-btn" data-tab="towns">
+      <span class="nav-tab-icon">🗺️</span>
+      <span class="nav-tab-label">鄉鎮</span>
+    </button>
+  </nav>
+
+  <!-- Floating Action Buttons -->
+  <div class="fab-container">
+    <button id="fab-top" class="fab-btn fab-top" title="回到頂端">⬆️</button>
+    <button id="fab-random" class="fab-btn fab-random" title="隨機抽美食">🎲</button>
+  </div>
+
+  <!-- Toast Notification Box -->
+  <div id="toast" class="toast-box">
+    <span id="toast-text">已複製</span>
+  </div>
+
+  <!-- Modal: Random Picker (今天吃什麼) -->
+  <div id="modal-random" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">🎲 今天吃什麼？</h3>
+        <button class="modal-close" data-close="modal-random">✕</button>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted);">
+        選擇障礙嗎？讓雲林食光幫你抽一家在地美味！
+      </p>
+
+      <div style="display:flex; gap:6px; margin-top:10px;">
+        <select id="random-scope-select" style="flex:1; height:36px; border-radius:18px; border:1px solid var(--border-color); padding:0 12px; font-weight:700; font-size:13px; background:#fff;">
+          <option value="current">從目前篩選範圍抽</option>
+          <option value="all">全雲林 346 間隨機抽</option>
+          <option value="mountain">⛰️ 只抽山線</option>
+          <option value="plain">🌾 只抽平原</option>
+          <option value="coastal">🌊 只抽海線</option>
+        </select>
+        <button id="btn-do-spin" style="height:36px; padding:0 16px; border-radius:18px; background:var(--primary); color:#fff; border:none; font-weight:800; font-size:13px; cursor:pointer;">
+          🎲 開始抽！
+        </button>
+      </div>
+
+      <div class="slot-box" id="slot-result-box">
+        <div id="slot-result-tag" style="display:inline-block; font-size:11px; font-weight:800; background:var(--accent-gold); color:#1c1917; padding:2px 8px; border-radius:10px; margin-bottom:6px;">準備抽籤</div>
+        <div class="slot-name" id="slot-result-name">點擊「開始抽！」</div>
+        <div class="slot-meta" id="slot-result-meta">按下按鈕隨機挑選你的下一餐</div>
+      </div>
+
+      <!-- Action buttons for selected store -->
+      <div id="slot-actions" style="display:none; gap:8px;">
+        <a id="slot-call-btn" href="#" class="action-btn call-btn">📞 撥打電話</a>
+        <a id="slot-nav-btn" target="_blank" rel="noopener noreferrer" href="#" class="action-btn nav-btn">📍 地圖導航</a>
+        <button id="slot-fav-btn" class="action-btn" style="flex:0 0 44px; background:#fff;">❤️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: PWA & Offline Guide -->
+  <div id="modal-pwa" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">📲 加入手機主畫面</h3>
+        <button class="modal-close" data-close="modal-pwa">✕</button>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted);">
+        將雲林食光加到手機桌面，享受像 App 一樣全螢幕、零延遲、離線可查的便利體驗！
+      </p>
+
+      <div style="display:flex; flex-direction:column; gap:12px; margin-top:14px;">
+        <div style="background:var(--bg-surface-soft); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:14px;">
+          <p style="font-weight:900; font-size:13px;">🍎 iPhone / iPad (Safari 瀏覽器)</p>
+          <ol style="font-size:12px; color:#57534e; margin-top:6px; padding-left:18px; line-height:1.7;">
+            <li>使用 Safari 開啟此頁面</li>
+            <li>點擊底部工具列中間的 <b>「分享圖示 ⎙」</b></li>
+            <li>選單往下滑點擊 <b>「加入主畫面 ➕」</b></li>
+            <li>點擊右上角「新增 / 加入」即大功告成！</li>
+          </ol>
+        </div>
+
+        <div style="background:var(--bg-surface-soft); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:14px;">
+          <p style="font-weight:900; font-size:13px;">🤖 Android (Chrome 瀏覽器)</p>
+          <ol style="font-size:12px; color:#57534e; margin-top:6px; padding-left:18px; line-height:1.7;">
+            <li>使用 Chrome 開啟本頁</li>
+            <li>點擊右上角 <b>「⋮」</b> 選單</li>
+            <li>點選 <b>「加到主畫面」</b> 或 <b>「安裝應用程式」</b></li>
+            <li>確認安裝完成！</li>
+          </ol>
+        </div>
+
+        <div style="background:#1c1917; color:#fff; border-radius:var(--radius-md); padding:14px;">
+          <p style="font-weight:900; font-size:13px; color:var(--accent-gold);">💾 單檔離線備份</p>
+          <p style="font-size:11.5px; color:rgba(255,255,255,0.7); margin-top:4px; line-height:1.6;">
+            本網頁已內建 346 間完整雲林店家資訊，只要下載成單一 HTML 檔案，即便身處山區或海邊收訊不良處，依然能隨時開啟搜尋與導航！
+          </p>
+          <button id="btn-modal-download" style="width:100%; height:40px; border-radius:var(--radius-full); background:var(--accent-gold); color:#1c1917; border:none; font-weight:900; font-size:13px; margin-top:10px; cursor:pointer;">
+            ⬇️ 下載單檔離線版 HTML
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Data & Core Engine Script -->
+<script>
+// Raw Store Data Embedded
+const STORES = [{"name":"大崙發哥麵店","town":"斗六","cat":"box","addr":"雲林縣斗六市崙峯里仁義路62-1號","tel":"0938563055","hours":"11:00–14:00、16:30–19:00（週末休）","price":"約45–80元","tags":["雲林神級滷肉飯連年入選","招牌黃金蛋飯","鹹香炒蛋混搭濃郁滷肉","銷魂爌肉飯雞魯飯必點"]},{"name":"阿賜豬腳飯","town":"斗六","cat":"box","addr":"雲林縣斗六市公正街34號","tel":"055335899","hours":"16:00–22:00（週六休）","price":"約60–130元","tags":["斗六宵夜排隊王","紅燒豬腳膠質軟黏","梅干扣肉飯滷肉飯","當歸下水湯"]},{"name":"正斗六炊仔飯","town":"斗六","cat":"box","addr":"雲林縣斗六市中山路379號","tel":"055347988","hours":"10:45–19:00（週二休）","price":"約80–120元","tags":["三代傳承炊仔飯","古早味炊蛋肉燥滷汁","金牌紅燒豬腳","扣肉飯"]},{"name":"番薯仔炊飯","town":"斗六","cat":"box","addr":"雲林縣斗六市中正路89號","tel":"055349397","hours":"09:00–13:00（週末休）","price":"約30–70元","tags":["百年早餐老鋪","炊飯30元銅板價","清爽古早味肉羹","骨仔肉湯必搭"]},{"name":"阿國獅魷魚羹","town":"斗六","cat":"noodle","addr":"雲林縣斗六市大同路112號","tel":"055354010","hours":"08:30–19:30","price":"約50–80元","tags":["八十年老字號","招牌魷魚嘴羹麵","手工特調辣粉","肉燥油豆腐滷肉香"]},{"name":"東市羊肉（傳承百年）","town":"斗六","cat":"noodle","addr":"雲林縣斗六市中華路115號","tel":"055322439","hours":"15:30–23:00（週日休）","price":"約60–130元","tags":["傳承百年排隊名店","獨創羊肉米糕","溫補當歸羊肉湯","羊油乾麵線"]},{"name":"老街碗粿","town":"斗六","cat":"box","addr":"雲林縣斗六市太平路122號","tel":"055323093","hours":"10:00–14:30、16:30–19:30（週日休）","price":"碗粿約25–35元","tags":["百年碗粿老店","古早味經典肉燥蛋飯","高湯關東煮無限續","太平老街地標"]},{"name":"鄧肉圓（斗六總店）","town":"斗六","cat":"box","addr":"雲林縣斗六市興華街24-8號","tel":"055336072","hours":"08:00–21:30","price":"肉圓約40元","tags":["車站前五十年老字號","低溫油泡外皮軟Q","特調粉紅甜米醬","筍角赤肉餡"]},{"name":"長興圓仔冰","town":"斗六","cat":"box","addr":"雲林縣斗六市中華路136號","tel":"055339445","hours":"10:30–22:00","price":"甜品約45–55元","tags":["三代手工燒麻糬","芝麻花生雙拼","彩虹綜合圓仔冰","純米古法磨製"]},{"name":"吳記肉圓（西市場）","town":"斗六","cat":"box","addr":"雲林縣斗六市愛國街21巷10號","tel":"055343581","hours":"09:30–19:30","price":"肉圓約35–45元","tags":["巷弄隱藏版老店","豬大骨湯頭回甘","鮮甜豬肉筍塊內餡","銅板價湯品10元起"]},{"name":"凹凸咖啡館（雲中街聚落）","town":"斗六","cat":"coffee","addr":"雲林縣斗六市雲中街9巷12號","tel":"055339222","hours":"10:00–18:00（週二休）","price":"約100–200元","tags":["日治警察宿舍改建","日式庭園大草皮","精品手沖咖啡","熱壓可朗芙鬆餅"]},{"name":"魔力牛牛排館（斗六店）","town":"斗六","cat":"steak","addr":"雲林縣斗六市公正路84號","tel":"055333919","hours":"11:00–14:00、16:30–21:00","price":"排餐約170–350元","tags":["不使用重組肉","濃湯飲料冰品無限續","超厚切沙朗牛排","平價聚餐好選擇"]},{"name":"壹番素食","town":"斗六","cat":"veg","addr":"雲林縣斗六市太平路","tel":"","hours":"詳洽店家","price":"人均約150–250元","tags":["太平老街三十年手藝","轉型全素蔬食料理","多間包廂家庭聚餐","寵物親子友善空間"]},{"name":"斗南圓環當歸鴨麵線","town":"斗南","cat":"noodle","addr":"雲林縣斗南鎮福德街1號","tel":"055960326","hours":"06:30–19:30（週二休）","price":"約65–85元","tags":["斗南回鄉必吃名單","藥膳當歸清甜溫潤","鴨肉軟嫩多汁","手工米血蘸獨門辣醬"]},{"name":"斗南米糕甲","town":"斗南","cat":"box","addr":"雲林縣斗南鎮中正路96號","tel":"055974090","hours":"10:00–19:30","price":"米糕約35元","tags":["七十年排隊老店","陶罐炊蒸筒仔米糕","蒜泥肉燥香濃提味","入口即化排骨酥湯"]},{"name":"斗南炸饅頭","town":"斗南","cat":"box","addr":"雲林縣斗南鎮中正路117號","tel":"055963298","hours":"21:30–05:00","price":"銅板價約25–65元","tags":["深夜傳奇排隊宵夜","炸饅頭淋滿起司煉乳","煎蛋豬排吐司","雲林夜貓朝聖點"]},{"name":"鍋道一號（斗南旗艦店）","town":"斗南","cat":"buffet","addr":"雲林縣斗南鎮延平路二段22號","tel":"055979988","hours":"11:00–22:00","price":"約230–420元","tags":["個人鴛鴦火鍋","時蔬火鍋料自助吧","冰品飲料無限享用","專屬停車場"]},{"name":"斗南阿國黑輪肉圓","town":"斗南","cat":"box","addr":"雲林縣斗南鎮文元街1號","tel":"055973273","hours":"12:30–20:30","price":"約35–60元","tags":["小南天土地公廟旁老店","Q軟油泡肉圓","炭火慢熬黑輪甜不辣","免費自取清甜大骨高湯"]},{"name":"斗南火車站大腸包小腸","town":"斗南","cat":"box","addr":"雲林縣斗南鎮南昌路火車站前","tel":"","hours":"14:00–18:30","price":"一份約60–75元","tags":["現烤炭香高粱香腸","手工灌製真材實料米腸","爽脆醃小黃瓜解膩","下午茶排隊點心"]},{"name":"虎尾兩撇（兩丿）爌肉飯","town":"虎尾","cat":"box","addr":"雲林縣虎尾鎮公安路41號","tel":"","hours":"06:00–10:30（賣完提早收）","price":"約45–70元","tags":["虎尾無招牌隱藏版傳奇","只賣四小時早起秒殺","油亮化口三層肉爌肉飯","古早味滷肉飯老饕必吃"]},{"name":"滷肉春（神級滷肉飯冠軍）","town":"虎尾","cat":"box","addr":"雲林縣虎尾鎮和平路104號","tel":"056360098","hours":"11:00–19:30","price":"約40–75元","tags":["神級滷肉飯爭霸賽冠軍","頂級西螺醬油細火熬燉","肥瘦黃金比例肉燥","膠質滿滿扒飯停不下來"]},{"name":"虎尾王家當歸鴨肉麵線","town":"虎尾","cat":"noodle","addr":"雲林縣虎尾鎮民生路37-8號","tel":"056314629","hours":"10:00–21:30（週五休）","price":"約65–80元","tags":["虎尾指標排隊小吃","清甜回甘中藥底","溫體鴨肉軟嫩帶汁","手工紅麵線可續湯"]},{"name":"阿世香菇肉羹","town":"虎尾","cat":"noodle","addr":"雲林縣虎尾鎮華南路31巷1號","tel":"056331233","hours":"07:00–18:00","price":"約35–55元","tags":["一甲子傳承老攤","厚切香菇大塊赤肉","古早味滷肉飯肥而不膩","紅糟肉酥香甘脆"]},{"name":"虎尾碳烤鴨蛋糕","town":"虎尾","cat":"box","addr":"雲林縣虎尾鎮中正路83號前","tel":"","hours":"06:30–15:00（賣完收）","price":"份裝約30–50元","tags":["罕見純木炭烘烤","新鮮鴨蛋現打麵糊","外脆內綿不乾口","排隊限定秒殺點心"]},{"name":"虎珍堂 菓寮店","town":"虎尾","cat":"box","addr":"雲林縣虎尾鎮中山路13號","tel":"056323611","hours":"10:00–18:30","price":"虎月燒約55–70元","tags":["鳥居老屋日式打卡地標","招牌現烤虎月燒","地瓜乳酪糕伴手禮金賞","散步甜點首選"]},{"name":"芸彰牧場台灣牛肉料理","town":"虎尾","cat":"steak","addr":"雲林縣虎尾鎮光復路370號","tel":"056333825","hours":"11:00–14:00、17:00–21:00","price":"人均約300–500元","tags":["牧場直營台灣牛肉","現切溫體牛肉火鍋","厚切沙朗牛排肉質鮮美","鮮奶霜淇淋香濃"]},{"name":"虎尾厝沙龍","town":"虎尾","cat":"coffee","addr":"雲林縣虎尾鎮民權路51巷3號","tel":"056321558","hours":"11:00–18:00（週一休）","price":"約120–180元","tags":["百年興亞式洋樓老屋","手沖咖啡搭配在地甜點","濃厚文藝氣息與檜木香","文青漫遊秘境"]},{"name":"菩提素食館","town":"虎尾","cat":"veg","addr":"雲林縣虎尾鎮文化路54號","tel":"056322896","hours":"10:30–13:30、16:30–19:30","price":"便當約70–120元","tags":["虎科大學生激推","多種新鮮少油原型蔬菜","當歸養生湯濃郁好喝","平價蔬食美味"]},{"name":"西螺黃家九層粿","town":"西螺","cat":"box","addr":"雲林縣西螺鎮建興路282號","tel":"0961353332","hours":"05:00–11:00（賣完收）","price":"九層粿35元","tags":["台灣500碗入選","西螺在來米層疊炊蒸","香酥自炸油蔥","特調蒜味甜米醬"]},{"name":"西螺祖傳麻糬大王（程文照手工坊）","town":"西螺","cat":"box","addr":"雲林縣西螺鎮埔心路139號","tel":"055883632","hours":"09:00–18:00","price":"盒裝約80–160元","tags":["片狀沾粉麻糬名門","純糯米手工製作不脹氣","現炒花生芝麻糖粉","包餡紅豆花生香甜"]},{"name":"福記碳烤鵝肉飯","town":"西螺","cat":"meal","addr":"雲林縣西螺鎮建興路277號","tel":"","hours":"12:00–20:00（週三休）","price":"鵝肉飯約80–150元","tags":["炭烤煙燻味濃郁迷人","肉質彈牙油亮多汁","鵝肉飯給料豪邁十足","老饕激推名攤"]},{"name":"西螺三角大水餃","town":"西螺","cat":"noodle","addr":"雲林縣西螺鎮觀音街12號","tel":"055863955","hours":"10:00–16:00（週一、四休）","price":"約45–70元","tags":["半世紀老字號","超巨大水晶餃宛如肉圓","脆筍鮮肉餡超彈牙","乾拌或湯麵皆宜"]},{"name":"琴連碗粿城","town":"西螺","cat":"box","addr":"雲林縣西螺鎮延平路75號","tel":"055865436","hours":"07:00–17:00","price":"碗粿約35元","tags":["西螺濁水米慢磨","古早鹹香肉燥碗粿","黑糖咖啡甜碗粿","四神小腸濃湯"]},{"name":"蕭家油蔥粿・黃金豆菜麵","town":"西螺","cat":"noodle","addr":"雲林縣西螺鎮建興路272號","tel":"055863836","hours":"05:00–11:00","price":"約30–50元","tags":["在地私房傳統早餐","冰鎮滑順油蔥粿","豆菜麵拌蒜頭油膏","經典椪皮豆腐湯"]},{"name":"正莊麻糬","town":"西螺","cat":"box","addr":"雲林縣西螺鎮平和路182號","tel":"055863736","hours":"08:00–20:00","price":"約40–90元","tags":["西螺在地私藏老店","自製天然糯米麻糬皮","香濃紅豆芋頭花生餡","夏天古早味枝仔冰消暑"]},{"name":"阿寶爌肉飯（隱藏版雨傘店）","town":"土庫","cat":"box","addr":"雲林縣土庫鎮中正路156號","tel":"","hours":"06:00–11:30（賣完收）","price":"爌肉飯約45–60元","tags":["土庫隱密飄香三十年","全酒陶鍋文火慢熬","爌肉肥而不膩入口化","古早味滷肉飯超誘人"]},{"name":"怪人花枝鱔魚麵","town":"土庫","cat":"noodle","addr":"雲林縣土庫鎮中正路105號","tel":"056621545","hours":"10:00–19:30（週一休）","price":"約90–120元","tags":["媽祖廟旁傳奇名店","猛火大炒鑊氣十足","脆口厚切鱔魚花枝","淋五印醋酸甜濃香"]},{"name":"阿海師當歸鴨肉麵線","town":"土庫","cat":"noodle","addr":"雲林縣土庫鎮中正路137號","tel":"056623992","hours":"07:30–19:30","price":"約65–90元","tags":["七十年當歸鴨名門","溫補甘醇中藥高湯","鴨肉鮮嫩不柴","手工紅麵線米血糕"]},{"name":"川龍食堂","town":"土庫","cat":"meal","addr":"雲林縣土庫鎮中山路165巷9號","tel":"056622518","hours":"10:30–19:30（週二休）","price":"人均約120–220元","tags":["近百年古早味食堂","現炸紅糟肉酥香多汁","什錦扁魚白菜滷","傳統古早味錦魯麵"]},{"name":"古早味雙豪油飯","town":"土庫","cat":"box","addr":"雲林縣土庫鎮中正路121號","tel":"056622119","hours":"06:00–13:00（週一休）","price":"油飯約35–50元","tags":["一甲子順天宮廟旁名攤","古法蒸炊香Q油飯","自炸油蔥蝦米乾魷魚","搭配大骨豬血湯"]},{"name":"巴比松手作料理","town":"土庫","cat":"meal","addr":"雲林縣土庫鎮成功路144號","tel":"056628870","hours":"11:30–14:30、17:30–20:30（預約制）","price":"套餐約450–700元","tags":["田野鄉村隱密私房餐廳","在地小農食材創意法菜","法式香煎鴨胸牛排","手工自製香草甜點"]},{"name":"北港老受鴨肉飯","town":"北港","cat":"box","addr":"雲林縣北港鎮中山路104號","tel":"055982201","hours":"10:30–19:00","price":"約60–110元","tags":["北港第一鴨肉飯","鴨肉軟嫩不柴","當歸鴨麵線"]},{"name":"輝煌牛肉湯","town":"北港","cat":"box","addr":"雲林縣北港鎮博愛路136之4號","tel":"055982999","hours":"06:00–13:30（週一休）","price":"約100–180元","tags":["現燙溫體牛","免費續湯","朝天宮周邊必吃"]},{"name":"北港圓仔湯","town":"北港","cat":"snack","addr":"雲林縣北港鎮中山路186號","tel":"055982345","hours":"11:00–21:30","price":"約35–60元","tags":["70年老店","綜合圓仔湯","手工湯圓"]},{"name":"北港李記鴨骨麵線","town":"北港","cat":"noodle","addr":"雲林縣北港鎮大同路84號","tel":"055783333","hours":"11:00–19:00（賣完休）","price":"約50–100元","tags":["限量鴨骨麵線","膠質湯頭","滷鴨翅"]},{"name":"北港保生堂漢方咖啡","town":"北港","cat":"coffee","addr":"雲林縣北港鎮中山路61號","tel":"055980123","hours":"10:00–18:00","price":"約80–180元","tags":["中藥行改建咖啡廳","漢方咖啡","古厝氛圍"]},{"name":"北港阿豐麵線糊","town":"北港","cat":"noodle","addr":"雲林縣北港鎮中山路","tel":"055983456","hours":"06:30–13:00","price":"約35–60元","tags":["麵線糊加魯肉","太空魚羹","銅板價"]},{"name":"北港新港生炒鴨肉羹","town":"北港","cat":"noodle","addr":"雲林縣北港鎮中山路附近","tel":"055982678","hours":"10:00–19:00","price":"約50–80元","tags":["大火快炒鴨肉羹","鍋氣十足","北港廟口小吃"]},{"name":"陳家煎盤粿","town":"北港","cat":"box","addr":"雲林縣北港鎮中山路","tel":"055982777","hours":"06:00–11:30","price":"約35–60元","tags":["煎盤粿米腸香腸","北港早餐三寶","蒜頭醬油膏"]},{"name":"福安鴨肉飯","town":"北港","cat":"box","addr":"雲林縣北港鎮中山路122號","tel":"055983333","hours":"10:00–19:30","price":"約60–120元","tags":["鴨肉飯鴨肉切盤","下水湯","在地人推"]},{"name":"北港圓仔湯（手工現搓）","town":"北港","cat":"box","addr":"雲林縣北港鎮中山路29號","tel":"057836845","hours":"11:00–22:00","price":"均一價約40元","tags":["七十年手工現搓圓仔","脆圓口感超Q彈","古早味糖水刨冰","朝天宮拜拜必吃甜點"]},{"name":"古坑三代祖傳麵店","town":"古坑","cat":"noodle","addr":"雲林縣古坑鄉中山路188號","tel":"055823509","hours":"06:00–19:00","price":"約35–60元","tags":["六十年老字號麵攤","招牌魷魚嘴羹麵","古法豬油油蔥肉燥乾麵","手工脆皮肉圓"]},{"name":"華山阿嬤私房菜","town":"古坑","cat":"meal","addr":"雲林縣古坑鄉華山78-5號","tel":"055900493","hours":"11:00–19:30","price":"人均約300–500元","tags":["全台首創咖啡烤雞","皮薄脆肉多汁","高山鮮筍炒麵","古坑醬筍土雞湯"]},{"name":"古坑芝麻炸雞","town":"古坑","cat":"box","addr":"雲林縣古坑鄉中山路74號","tel":"0932554536","hours":"14:00–19:00","price":"約35–100元","tags":["午後限定秒殺炸雞","黑芝麻炸皮酥脆","雞翅肉汁豐厚鹹香","古坑必排小吃"]},{"name":"雲頂咖啡景觀餐廳","town":"古坑","cat":"coffee","addr":"雲林縣古坑鄉桃源路1-3號","tel":"055900363","hours":"11:30–22:30（週末至00:00）","price":"套餐約180–400元","tags":["360度嘉南平原夜景","二樓露天景觀視野極佳","濃醇古坑手沖咖啡","暖心小火鍋約會首選"]},{"name":"仙地咖啡","town":"古坑","cat":"coffee","addr":"雲林縣古坑鄉桃源路1-2號","tel":"055901989","hours":"10:00–02:00","price":"約150–350元","tags":["華山最高點景觀之一","俯瞰百萬平原百萬夜景","招牌特調古坑咖啡","營業至凌晨夜貓首選"]},{"name":"金蓮生炒鴨肉羹","town":"大埤","cat":"noodle","addr":"雲林縣大埤鄉民生路128號","tel":"055913218","hours":"06:00–13:30","price":"約60–75元","tags":["大埤在地排隊早餐","猛火生炒厚切鴨肉","洋蔥筍絲香濃鑊氣","生炒鴨肉切盤現炒"]},{"name":"大埤殺豬 扌六麵豬雜湯","town":"大埤","cat":"noodle","addr":"雲林縣大埤鄉民生路31號","tel":"0989751408","hours":"05:30–14:00（週日、一休）","price":"約40–70元","tags":["三十年清晨老麵攤","手工道地扌六麵","每日新鮮溫體豬雜湯","大埤酸菜提味極佳"]},{"name":"大埤大嬤鳥仔餅","town":"大埤","cat":"box","addr":"雲林縣大埤鄉民生路112號","tel":"055912443","hours":"08:00–20:00","price":"每包約100–150元","tags":["大埤代表性特產伴手禮","古早味手工鳥仔造型餅","地瓜餡麥芽香甜","傳統祭祀名點"]},{"name":"三角窗黃金魚焿","town":"大埤","cat":"noodle","addr":"雲林縣大埤鄉大埤路7號","tel":"055910349","hours":"10:30–19:30（週一休）","price":"約75–100元","tags":["現炸土魠魚外酥內嫩","豪華三鮮羹麵","鮮蚵海味滷肉飯","濃香柴魚羹湯底"]},{"name":"莿桐閣再來米糕排骨酥麵","town":"莿桐","cat":"noodle","addr":"雲林縣莿桐鄉中正路123號","tel":"055845448","hours":"11:00–20:00（週五、六休）","price":"約65–85元","tags":["老司機指名排隊店","蒜香排骨酥軟爛入味","傳統筒仔米糕肉燥香","白胡椒高湯清甜甘醇"]},{"name":"莿桐無名古早味圓仔冰","town":"莿桐","cat":"box","addr":"雲林縣莿桐鄉中正路138號","tel":"","hours":"08:00–18:00","price":"每碗約35–45元","tags":["夏天排隊古早味剉冰","手工自揉軟Q白圓仔","慢火燉煮綿密紅豆","糖水甜而不膩消暑"]},{"name":"莿桐陳家肉圓","town":"莿桐","cat":"box","addr":"雲林縣莿桐鄉西安路25號","tel":"","hours":"14:00–18:00（週二、三休）","price":"肉圓約40元","tags":["五十年手工老字號","低溫油泡外皮Q彈","自調蒜香白米醬","筍干赤肉塊內餡"]},{"name":"高家老牌楊桃汁","town":"莿桐","cat":"box","addr":"雲林縣莿桐鄉中正路156號","tel":"055843477","hours":"09:00–21:00","price":"約30–50元","tags":["古法大甕醃製楊桃","生津止渴鹹酸甘甜","解油膩止咳必備","在地老攤清涼解渴"]},{"name":"蘇記 林內豬腳大王","town":"林內","cat":"box","addr":"雲林縣林內鄉中山路9號","tel":"055892635","hours":"11:00–19:30（週六休）","price":"便當約95–130元","tags":["車站前五十年名攤","炭火文火慢燉三小時","膠質滿滿滷肉豬腳飯","古法鹹酸菜筍干配飯"]},{"name":"永光西點麵包（爆漿大波蘿）","town":"林內","cat":"box","addr":"雲林縣林內鄉中正路189號","tel":"055895288","hours":"11:00–20:00","price":"約100–130元","tags":["火車站前排隊名店","比臉還大的爆漿波蘿","濃郁流心巧克力原味奶酥","現烤酥皮香脆無比"]},{"name":"林內驛站（原寶隆紙廠園區）","town":"林內","cat":"meal","addr":"雲林縣林內鄉新興路9號","tel":"055891398","hours":"09:00–17:00（週一休）","price":"約80–180元","tags":["古蹟園區文青輕食館","特產林內芋頭排骨米粉","芋頭剉冰綿密濃郁","綠意公園適合散步放鬆"]},{"name":"阿文排骨飯大王","town":"林內","cat":"box","addr":"雲林縣林內鄉中正路206號","tel":"055891374","hours":"10:30–19:30","price":"約85–110元","tags":["林內在地排骨名店","先炸後滷傳統醬香爌肉","骨肉輕易分離","苦瓜排骨盅湯清甜"]},{"name":"二崙阿雀麵攤","town":"二崙","cat":"noodle","addr":"雲林縣二崙鄉中山路234號","tel":"055980222","hours":"09:00–13:00（週四休）","price":"約40–65元","tags":["二崙早市排隊扛霸子","鴨肉麵線湯頭清爽","自製彈牙肉圓古早滷肉","純米碗粿肉燥香"]},{"name":"二崙佳美餅行","town":"二崙","cat":"box","addr":"雲林縣二崙鄉中山路108號","tel":"055982525","hours":"09:00–20:00","price":"約160–280元","tags":["雲林知名伴手禮名門","狀元餅蛋黃肉脯扎實","手工伍仁酥芳香脆口","紅豆麻糬大餅名店"]},{"name":"二崙老街水煎包","town":"二崙","cat":"box","addr":"雲林縣二崙鄉中山路132號","tel":"","hours":"06:00–11:00（賣完收）","price":"每顆約15元","tags":["外皮金黃焦香底脆","高麗菜肉餡鮮甜多汁","在地人排隊銅板早餐","淋甜辣醬更加美味"]},{"name":"二崙肉圓・米腸","town":"二崙","cat":"box","addr":"雲林縣二崙鄉中興路18號","tel":"055985085","hours":"10:00–14:00（週三休）","price":"約35–45元","tags":["糯米手工灌大腸香腸","低溫泡油香蔥肉圓","乾麵拌特製蒜辣醬肉燥","超值銅板價早午餐"]},{"name":"李排骨酥（神級滷肉飯冠軍）","town":"崙背","cat":"box","addr":"雲林縣崙背鄉建國路16號","tel":"056961625","hours":"06:00–13:30","price":"約40–85元","tags":["2022雲林神級滷肉飯冠軍","偏甜濃郁重口味銷魂滷肉飯","搭配爽口酸菜解膩極品","陶甕蒸燉軟爛排骨酥麵"]},{"name":"千巧谷牛樂園牧場","town":"崙背","cat":"coffee","addr":"雲林縣崙背鄉東興路182-32號","tel":"056969845","hours":"09:00–19:00","price":"甜點約50–150元","tags":["崙背酪農區地標景點","100%純鮮奶烘焙乳酪蛋糕","招牌鮮奶酪鮮奶泡芙","柴燒窯烤披薩香濃"]},{"name":"廖家牛肉麵","town":"崙背","cat":"noodle","addr":"雲林縣崙背鄉南光路27號","tel":"056964177","hours":"10:30–14:00、16:30–20:00","price":"約120–150元","tags":["崙背老牌牛肉麵","蔬果牛大骨慢火熬燉","厚切牛腱肉軟嫩帶筋","自炒酸菜香辣開胃"]},{"name":"崙背阿榮肉圓","town":"崙背","cat":"box","addr":"雲林縣崙背鄉正義路162號","tel":"056969027","hours":"06:00–13:30","price":"肉圓約35元","tags":["早市超人氣排隊名店","外皮軟嫩細緻彈牙","筍角鮮肉餡扎實","大骨豆腐貢丸湯超平價"]},{"name":"志明當歸鵝肉麵線","town":"麥寮","cat":"noodle","addr":"雲林縣麥寮鄉中正路23號","tel":"056936553","hours":"10:00–20:00","price":"約85–110元","tags":["一甲子六十年傳承","在地肥嫩土鵝現煮","中藥當歸高湯甘香","鵝油麵線鵝米血必點"]},{"name":"拱範宮廟口老牌臭豆腐","town":"麥寮","cat":"box","addr":"雲林縣麥寮鄉表福路（拱範宮前）","tel":"","hours":"14:30–21:00","price":"約50–65元","tags":["國定古蹟廟口排隊名攤","外皮金酥外脆內嫩","台式泡菜酸甜爽脆","蒜泥油膏香氣四溢"]},{"name":"海珍味米糕肉羹","town":"麥寮","cat":"box","addr":"雲林縣麥寮鄉中正路83號","tel":"056932479","hours":"06:00–13:00","price":"約35元","tags":["六十年老牌米糕店","肥美肉燥滷肉淋上糯米","酸甜濃郁傳統赤肉羹","特調甜辣醬提味"]},{"name":"麥寮吳排骨酥麵","town":"麥寮","cat":"noodle","addr":"雲林縣麥寮鄉中正路97號","tel":"","hours":"06:00–13:30","price":"約65–85元","tags":["麥寮人自幼吃到大","濃香排骨酥軟爛脫骨","手工乾意麵古早肉燥","傳統米糕肉羹湯"]},{"name":"程記鵝肉大王","town":"東勢","cat":"meal","addr":"雲林縣東勢鄉東勢西路98號","tel":"056991168","hours":"10:30–19:30","price":"約220–450元","tags":["東勢三十年在地名店","獨門中藥滷汁淬煉","琥珀色多汁油亮鵝肉","鮮美鵝汁米粉湯鵝油飯"]},{"name":"東勢賜伯鴨肉羹","town":"東勢","cat":"noodle","addr":"雲林縣東勢鄉東勢東路67號","tel":"056993188","hours":"06:00–13:30","price":"約50–70元","tags":["老街經典鴨肉羹名攤","大火爆炒蒜香焦香四溢","扁魚筍絲濃郁羹湯","米粉冬粉吸汁飽滿"]},{"name":"東勢鴨肉羹麵","town":"東勢","cat":"noodle","addr":"雲林縣東勢鄉東勢東路89號","tel":"056994513","hours":"04:00–10:00（週一休）","price":"約40–60元","tags":["清晨破曉秒殺早餐","爆炒生鴨肉鑊氣足","在地淋花生辣椒醬","鮮美清甜豬腸湯"]},{"name":"木記鴨肉麵線","town":"東勢","cat":"noodle","addr":"雲林縣東勢鄉東勢東路41號","tel":"056992816","hours":"10:00–19:30","price":"約70–90元","tags":["藥膳甘醇清潤湯底","溫體當日現宰土鴨","手工軟糯米血糕","鮮脆下水腸切盤"]},{"name":"褒忠爌肉飯（香菇肉羹）","town":"褒忠","cat":"box","addr":"雲林縣褒忠鄉中民路194號","tel":"056972567","hours":"05:30–14:00（週末休）","price":"約35–60元","tags":["純樸早晨古早味","肥瘦相間厚塊爌肉飯","濃郁醬汁淋香白飯","老饕最愛淋花生辣醬配羹湯"]},{"name":"施家屯牛雜（牛肉麵）","town":"褒忠","cat":"noodle","addr":"雲林縣褒忠鄉三民路121號","tel":"056972136","hours":"11:00–17:00（週日休）","price":"約100–150元","tags":["專程前往必吃老店","清燉溫體牛雜湯極甘","大火爆炒牛雜炒麵","溫補牛肉火鍋"]},{"name":"褒忠老牌肉圓米糕","town":"褒忠","cat":"box","addr":"雲林縣褒忠鄉中民路168號","tel":"","hours":"06:30–13:00","price":"約30–45元","tags":["褒忠早市招牌古早味","純米外皮滑溜Q潤","香濃自製辣米醬滷肉汁","銅板價格暖心早餐"]},{"name":"褒忠鴨肉羹麵線","town":"褒忠","cat":"noodle","addr":"雲林縣褒忠鄉三民路81-94號","tel":"056974872","hours":"06:00–16:00（週三休）","price":"約50–75元","tags":["洋蔥生炒鴨肉羹濃郁","當歸冬粉鴨肉麵線","傳統黑白切大腸頭","古早味滷肉米糕"]},{"name":"台西蛤仔輝 文蛤特色料理","town":"台西","cat":"meal","addr":"雲林縣台西鄉五港村中央路221號","tel":"056984911","hours":"10:00–19:00","price":"約120–280元","tags":["文蛤故鄉特色代表店","全台首創現蒸文蛤包子","大顆文蛤炒麵海味爆汁","鮮甜原汁文蛤湯"]},{"name":"五條港阿塗海產","town":"台西","cat":"meal","addr":"雲林縣台西鄉中央路111號","tel":"056982260","hours":"10:00–20:00","price":"人均約200–400元","tags":["安西府廟前地標海產","現炒台西特產大文蛤","現剖鮮蚵酥炸爆汁","野生赤翅仔海味十足"]},{"name":"台西好口味小吃部","town":"台西","cat":"noodle","addr":"雲林縣台西鄉中山路（農會斜對面）","tel":"056983050","hours":"09:30–19:00","price":"約40–65元","tags":["海線溫馨老麵攤","鮮甜滑順滑口肉羹麵","香濃豬油蔥肉燥乾麵","現撈鮮魚味噌湯"]},{"name":"台西玉津香餅鋪・包子","town":"台西","cat":"box","addr":"雲林縣台西鄉民權路38號","tel":"056982264","hours":"08:00–20:00","price":"包子約25–40元","tags":["六十年手藝名門","手作香菇鮮肉包多汁","鹹菜竹筍手工大包","海口傳統喜餅伴手禮"]},{"name":"元長崙仔阿獅當歸鴨肉麵線","town":"元長","cat":"noodle","addr":"雲林縣元長鄉安北路82-8號","tel":"057862736","hours":"08:30–17:00（週一、二休）","price":"約70–90元","tags":["田中央鐵皮屋名店","當歸高湯甘香可免費續","現炸薄脆紅糟肉必點","鴨肉軟嫩下水鮮脆"]},{"name":"元長白鶴鴨肉羹麵","town":"元長","cat":"noodle","addr":"雲林縣元長鄉元中路23號","tel":"057882302","hours":"07:00–14:00（週三、四休）","price":"約55–70元","tags":["市場半世紀老字號","爆炒焦香筍絲鴨肉羹","陶罐自蒸筒仔米糕肉燥飯","鮮甜大骨骨仔肉湯"]},{"name":"元長黑金剛花生伴手禮專賣","town":"元長","cat":"box","addr":"雲林縣元長鄉中山路（鄉公所周邊）","tel":"","hours":"08:00–18:00","price":"約120–180元","tags":["黑金剛花生最大產地","天然花青素黑仁花生","酥脆香濃不澀口","在地必帶農特產伴手禮"]},{"name":"李記李林物・大腸麵線炸蛋蔥油餅","town":"元長","cat":"noodle","addr":"雲林縣元長鄉中山路45號","tel":"0978356585","hours":"11:30–18:30（週五休）","price":"約45–70元","tags":["元長人氣下午茶","柴魚濃香蚵仔大腸麵線","爆漿半熟蛋炸蔥油餅","酥香蒜醬過癮"]},{"name":"四湖羊肉老店","town":"四湖","cat":"noodle","addr":"雲林縣四湖鄉中正路（加油站正對面）","tel":"055872439","hours":"06:30–13:30（週一至三休）","price":"約75–100元","tags":["數十年老牌羊肉","溫體生炒羊肉麵","濃香羊油手工麵線","當歸羊大骨吸骨髓"]},{"name":"四湖阿三哥鱔魚麵花枝麵","town":"四湖","cat":"noodle","addr":"雲林縣四湖鄉中山東路102巷21-3號","tel":"057874959","hours":"15:00–20:00（週日休）","price":"約90–130元","tags":["參天宮廟旁巷弄傳奇","猛火爆炒焦香鱔魚","鮮脆生炒花枝羹麵","特製酸甜五印醋底"]},{"name":"四湖廣成香肉脯肉鬆","town":"四湖","cat":"box","addr":"雲林縣四湖鄉中正路436號","tel":"057872655","hours":"07:30–20:00","price":"約150–250元","tags":["半世紀肉鬆肉乾名店","溫體黑豬肉古法現炒","招牌厚切蜜汁豬肉乾","海線老字號排隊名產"]},{"name":"四湖公所麵（阿嬤麵）","town":"四湖","cat":"noodle","addr":"雲林縣四湖鄉中山西路公所旁","tel":"","hours":"15:30–19:00（週日、一休）","price":"約35–65元","tags":["公所旁古早回憶","傳統陽春肉燥乾麵","滿盤滷大腸豬皮黑白切","鮮採粉腸清湯"]},{"name":"第一鰻波（胭脂鰻專賣）","town":"口湖","cat":"meal","addr":"雲林縣口湖鄉埔南村118-1號","tel":"0963120203","hours":"10:00–17:00（預約制）","price":"定食約260–390元","tags":["台灣鰻魚故鄉代表","外銷日本頂級白鰻","炭火慢火炙烤蒲燒","軟嫩無腥味特調醬汁"]},{"name":"口湖明湖海產店","town":"口湖","cat":"meal","addr":"雲林縣口湖鄉蚵寮村中正路二段472號","tel":"057891390","hours":"10:30–19:30","price":"人均約250–450元","tags":["在地老饕指名海產店","鮮蚵大顆肥美蚵仔麵線","炭火現烤野生烏魚子","現炒赤嘴蛤鮮甜多汁"]},{"name":"口湖遊客中心・甘苦人料理","town":"口湖","cat":"meal","addr":"雲林縣口湖鄉光明路163號","tel":"057906601","hours":"09:00–17:00","price":"約230–360元","tags":["口湖在地海產精緻套餐","厚切蒲燒鰻魚定食","金黃烏魚子炒飯","西濱公路美食補給站"]},{"name":"口湖下崙海鮮麵・古早味麵攤","town":"口湖","cat":"noodle","addr":"雲林縣口湖鄉下崙村福安路","tel":"","hours":"06:00–13:30","price":"約75–95元","tags":["海口人豪邁大碗海鮮麵","鮮燙文蛤蚵仔小卷","湯頭甘醇鮮甜海味","古早蒜香肉燥乾麵"]},{"name":"水林阿龍傳統小吃（24小時）","town":"水林","cat":"box","addr":"雲林縣水林鄉水林路72號","tel":"057852738","hours":"24小時不打烊","price":"約40–70元","tags":["全天營業不打烊名攤","招牌雞魯飯肉汁油潤鹹香","銷魂古早味滷肉飯","香菇赤肉羹麵鮮切骨仔肉湯"]},{"name":"水林蔦松客棧","town":"水林","cat":"meal","addr":"雲林縣水林鄉松北村蔦松路8號","tel":"0935114228","hours":"11:30–20:00（完全預約制）","price":"約550–850元","tags":["老宅三合院無菜單私房菜","招牌古法黑麻油煎麵線","陳年老菜脯清燉土雞湯","小農野蔬產地直送"]},{"name":"水林玉記號番薯甜點伴手禮","town":"水林","cat":"box","addr":"雲林縣水林鄉水林路106號","tel":"057852765","hours":"08:00–18:00","price":"約100–180元","tags":["水林特產57號黃金地瓜","手工炭烤地瓜香甜綿蜜","冰心地瓜地瓜脆片","地瓜原鄉招牌點心"]},{"name":"水林安和素食","town":"水林","cat":"veg","addr":"雲林縣水林鄉水林路35-1號","tel":"057853112","hours":"06:30–13:30","price":"約35–65元","tags":["水林在地老牌素食小吃","藥膳當歸湯麵香醇溫潤","手工自製香Q素肉燥飯","多樣家常炒素菜"]},{"name":"景陽宮前鴨肉羹麵","town":"水林","cat":"noodle","addr":"雲林縣水林鄉水林路（景陽宮前）","tel":"","hours":"07:00–13:00","price":"約45–65元","tags":["在地人日常早餐首選","猛火炒香薄片鮮鴨肉","清甜筍絲微芡爽口","自炒辣椒油香氣足"]},{"name":"阿松小吃部","town":"斗六","cat":"noodle","addr":"雲林縣斗六市自由路53號","tel":"055321234","hours":"11:00–20:00（週一休）","price":"約50–120元","tags":["斗六人從小吃到大","古早味炊仔飯肉燥香","豬腳飯腿庫飯","骨仔肉湯"]},{"name":"炊仔張豬腳飯","town":"斗六","cat":"box","addr":"雲林縣斗六市愛國街20號","tel":"055345678","hours":"10:30–19:30","price":"約60–130元","tags":["老饕最愛爌肉飯","滷汁膠質黏嘴","梅干扣肉","當歸鴨麵線"]},{"name":"雙雙鹽酥雞滷肉飯","town":"斗六","cat":"box","addr":"雲林縣斗六市愛國街30號","tel":"055320987","hours":"10:30–13:30、16:30–19:30","price":"約75–110元","tags":["爆紅鹽酥雞滷肉飯","荷包蛋必加","銅板價救星","外皮薄脆多汁"]},{"name":"二吉軒豆漿豆乳","town":"斗六","cat":"coffee","addr":"雲林縣斗六市中正路58號","tel":"055342222","hours":"06:30–13:30","price":"約35–80元","tags":["豆乳界星巴克總店","濃郁豆漿豆花","古早味蛋餅燒餅"]},{"name":"溝仔埧清涼冰店","town":"斗六","cat":"box","addr":"雲林縣斗六市仁義路12號","tel":"055331111","hours":"11:00–21:00","price":"約40–70元","tags":["60年老冰店","三色冰淇淋夾餅","古早味紅茶"]},{"name":"馬可先生麵包坊斗六店","town":"斗六","cat":"coffee","addr":"雲林縣斗六市雲林路二段300號","tel":"055376543","hours":"09:00–21:00","price":"約80–200元","tags":["健康雜糧麵包","咖啡輕食","伴手禮首選"]},{"name":"塔吉特千層蛋糕大使館","town":"斗六","cat":"coffee","addr":"雲林縣斗六市榴中里工業路118號","tel":"055573234","hours":"09:00–18:00","price":"約120–200元","tags":["觀光工廠","千層蛋糕吃到飽","親子DIY"]},{"name":"鵝肉明","town":"斗六","cat":"box","addr":"雲林縣斗六市民生南路27號美食廣場","tel":"055342211","hours":"10:30–20:00","price":"約70–200元","tags":["竹籠蒸肥鵝","煙燻鵝肉","鵝油拌飯"]},{"name":"魷魚興魷魚嘴羹斗六店","town":"斗六","cat":"noodle","addr":"雲林縣斗六市雲林路二段","tel":"055333444","hours":"10:00–20:00","price":"約50–90元","tags":["魷魚嘴羹","肉羹麵線糊"]},{"name":"田媽媽海陸餐廳","town":"斗六","cat":"meal","addr":"雲林縣斗六市文化路646巷","tel":"055372222","hours":"11:00–14:00、17:00–20:30","price":"約100–300元","tags":["斗六合菜","古坑咖啡雞","桶仔雞"]},{"name":"斗六夜市阿興蚵嗲","town":"斗六","cat":"snack","addr":"雲林縣斗六市莊敬路斗六夜市","tel":"0935123456","hours":"17:00–23:00（週二、六）","price":"約35–70元","tags":["現炸蚵嗲","韭菜條肉嗲","米糕嗲"]},{"name":"四代目花生酥","town":"斗六","cat":"snack","addr":"雲林縣斗六市中正路123號","tel":"055331234","hours":"09:00–19:00","price":"約50–200元","tags":["手工花生酥","芝麻糖","雲林伴手禮"]},{"name":"虎尾婆婆的店","town":"虎尾","cat":"box","addr":"雲林縣虎尾鎮工專路27號","tel":"055363333","hours":"10:30–19:30","price":"約10–80元","tags":["10元黑白切傳奇","滷肉飯雞肉飯","每日限量豬血湯"]},{"name":"虎尾樂包子肉包","town":"虎尾","cat":"box","addr":"雲林縣虎尾鎮中正路89號","tel":"055322345","hours":"06:00–12:30","price":"約25–50元","tags":["老麵發酵肉包","筍包菜包","虎尾早餐排隊王"]},{"name":"虎尾美貞肉圓","town":"虎尾","cat":"box","addr":"雲林縣虎尾鎮公安路36號","tel":"055322876","hours":"13:00–18:30","price":"約35–45元","tags":["低溫油泡肉圓","筍丁赤肉餡","蒜頭醬油膏"]},{"name":"虎尾老張牛肉麵","town":"虎尾","cat":"noodle","addr":"雲林縣虎尾鎮信義路89號","tel":"055321987","hours":"11:00–20:00","price":"約90–160元","tags":["紅燒牛肉麵","半筋半肉","滷味小菜"]},{"name":"虎月燒","town":"虎尾","cat":"snack","addr":"雲林縣虎尾鎮中正路103號","tel":"055323456","hours":"10:00–18:00","price":"約35–55元","tags":["日式銅鑼燒","虎尾伴手禮","萬丹紅豆餡"]},{"name":"虎尾碳烤雞蛋糕","town":"虎尾","cat":"snack","addr":"雲林縣虎尾鎮中正路與德興路口","tel":"0912123456","hours":"14:00–18:30","price":"約30–50元","tags":["古早味雞蛋糕","外脆內鬆軟","排隊小吃"]},{"name":"虎尾後庄沙鍋魚頭","town":"虎尾","cat":"meal","addr":"雲林縣虎尾鎮林森路二段95號","tel":"055322999","hours":"11:00–14:00、17:00–21:00","price":"約200–600元","tags":["沙鍋魚頭火鍋","白菜滷","合菜聚餐"]},{"name":"芸彰牧場牛肉店","town":"虎尾","cat":"box","addr":"雲林縣虎尾鎮大成街15號","tel":"055321123","hours":"10:30–19:30（週一休）","price":"約80–200元","tags":["溫體牛肉湯","牛肉炒麵","牛雜湯"]},{"name":"虎尾不二家蛋黃酥","town":"虎尾","cat":"snack","addr":"雲林縣虎尾鎮中正路附近","tel":"055320111","hours":"09:00–18:00","price":"約200–500元","tags":["中秋排隊名店","蛋黃酥芋頭酥"]},{"name":"西螺阿秀倌蚵嗲","town":"西螺","cat":"snack","addr":"雲林縣西螺鎮延平路102號旁","tel":"0932123456","hours":"13:30–18:00（週一休）","price":"約35–70元","tags":["現炸蚵嗲","韭菜肉條","西螺延平老街必吃"]},{"name":"西螺麻糬大王冰上冰","town":"西螺","cat":"snack","addr":"雲林縣西螺鎮延平路253號","tel":"055883999","hours":"10:00–21:00","price":"約40–70元","tags":["DIY麻糬","古早味叭噗","花生芝麻"]},{"name":"西螺祖傳豆菜麵","town":"西螺","cat":"noodle","addr":"雲林縣西螺鎮延平路88號","tel":"055884567","hours":"06:30–13:00","price":"約35–60元","tags":["豆芽菜黃麵","甜辣醬","西螺早餐經典"]},{"name":"西螺菜頭粿王","town":"西螺","cat":"box","addr":"雲林縣西螺鎮大同路","tel":"055883789","hours":"06:00–11:00","price":"約25–50元","tags":["煎菜頭粿","米腸","早餐老店"]},{"name":"西螺東市場麥芽酥","town":"西螺","cat":"snack","addr":"雲林縣西螺鎮延平路市場內","tel":"055880123","hours":"07:00–13:00","price":"約20–50元","tags":["手工麥芽酥","花生麥芽糖","伴手禮"]},{"name":"西螺福興宮旁粉圓冰","town":"西螺","cat":"snack","addr":"雲林縣西螺鎮延平路福興宮前","tel":"055883111","hours":"11:00–19:00","price":"約30–50元","tags":["古早味粉圓","黑糖剉冰","廟口冰品"]},{"name":"西螺鼎愛豆花","town":"西螺","cat":"snack","addr":"雲林縣西螺鎮延平路312號","tel":"055886789","hours":"12:00–20:00","price":"約45–70元","tags":["豆花嫩仙草","芋圓地瓜圓"]},{"name":"西螺苜見苜蓿芽捲","town":"西螺","cat":"box","addr":"雲林縣西螺鎮光復西路207號","tel":"0967064799","hours":"06:30–10:30（週二-四、六）","price":"約50–70元","tags":["苜蓿芽手捲","健康輕食","素食可"]},{"name":"斗南阿國師雲蒸薑母鴨","town":"斗南","cat":"meal","addr":"雲林縣斗南鎮義德路2號","tel":"055960798","hours":"17:00–23:00","price":"約300–600元","tags":["甕蒸薑母鴨","麻油炒鴨佛","溫補湯頭"]},{"name":"斗南老店碗粿","town":"斗南","cat":"box","addr":"雲林縣斗南鎮西岐里","tel":"055975432","hours":"06:30–13:00","price":"約30–55元","tags":["古早味碗粿","肉羹","在地早餐"]},{"name":"斗南炸饅頭豆漿","town":"斗南","cat":"box","addr":"雲林縣斗南鎮文元街","tel":"055972345","hours":"05:30–10:30","price":"約20–50元","tags":["現炸饅頭","豆漿米漿","銅板早餐"]},{"name":"斗南東池池上飯包","town":"斗南","cat":"box","addr":"雲林縣斗南鎮中正路","tel":"055977777","hours":"10:00–19:30","price":"約80–120元","tags":["池上飯包","雞腿排骨","便當"]},{"name":"斗南阿安鴨肉羹","town":"斗南","cat":"noodle","addr":"雲林縣斗南鎮中正路","tel":"055973333","hours":"10:00–19:00","price":"約50–80元","tags":["鴨肉羹麵","辣椒粉","斗南小吃"]},{"name":"斗南大林臭豆腐","town":"斗南","cat":"snack","addr":"雲林縣斗南鎮夜市","tel":"0912345678","hours":"17:00–22:00","price":"約50–70元","tags":["外酥內嫩","泡菜醬汁"]},{"name":"斗南彭家飯湯","town":"斗南","cat":"box","addr":"雲林縣斗南鎮博愛路","tel":"055976789","hours":"10:30–19:00","price":"約70–110元","tags":["雲林100碗","飯湯刈包","古早味"]},{"name":"古坑阿嬤私房菜咖啡桶仔雞","town":"古坑","cat":"meal","addr":"雲林縣古坑鄉永光村光華路","tel":"055823456","hours":"11:00–20:00（預約制）","price":"約300–700元","tags":["咖啡桶仔雞","一雞多吃","山景庭園"]},{"name":"古坑老甕薑母鴨","town":"古坑","cat":"meal","addr":"雲林縣古坑鄉中山路164號","tel":"055821688","hours":"17:00–23:00","price":"約400–800元","tags":["43年老店","甕蒸薑母鴨","華山夜景"]},{"name":"華山啡你不可庭園咖啡","town":"古坑","cat":"coffee","addr":"雲林縣古坑鄉華山村","tel":"055902345","hours":"10:00–19:00","price":"約150–350元","tags":["華山夜景咖啡","鬆餅下午茶","觀景台"]},{"name":"古坑桂林映象會館山林料理","town":"古坑","cat":"meal","addr":"雲林縣古坑鄉桂林村","tel":"055901234","hours":"11:00–19:00","price":"約200–500元","tags":["山產野菜","桶仔雞","桂林景觀"]},{"name":"古坑古早味阿嬤豆花","town":"古坑","cat":"snack","addr":"雲林縣古坑鄉中山路","tel":"055822345","hours":"11:00–18:00","price":"約35–55元","tags":["古早味豆花","薑汁豆花","花生豆花"]},{"name":"古坑芝麻炸雞華山店","town":"古坑","cat":"snack","addr":"雲林縣古坑鄉華山村","tel":"055902222","hours":"11:00–19:00","price":"約70–130元","tags":["芝麻炸雞","古坑13間必吃","外酥內汁"]},{"name":"古坑田園小館","town":"古坑","cat":"meal","addr":"雲林縣古坑鄉永昌村光興路108號","tel":"055828377","hours":"11:00–20:00","price":"約150–400元","tags":["田園合菜","咖啡入菜","古坑隱藏版"]},{"name":"古坑56號藍色公路咖啡","town":"古坑","cat":"coffee","addr":"雲林縣古坑鄉華山","tel":"055901111","hours":"09:30–18:00","price":"約120–280元","tags":["藍色公路景觀","手沖咖啡","華山必訪"]},{"name":"古坑華山阿舍餐廳","town":"古坑","cat":"meal","addr":"雲林縣古坑鄉華山","tel":"055901567","hours":"11:00–19:30","price":"約150–400元","tags":["桶仔雞合菜","筍湯","土雞料理"]},{"name":"古坑大陸餅","town":"古坑","cat":"snack","addr":"雲林縣古坑鄉永光","tel":"055823333","hours":"06:00–11:00","price":"約20–40元","tags":["古早味大陸餅","芝麻蔥花","早餐銅板"]},{"name":"土庫鴨肉麵線老店","town":"土庫","cat":"noodle","addr":"雲林縣土庫鎮中山路157號","tel":"055622345","hours":"08:00–19:00","price":"約60–120元","tags":["當歸鴨麵線","鴨腸米血","清燙下水"]},{"name":"土庫黑金燒麻糬","town":"土庫","cat":"snack","addr":"雲林縣土庫鎮中正路附近","tel":"055623456","hours":"14:00–18:30","price":"約30–60元","tags":["現包燒麻糬","花生芝麻","Q彈不黏牙"]},{"name":"土庫古早味雙糕潤","town":"土庫","cat":"snack","addr":"雲林縣土庫鎮中山路","tel":"055624567","hours":"09:00–17:00","price":"約35–80元","tags":["雲林100碗","雙糕潤黑糖原味","Q彈古早味"]},{"name":"土庫馬光張家牛肉麵","town":"土庫","cat":"noodle","addr":"雲林縣土庫鎮馬光路","tel":"055625678","hours":"11:00–20:00","price":"約80–150元","tags":["清燉紅燒牛肉麵","馬光名店","滷味"]},{"name":"土庫驛可可莊園","town":"土庫","cat":"coffee","addr":"雲林縣土庫鎮大同路1-2號","tel":"056623488","hours":"10:00–18:00","price":"約120–250元","tags":["可可莊園","巧克力DIY","親子景點咖啡"]},{"name":"土庫順天宮廟口麵線","town":"土庫","cat":"noodle","addr":"雲林縣土庫鎮中山路廟口","tel":"055626789","hours":"06:00–13:00","price":"約40–70元","tags":["廟口麵線糊","油蔥酥","早餐"]},{"name":"土庫阿明鴨肉飯","town":"土庫","cat":"box","addr":"雲林縣土庫鎮中正路","tel":"055627890","hours":"10:30–19:30","price":"約60–110元","tags":["鴨肉飯","鴨肉切盤","當歸湯"]},{"name":"林內阿文排骨大王","town":"林內","cat":"box","addr":"雲林縣林內鄉中山路136號","tel":"055892345","hours":"10:30–19:30","price":"約70–120元","tags":["炸排骨飯","雞腿飯","林內車站前必吃"]},{"name":"林內林北肉羹","town":"林內","cat":"noodle","addr":"雲林縣林內鄉中正路","tel":"055893456","hours":"06:30–14:00","price":"約40–80元","tags":["赤肉羹麵","魯肉飯","古早味"]},{"name":"林內永光肉圓","town":"林內","cat":"box","addr":"雲林縣林內鄉永光","tel":"055894567","hours":"10:00–18:00","price":"約35–45元","tags":["永光李肉圓","外皮Q彈","肉餡飽滿"]},{"name":"林內阿玉排骨酥湯","town":"林內","cat":"box","addr":"雲林縣林內鄉中山路","tel":"055895678","hours":"10:00–19:00","price":"約60–110元","tags":["排骨酥湯","米糕","芋頭排骨"]},{"name":"林內教芋部豆花","town":"林內","cat":"snack","addr":"雲林縣林內鄉中山路","tel":"055896789","hours":"12:00–20:00","price":"約45–70元","tags":["芋泥豆花","芋圓","古早味"]},{"name":"林內紫斑蝶咖啡館","town":"林內","cat":"coffee","addr":"雲林縣林內鄉","tel":"055897890","hours":"09:00–18:00","price":"約100–200元","tags":["賞蝶景觀咖啡","輕食鬆餅","林內景點"]},{"name":"林內火車站前麵攤","town":"林內","cat":"noodle","addr":"雲林縣林內鄉中山路","tel":"055898901","hours":"06:00–13:00","price":"約40–70元","tags":["陽春麵麻醬麵","滷菜小菜"]},{"name":"林內湖南碗粿","town":"林內","cat":"box","addr":"雲林縣林內鄉新興","tel":"055899012","hours":"06:30–12:30","price":"約30–55元","tags":["古早味碗粿","肉羹湯"]},{"name":"莿桐圓仔冰","town":"莿桐","cat":"snack","addr":"雲林縣莿桐鄉莿桐村中正路53號","tel":"055842345","hours":"11:00–20:00","price":"約40–60元","tags":["古早味圓仔冰","粉粿愛玉","50年老店"]},{"name":"莿桐大美火雞肉飯","town":"莿桐","cat":"box","addr":"雲林縣莿桐鄉中正路","tel":"055843456","hours":"10:30–19:30","price":"約60–110元","tags":["火雞肉飯","滷豆腐","排骨酥湯"]},{"name":"莿桐向陽冬瓜茶","town":"莿桐","cat":"snack","addr":"雲林縣莿桐鄉","tel":"055844567","hours":"09:00–19:00","price":"約25–50元","tags":["古早味冬瓜茶","冬瓜檸檬","消暑"]},{"name":"莿桐芒果咖啡","town":"莿桐","cat":"coffee","addr":"雲林縣莿桐鄉四合村","tel":"055845678","hours":"10:00–18:00（週一休）","price":"約100–200元","tags":["雲林精品咖啡","鄉間老宅咖啡","手沖單品"]},{"name":"莿桐四合冬瓜山粉圓冰","town":"莿桐","cat":"snack","addr":"雲林縣莿桐鄉四合","tel":"055846789","hours":"11:00–18:00","price":"約30–60元","tags":["冬瓜山粉圓","古早味剉冰"]},{"name":"莿桐廟口肉羹麵","town":"莿桐","cat":"noodle","addr":"雲林縣莿桐鄉中正路廟前","tel":"055847890","hours":"06:30–13:30","price":"約40–80元","tags":["肉羹麵米糕","魯肉飯"]},{"name":"莿桐阿甘麵攤","town":"莿桐","cat":"noodle","addr":"雲林縣莿桐鄉中正路","tel":"055848901","hours":"10:00–19:00","price":"約50–90元","tags":["陽春麵切仔麵","黑白切"]},{"name":"莿桐蒜頭麵","town":"莿桐","cat":"noodle","addr":"雲林縣莿桐鄉蒜頭村","tel":"055849012","hours":"10:00–20:00","price":"約60–110元","tags":["蒜頭麵蒜味十足","斗南蒜頭麵分店"]},{"name":"二崙廖家鵝肉","town":"二崙","cat":"box","addr":"雲林縣二崙鄉中山路120號","tel":"055982222","hours":"10:30–19:30","price":"約70–180元","tags":["鵝肉切盤","鵝肉麵線","當歸鵝肉湯"]},{"name":"二崙大華鵝肉","town":"二崙","cat":"box","addr":"雲林縣二崙鄉中山路","tel":"055981111","hours":"10:00–19:00","price":"約70–180元","tags":["鵝肉飯","鵝血湯","煙燻鵝肉"]},{"name":"二崙老店肉圓","town":"二崙","cat":"box","addr":"雲林縣二崙鄉中山路","tel":"055983444","hours":"09:30–18:30","price":"約35–45元","tags":["油泡肉圓","筍角肉餡"]},{"name":"二崙東興狀元餅","town":"二崙","cat":"snack","addr":"雲林縣二崙鄉中山路45號","tel":"055981234","hours":"08:30–18:00","price":"約150–400元","tags":["二崙名產狀元餅","送禮首選","古早味大餅"]},{"name":"二崙阿火肉圓","town":"二崙","cat":"box","addr":"雲林縣二崙鄉","tel":"055982345","hours":"10:00–18:00","price":"約35–45元","tags":["肉圓肉羹","古早味"]},{"name":"二崙楊記肉包","town":"二崙","cat":"box","addr":"雲林縣二崙鄉來惠村","tel":"055983555","hours":"06:00–12:00","price":"約25–45元","tags":["老麵肉包","菜包饅頭"]},{"name":"二崙田園牛肉麵","town":"二崙","cat":"noodle","addr":"雲林縣二崙鄉中山路","tel":"055984666","hours":"11:00–20:00","price":"約80–150元","tags":["紅燒牛肉麵","滷味小菜"]},{"name":"二崙港後古早味麵攤","town":"二崙","cat":"noodle","addr":"雲林縣二崙鄉港後村","tel":"055985777","hours":"06:30–13:00","price":"約40–80元","tags":["切仔麵陽春麵","黑白切"]},{"name":"崙背阿火肉圓","town":"崙背","cat":"box","addr":"雲林縣崙背鄉南陽村","tel":"055812345","hours":"09:00–18:00","price":"約35–45元","tags":["崙背肉圓","醬料古早味"]},{"name":"崙背永興豆皮工廠豆皮料理","town":"崙背","cat":"box","addr":"雲林縣崙背鄉大有村","tel":"055813456","hours":"10:00–17:00","price":"約50–120元","tags":["現炸豆皮","豆皮火鍋","在地豆皮工廠"]},{"name":"崙背奉天宮廟口肉羹","town":"崙背","cat":"noodle","addr":"雲林縣崙背鄉南陽村奉天宮前","tel":"055814567","hours":"06:30–13:00","price":"約40–80元","tags":["肉羹麵魯肉飯","廟口小吃"]},{"name":"崙背東山食品行煎餅","town":"崙背","cat":"snack","addr":"雲林縣崙背鄉南光路","tel":"055815678","hours":"08:00–18:00","price":"約50–150元","tags":["古早味煎餅","蛋捲桃酥","隱藏版"]},{"name":"崙背阿宗爌肉飯","town":"崙背","cat":"box","addr":"雲林縣崙背鄉南陽路","tel":"055816789","hours":"10:30–19:30","price":"約60–120元","tags":["爌肉飯腿庫飯","滷白菜"]},{"name":"崙背李排骨酥（分店）","town":"崙背","cat":"box","addr":"雲林縣崙背鄉","tel":"055817890","hours":"10:00–19:00","price":"約60–120元","tags":["排骨酥湯","米糕"]},{"name":"崙背鮮奶饅頭豆漿店","town":"崙背","cat":"box","addr":"雲林縣崙背鄉","tel":"055818901","hours":"05:30–11:00","price":"約20–50元","tags":["鮮奶饅頭","豆漿","早餐"]},{"name":"麥寮碳烤玉米","town":"麥寮","cat":"snack","addr":"雲林縣麥寮鄉表福路32號","tel":"055913456","hours":"14:00–20:00","price":"約60–90元","tags":["古早味碳烤玉米","沙茶醬料","麥寮夜市名店"]},{"name":"麥寮明星珍餅舖","town":"麥寮","cat":"snack","addr":"雲林縣麥寮鄉中正路83巷25號","tel":"055914567","hours":"08:30–20:00","price":"約50–300元","tags":["綠豆椪蛋黃酥","麥寮老餅舖","伴手禮"]},{"name":"麥寮一品香鵝肉","town":"麥寮","cat":"box","addr":"雲林縣麥寮鄉中興路","tel":"055915678","hours":"10:30–19:30","price":"約70–180元","tags":["鵝肉飯麵","當歸湯"]},{"name":"麥寮海產蚵仔麵線","town":"麥寮","cat":"noodle","addr":"雲林縣麥寮鄉中正路","tel":"055916789","hours":"06:30–13:00","price":"約40–80元","tags":["蚵仔麵線","蚵仔煎","海產粥"]},{"name":"麥寮鄭記排骨酥","town":"麥寮","cat":"box","addr":"雲林縣麥寮鄉","tel":"055917890","hours":"10:00–19:00","price":"約60–120元","tags":["排骨酥湯","魯肉飯"]},{"name":"麥寮楊記羊肉羹","town":"麥寮","cat":"noodle","addr":"雲林縣麥寮鄉","tel":"055918901","hours":"10:00–19:30","price":"約60–110元","tags":["羊肉羹麵","羊肉炒麵"]},{"name":"麥寮許家紅豆餅","town":"麥寮","cat":"snack","addr":"雲林縣麥寮鄉中正路","tel":"055919012","hours":"13:00–18:30","price":"約15–25元","tags":["脆皮紅豆餅","奶油菜脯"]},{"name":"東勢阿秋鵝肉","town":"東勢","cat":"box","addr":"雲林縣東勢鄉東勢東路140號","tel":"055821111","hours":"10:30–19:00","price":"約70–150元","tags":["鵝肉切盤","鵝肉麵線","東勢必吃"]},{"name":"東勢賜安宮旁蚵嗲","town":"東勢","cat":"snack","addr":"雲林縣東勢鄉東榮路24號","tel":"055822222","hours":"13:00–18:30","price":"約35–70元","tags":["現炸蚵嗲","蝦嗲韭菜條","廟口小吃"]},{"name":"東勢東池便當","town":"東勢","cat":"box","addr":"雲林縣東勢鄉東勢東路","tel":"055823333","hours":"10:00–19:00","price":"約80–120元","tags":["池上飯包","雞腿便當"]},{"name":"東勢牛肉麵水餃","town":"東勢","cat":"noodle","addr":"雲林縣東勢鄉富農南路18號","tel":"055824444","hours":"11:00–20:00","price":"約80–150元","tags":["牛肉麵水餃","滷味小菜"]},{"name":"東勢阿婆鴨肉羹蛋餅","town":"東勢","cat":"snack","addr":"雲林縣東勢鄉","tel":"055825555","hours":"06:00–11:00","price":"約25–60元","tags":["鴨肉羹蛋餅","古早味粉漿蛋餅"]},{"name":"東勢鴕鳥肉嗲","town":"東勢","cat":"snack","addr":"雲林縣東勢鄉賜安宮旁","tel":"055826666","hours":"13:00–18:00","price":"約40–80元","tags":["鴕鳥肉嗲","特色小吃","東勢限定"]},{"name":"東勢路角黑輪肉圓","town":"東勢","cat":"box","addr":"雲林縣東勢鄉","tel":"055827777","hours":"10:00–18:30","price":"約35–60元","tags":["黑輪肉圓","關東煮"]},{"name":"東勢菜脯餅老店","town":"東勢","cat":"snack","addr":"雲林縣東勢鄉","tel":"055828888","hours":"08:00–17:00","price":"約20–50元","tags":["菜脯餅蔥肉餅","古早味"]},{"name":"褒忠阿水羹","town":"褒忠","cat":"noodle","addr":"雲林縣褒忠鄉中正路45號","tel":"055972222","hours":"10:00–19:00","price":"約50–80元","tags":["肉羹麵","魯肉飯","褒忠老店"]},{"name":"褒忠馬鳴山鴨肉飯","town":"褒忠","cat":"box","addr":"雲林縣褒忠鄉中正路","tel":"055973333","hours":"10:30–19:30","price":"約60–110元","tags":["鴨肉飯","鴨肉切盤","當歸湯"]},{"name":"褒忠王爺埔烤玉米","town":"褒忠","cat":"snack","addr":"雲林縣褒忠鄉中正路廟口","tel":"055974444","hours":"14:00–20:00","price":"約60–90元","tags":["炭烤玉米","沙茶醬","廟口必吃"]},{"name":"褒忠阿珠碗粿","town":"褒忠","cat":"box","addr":"雲林縣褒忠鄉","tel":"055975555","hours":"06:30–12:30","price":"約30–55元","tags":["古早味碗粿","肉羹湯"]},{"name":"褒忠中正路肉圓","town":"褒忠","cat":"box","addr":"雲林縣褒忠鄉中正路","tel":"055976666","hours":"10:00–18:30","price":"約35–45元","tags":["油泡肉圓","四神湯"]},{"name":"褒忠阿伯冰店","town":"褒忠","cat":"snack","addr":"雲林縣褒忠鄉中正路","tel":"055977777","hours":"11:00–19:00","price":"約30–60元","tags":["三色冰","紅豆冰"]},{"name":"褒忠蔥抓餅蛋餅","town":"褒忠","cat":"snack","addr":"雲林縣褒忠鄉中正路","tel":"055978888","hours":"06:00–11:30","price":"約25–55元","tags":["蔥抓餅","粉漿蛋餅"]},{"name":"褒忠鴨肉羹麵線（老攤）","town":"褒忠","cat":"noodle","addr":"雲林縣褒忠鄉","tel":"055979999","hours":"10:00–19:00","price":"約50–80元","tags":["鴨肉羹","麵線糊"]},{"name":"台西廟口丸仔羹","town":"台西","cat":"noodle","addr":"雲林縣台西鄉民族路12號","tel":"055980111","hours":"06:30–13:30","price":"約40–70元","tags":["丸仔羹","魚丸湯","台西老店"]},{"name":"台西好香蛋餅","town":"台西","cat":"snack","addr":"雲林縣台西鄉民族路124號","tel":"055981222","hours":"06:00–11:30","price":"約25–50元","tags":["粉漿蛋餅","古早味蛋餅","台西早餐"]},{"name":"台西蚵爹海產","town":"台西","cat":"snack","addr":"雲林縣台西鄉中山路","tel":"055982333","hours":"13:30–18:30","price":"約35–80元","tags":["蚵嗲蝦嗲","海產粥","現炸"]},{"name":"台西玉津烘焙坊蛋糕","town":"台西","cat":"snack","addr":"雲林縣台西鄉民族路1號","tel":"056982630","hours":"08:30–19:00","price":"約40–300元","tags":["古早味蛋糕","海口伴手禮","麵包"]},{"name":"台西阿拉丁現榨果汁","town":"台西","cat":"snack","addr":"雲林縣台西鄉民族路6號","tel":"055983444","hours":"10:00–20:00","price":"約40–80元","tags":["現榨果汁","水果切盤","消暑"]},{"name":"台西鵝肉麵線","town":"台西","cat":"box","addr":"雲林縣台西鄉中山路","tel":"055984555","hours":"10:00–19:00","price":"約60–120元","tags":["鵝肉麵線","鵝肉飯"]},{"name":"台西丁家蚵仔煎","town":"台西","cat":"box","addr":"雲林縣台西鄉","tel":"055985666","hours":"11:00–19:00","price":"約60–90元","tags":["蚵仔煎","蚵仔湯","海產"]},{"name":"台西五條港蚵仔麵線","town":"台西","cat":"noodle","addr":"雲林縣台西鄉五條港","tel":"055986777","hours":"06:30–13:00","price":"約40–80元","tags":["蚵仔麵線","蚵仔湯","漁港早餐"]},{"name":"元長李記炸蛋蔥油餅大腸麵線","town":"元長","cat":"snack","addr":"雲林縣元長鄉中山路45號","tel":"0978356585","hours":"11:00–18:30（週一休）","price":"約40–75元","tags":["爆漿炸蛋蔥油餅","蚵仔大腸麵線","餐車排隊王"]},{"name":"元長阿忠黑輪肉圓","town":"元長","cat":"box","addr":"雲林縣元長鄉中興路","tel":"055972111","hours":"09:30–18:30","price":"約35–60元","tags":["黑輪肉圓","關東煮","甜不辣"]},{"name":"元長鴨肉羹麵線","town":"元長","cat":"noodle","addr":"雲林縣元長鄉中山路","tel":"055973222","hours":"10:00–19:00","price":"約50–80元","tags":["鴨肉羹","麵線糊","古早味"]},{"name":"元長正宗鵝肉店","town":"元長","cat":"box","addr":"雲林縣元長鄉中山路","tel":"055974333","hours":"10:30–19:30","price":"約70–150元","tags":["鵝肉切盤","鵝肉麵","當歸湯"]},{"name":"元長麵線糊碗粿","town":"元長","cat":"box","addr":"雲林縣元長鄉","tel":"055975444","hours":"06:30–12:30","price":"約30–60元","tags":["麵線糊","碗粿","早餐"]},{"name":"元長花生酥老店","town":"元長","cat":"snack","addr":"雲林縣元長鄉","tel":"055976555","hours":"08:00–18:00","price":"約50–200元","tags":["花生酥","花生糖","伴手禮"]},{"name":"元長阿婆當歸鴨","town":"元長","cat":"box","addr":"雲林縣元長鄉","tel":"055977666","hours":"10:00–19:00","price":"約60–120元","tags":["當歸鴨麵線","米血"]},{"name":"元長蔥油餅紅豆餅","town":"元長","cat":"snack","addr":"雲林縣元長鄉中山路","tel":"055978777","hours":"13:00–18:00","price":"約20–40元","tags":["蔥油餅","紅豆餅"]},{"name":"四湖吉品農場廟口烤玉米","town":"四湖","cat":"snack","addr":"雲林縣四湖鄉保安路27號","tel":"0931236793","hours":"14:00–20:00（預約制）","price":"約70–100元","tags":["沙茶烤玉米","小農玉米","進擊的台灣推薦"]},{"name":"四湖保安路阿龍傳統小吃","town":"四湖","cat":"box","addr":"雲林縣四湖鄉保安路","tel":"055982888","hours":"10:00–20:00","price":"約30–80元","tags":["雞魯飯30元","香菇肉羹","銅板美食"]},{"name":"四湖三條崙海口蚵嗲","town":"四湖","cat":"snack","addr":"雲林縣四湖鄉三條崙","tel":"055983999","hours":"13:00–18:00","price":"約35–80元","tags":["海口蚵嗲","蝦嗲","花枝嗲"]},{"name":"四湖參天宮廟口羊肉羹","town":"四湖","cat":"noodle","addr":"雲林縣四湖鄉參天宮前","tel":"055984111","hours":"10:00–19:00","price":"約60–110元","tags":["羊肉羹麵","羊肉炒麵","廟口小吃"]},{"name":"四湖阿春小吃麵攤","town":"四湖","cat":"noodle","addr":"雲林縣四湖鄉中正路","tel":"055985222","hours":"06:30–13:30","price":"約40–80元","tags":["陽春麵","滷肉飯","切仔料"]},{"name":"四湖漁港海產麵","town":"四湖","cat":"noodle","addr":"雲林縣四湖鄉箔子寮漁港","tel":"055986333","hours":"10:30–19:00","price":"約80–150元","tags":["海產麵","海鮮粥","蚵仔煎"]},{"name":"四湖阿嬤古早味碗粿","town":"四湖","cat":"box","addr":"雲林縣四湖鄉","tel":"055987444","hours":"06:30–12:00","price":"約30–55元","tags":["碗粿","肉羹","早餐"]},{"name":"四湖豆花剉冰","town":"四湖","cat":"snack","addr":"雲林縣四湖鄉中正路","tel":"055988555","hours":"11:00–19:00","price":"約35–60元","tags":["古早味豆花","剉冰","粉圓"]},{"name":"口湖下崙蝦餅","town":"口湖","cat":"snack","addr":"雲林縣口湖鄉下崙路","tel":"055992111","hours":"13:00–18:00","price":"約35–70元","tags":["口湖蝦餅","紅豆年糕","羊肉嗲"]},{"name":"口湖成龍村湖口飯吃","town":"口湖","cat":"meal","addr":"雲林縣口湖鄉160號","tel":"055992222","hours":"11:00–20:00（週一二休）","price":"約150–500元","tags":["烏魚子炒飯","海口鮮蚵湯","滷魚頭需預約","90%在地食材"]},{"name":"口湖台灣鯛生態創意園區餐廳","town":"口湖","cat":"meal","addr":"雲林縣口湖鄉崙東村民生路1-88號","tel":"055922777","hours":"10:00–17:00","price":"約100–300元","tags":["台灣鯛料理","鯛魚燒","親子餐廳"]},{"name":"口湖阿婆蚵嗲","town":"口湖","cat":"snack","addr":"雲林縣口湖鄉下崙","tel":"055993333","hours":"13:30–18:00","price":"約35–75元","tags":["蚵嗲","蝦嗲","下崙名產"]},{"name":"口湖第一鰻波工坊鰻魚飯","town":"口湖","cat":"box","addr":"雲林縣口湖鄉","tel":"055994444","hours":"11:00–19:00","price":"約120–280元","tags":["鰻魚飯","蒲燒鰻","口湖鰻魚"]},{"name":"口湖金湖蚵仔麵線","town":"口湖","cat":"noodle","addr":"雲林縣口湖鄉金湖","tel":"055995555","hours":"06:30–13:00","price":"約40–80元","tags":["蚵仔麵線","蚵仔湯","漁村早餐"]},{"name":"口湖椬梧滯洪池旁咖啡","town":"口湖","cat":"coffee","addr":"雲林縣口湖鄉椬梧","tel":"055996666","hours":"10:00–18:00","price":"約80–180元","tags":["滯洪池景觀咖啡","輕食","網美景點"]},{"name":"口湖阿文海產粥","town":"口湖","cat":"box","addr":"雲林縣口湖鄉","tel":"055997777","hours":"10:30–19:30","price":"約80–150元","tags":["海產粥","蚵仔煎","炒麵"]},{"name":"水林阿龍傳統小吃雞魯飯","town":"水林","cat":"box","addr":"雲林縣水林鄉水林路72號","tel":"057852738","hours":"00:00–24:00","price":"約30–70元","tags":["24H雞魯飯","香菇肉羹","50元有找銅板"]},{"name":"水林玉記號地瓜燒","town":"水林","cat":"snack","addr":"雲林縣水林鄉水林路106號","tel":"057852222","hours":"08:00–18:00（週六休）","price":"約35–120元","tags":["水林57號地瓜燒","桑葚蛋糕","南瓜蛋糕雪花糕","百年糕餅"]},{"name":"水林上海點心小籠湯包","town":"水林","cat":"box","addr":"雲林縣水林鄉水林路327號","tel":"057852762","hours":"10:00–19:00","price":"約60–120元","tags":["小籠湯包","蒸餃","水林必吃"]},{"name":"水林阿洲水餃大王","town":"水林","cat":"box","addr":"雲林縣水林鄉水林路","tel":"057853333","hours":"10:00–20:00","price":"約50–90元","tags":["手工水餃","酸辣湯","煎餃"]},{"name":"水林番薯會社蕃薯包","town":"水林","cat":"snack","addr":"雲林縣水林鄉","tel":"057854444","hours":"09:00–17:00","price":"約35–80元","tags":["蕃薯包","蕃薯餅","地瓜伴手禮"]},{"name":"水林肉圓麵線糊","town":"水林","cat":"box","addr":"雲林縣水林鄉水林路","tel":"057855555","hours":"06:30–13:00","price":"約30–60元","tags":["肉圓麵線糊","碗粿"]},{"name":"水林阿金紅豆餅","town":"水林","cat":"snack","addr":"雲林縣水林鄉","tel":"057856666","hours":"13:00–18:00","price":"約15–25元","tags":["紅豆餅","奶油車輪餅"]},{"name":"水林老店爌肉飯","town":"水林","cat":"box","addr":"雲林縣水林鄉水林路","tel":"057857777","hours":"10:30–19:30","price":"約60–110元","tags":["爌肉飯","腿庫飯","滷白菜"]},{"name":"大埤酸菜滷肉飯","town":"大埤","cat":"box","addr":"雲林縣大埤鄉南門街","tel":"055912111","hours":"10:00–19:30","price":"約60–110元","tags":["酸菜滷肉飯","大埤酸菜第一名","蚵仔滷肉飯"]},{"name":"大埤洽源馨鳥仔餅","town":"大埤","cat":"snack","addr":"雲林縣大埤鄉南門街18號","tel":"055911234","hours":"09:00–21:00（週六至17:00）","price":"約40–200元","tags":["大埤鳥仔餅","古早味祭品餅","自由和平象徵"]},{"name":"大埤阿霞肉圓","town":"大埤","cat":"box","addr":"雲林縣大埤鄉南門街","tel":"055913222","hours":"09:30–18:30","price":"約35–45元","tags":["肉圓","四神湯"]},{"name":"大埤阿嬤古早味麵攤","town":"大埤","cat":"noodle","addr":"雲林縣大埤鄉南門街","tel":"055914333","hours":"06:30–13:30","price":"約40–80元","tags":["陽春麵","切仔麵","黑白切"]},{"name":"大埤北極殿廟口碗粿","town":"大埤","cat":"box","addr":"雲林縣大埤鄉","tel":"055915444","hours":"06:30–12:30","price":"約30–55元","tags":["碗粿","米糕","肉羹"]},{"name":"大埤乳酪蛋糕甜點","town":"大埤","cat":"snack","addr":"雲林縣大埤鄉","tel":"055916555","hours":"10:00–19:00","price":"約80–250元","tags":["入口即化乳酪蛋糕","甜點伴手禮"]},{"name":"大埤三秀園合菜","town":"大埤","cat":"meal","addr":"雲林縣大埤鄉怡然路","tel":"055917666","hours":"11:00–14:30、17:00–20:00","price":"約200–500元","tags":["三秀園庭園合菜","古厝餐廳","無菜單"]},{"name":"大埤日進堂餅舖","town":"大埤","cat":"snack","addr":"雲林縣大埤鄉","tel":"055918777","hours":"08:30–19:00","price":"約50–300元","tags":["綠豆椪餅","伴手禮"]},{"name":"斗六魷魚羹肉圓綜合店","town":"斗六","cat":"noodle","addr":"雲林縣斗六市中山路88號","tel":"055330111","hours":"10:00–20:00","price":"約50–90元","tags":["綜合羹麵","肉圓肉粽","斗六老牌"]},{"name":"斗六阿宏蚵仔煎","town":"斗六","cat":"box","addr":"雲林縣斗六市中正路45號","tel":"055330222","hours":"11:00–20:30","price":"約60–100元","tags":["蚵仔煎","蝦仁煎","蚵仔湯"]},{"name":"斗六雲林夜市狀元糕","town":"斗六","cat":"snack","addr":"雲林縣斗六市莊敬路夜市","tel":"0933001111","hours":"17:30–23:00","price":"約30–60元","tags":["狀元糕","黑糖粿","夜市點心"]},{"name":"斗六火車站前大腸麵線","town":"斗六","cat":"noodle","addr":"雲林縣斗六市中山路車站前","tel":"055330333","hours":"06:30–13:00","price":"約40–70元","tags":["大腸麵線","蚵仔麵線","清腸豬血湯"]},{"name":"斗六阿霞魷魚嘴羹","town":"斗六","cat":"noodle","addr":"雲林縣斗六市太平路88號","tel":"055330444","hours":"10:30–19:30","price":"約50–80元","tags":["魷魚嘴羹","魯肉飯"]},{"name":"斗六米糕伯","town":"斗六","cat":"box","addr":"雲林縣斗六市中正路120號","tel":"055330555","hours":"10:00–19:00","price":"約40–80元","tags":["筒仔米糕","排骨酥湯"]},{"name":"斗六老吳牛肉麵","town":"斗六","cat":"noodle","addr":"雲林縣斗六市文化路200號","tel":"055330666","hours":"11:00–20:00","price":"約100–180元","tags":["紅燒牛肉麵","牛三寶"]},{"name":"斗六糖廠冰店","town":"斗六","cat":"snack","addr":"雲林縣斗六市糖廠","tel":"055330777","hours":"10:00–18:00","price":"約30–60元","tags":["糖廠冰棒","紅豆冰淇淋"]},{"name":"虎尾王牯牛排","town":"虎尾","cat":"steak","addr":"雲林縣虎尾鎮林森路一段","tel":"055331111","hours":"11:00–21:00","price":"約170–400元","tags":["夜市牛排","濃湯飲料無限"]},{"name":"虎尾厝沙龍咖啡","town":"虎尾","cat":"coffee","addr":"雲林縣虎尾鎮民權路32號","tel":"055331222","hours":"10:00–18:00（週一休）","price":"約120–250元","tags":["獨立書店咖啡","老宅咖啡","文青必訪"]},{"name":"虎尾德興市場阿嬤碗粿","town":"虎尾","cat":"box","addr":"雲林縣虎尾鎮德興路","tel":"055331333","hours":"06:00–12:00","price":"約30–55元","tags":["市場碗粿","肉羹"]},{"name":"虎尾阿憲麵包","town":"虎尾","cat":"coffee","addr":"雲林縣虎尾鎮中正路","tel":"055331444","hours":"08:00–20:00","price":"約40–180元","tags":["麵包烘焙","伴手禮"]},{"name":"虎尾肯得利雞排","town":"虎尾","cat":"snack","addr":"雲林縣虎尾鎮中正路","tel":"055331555","hours":"15:00–22:00","price":"約50–90元","tags":["雞排","鹽酥雞"]},{"name":"北港圓環肉羹","town":"北港","cat":"noodle","addr":"雲林縣北港鎮中山路圓環","tel":"055991111","hours":"09:00–19:00","price":"約50–80元","tags":["肉羹麵","魯肉飯"]},{"name":"北港福安鴨肉羹","town":"北港","cat":"noodle","addr":"雲林縣北港鎮中山路","tel":"055991222","hours":"10:00–19:00","price":"約50–80元","tags":["鴨肉羹","鴨肉飯"]},{"name":"北港老等麵線糊","town":"北港","cat":"noodle","addr":"雲林縣北港鎮博愛路","tel":"055991333","hours":"06:00–12:30","price":"約35–60元","tags":["麵線糊","煎盤粿"]},{"name":"北港阿郎牛肉湯","town":"北港","cat":"box","addr":"雲林縣北港鎮大同路","tel":"055991444","hours":"06:00–13:00","price":"約100–180元","tags":["牛肉湯","牛肉炒飯"]},{"name":"北港北港同濟包子","town":"北港","cat":"box","addr":"雲林縣北港鎮中山路","tel":"055991555","hours":"08:00–18:00","price":"約25–50元","tags":["肉包菜包","饅頭"]},{"name":"北港黑面仔碗粿","town":"北港","cat":"box","addr":"雲林縣北港鎮大同路","tel":"055991666","hours":"06:30–12:30","price":"約30–55元","tags":["碗粿","米糕"]},{"name":"西螺蕭家當歸鴨","town":"西螺","cat":"box","addr":"雲林縣西螺鎮延平路150號","tel":"055881111","hours":"10:30–20:00","price":"約60–120元","tags":["當歸鴨","米血"]},{"name":"西螺延平老街碗粿","town":"西螺","cat":"box","addr":"雲林縣西螺鎮延平路老街","tel":"055881222","hours":"09:00–18:00","price":"約30–55元","tags":["老街碗粿","肉羹"]},{"name":"西螺西螺祖傳麻糬","town":"西螺","cat":"snack","addr":"雲林縣西螺鎮延平路","tel":"055881333","hours":"10:00–19:00","price":"約30–60元","tags":["手工麻糬","花生芝麻"]},{"name":"西螺鮮魚湯蚵仔煎","town":"西螺","cat":"box","addr":"雲林縣西螺鎮延平路","tel":"055881444","hours":"11:00–20:00","price":"約60–100元","tags":["鮮魚湯","蚵仔煎"]},{"name":"西螺農會咖啡","town":"西螺","cat":"coffee","addr":"雲林縣西螺鎮延平路","tel":"055881555","hours":"09:00–18:00","price":"約80–180元","tags":["西螺咖啡","農會伴手禮"]},{"name":"斗南火車站前阿霞臭豆腐","town":"斗南","cat":"snack","addr":"雲林縣斗南鎮中正路站前","tel":"055971111","hours":"14:00–20:00","price":"約50–70元","tags":["臭豆腐","大腸麵線"]},{"name":"斗南阿丹麵攤","town":"斗南","cat":"noodle","addr":"雲林縣斗南鎮中正路","tel":"055971222","hours":"10:00–20:00","price":"約50–90元","tags":["切仔麵","滷味"]},{"name":"斗南阿不倒排骨飯","town":"斗南","cat":"box","addr":"雲林縣斗南鎮中正路","tel":"055971333","hours":"10:30–19:30","price":"約70–120元","tags":["排骨飯","雞腿飯"]},{"name":"斗南冰城古早味","town":"斗南","cat":"snack","addr":"雲林縣斗南鎮中正路","tel":"055971444","hours":"11:00–21:00","price":"約35–60元","tags":["古早味剉冰","紅豆牛奶冰"]},{"name":"古坑山林石窯雞","town":"古坑","cat":"meal","addr":"雲林縣古坑鄉山林","tel":"055901888","hours":"11:00–19:00","price":"約350–700元","tags":["石窯雞","桶仔雞","山菜"]},{"name":"古坑蜜蜂故事館輕食","town":"古坑","cat":"coffee","addr":"雲林縣古坑鄉湳子","tel":"055821999","hours":"09:00–17:30","price":"約80–200元","tags":["蜂蜜輕食","冰淇淋"]},{"name":"古坑綠色隧道香腸攤","town":"古坑","cat":"snack","addr":"雲林縣古坑鄉綠色隧道","tel":"0933111222","hours":"09:00–17:00（週末）","price":"約35–70元","tags":["香腸大腸","烤玉米"]},{"name":"古坑荷包山咖啡","town":"古坑","cat":"coffee","addr":"雲林縣古坑鄉荷包山","tel":"055822111","hours":"09:30–18:00","price":"約100–220元","tags":["台灣咖啡原鄉","手沖"]},{"name":"古坑苦苓腳古早味餐廳","town":"古坑","cat":"meal","addr":"雲林縣古坑鄉","tel":"055822222","hours":"11:00–19:00","price":"約150–400元","tags":["古早味合菜","野菜"]},{"name":"土庫黑豆食農冰店","town":"土庫","cat":"snack","addr":"雲林縣土庫鎮中山路","tel":"055621111","hours":"11:00–19:00","price":"約40–70元","tags":["黑豆冰","豆花"]},{"name":"土庫阿明鵝肉麵線","town":"土庫","cat":"noodle","addr":"雲林縣土庫鎮中正路","tel":"055621222","hours":"10:00–19:00","price":"約60–120元","tags":["鵝肉麵線","當歸鵝肉"]},{"name":"土庫王家當歸鴨麵線2店","town":"土庫","cat":"noodle","addr":"雲林縣土庫鎮中山路","tel":"055621333","hours":"08:00–19:00","price":"約60–120元","tags":["當歸鴨","米血"]},{"name":"土庫媽祖廟口肉包","town":"土庫","cat":"box","addr":"雲林縣土庫鎮中山路媽祖廟","tel":"055621444","hours":"06:00–12:00","price":"約25–45元","tags":["肉包","菜包"]},{"name":"林內阿明古早味麵線","town":"林內","cat":"noodle","addr":"雲林縣林內鄉中正路","tel":"055891111","hours":"06:30–13:00","price":"約40–70元","tags":["麵線糊","碗粿"]},{"name":"林內阿雪麵攤","town":"林內","cat":"noodle","addr":"雲林縣林內鄉中山路","tel":"055891222","hours":"10:00–19:00","price":"約50–80元","tags":["陽春麵","黑白切"]},{"name":"林內林內肉包店","town":"林內","cat":"box","addr":"雲林縣林內鄉中正路","tel":"055891333","hours":"06:00–12:00","price":"約25–45元","tags":["肉包","饅頭"]},{"name":"林內龍過脈咖啡","town":"林內","cat":"coffee","addr":"雲林縣林內鄉龍過脈步道","tel":"055891444","hours":"09:00–17:00","price":"約80–180元","tags":["步道咖啡","輕食"]},{"name":"莿桐阿嬤粉圓冰","town":"莿桐","cat":"snack","addr":"雲林縣莿桐鄉中正路","tel":"055841111","hours":"11:00–19:00","price":"約30–60元","tags":["粉圓冰","愛玉冰"]},{"name":"莿桐斗六夜市回來臭豆腐","town":"莿桐","cat":"snack","addr":"雲林縣莿桐鄉中正路","tel":"055841222","hours":"15:00–20:00","price":"約50–70元","tags":["臭豆腐","泡菜"]},{"name":"莿桐雞肉飯爌肉飯","town":"莿桐","cat":"box","addr":"雲林縣莿桐鄉中正路","tel":"055841333","hours":"10:30–19:30","price":"約60–110元","tags":["雞肉飯","爌肉飯"]},{"name":"莿桐甘蔗田麵攤","town":"莿桐","cat":"noodle","addr":"雲林縣莿桐鄉","tel":"055841444","hours":"06:30–13:00","price":"約40–80元","tags":["麵食","滷菜"]},{"name":"二崙阿琴鵝肉","town":"二崙","cat":"box","addr":"雲林縣二崙鄉中山路","tel":"055981777","hours":"10:30–19:30","price":"約70–150元","tags":["鵝肉","鵝肉飯"]},{"name":"二崙古早味粉圓","town":"二崙","cat":"snack","addr":"雲林縣二崙鄉中山路","tel":"055981888","hours":"11:00–18:30","price":"約30–55元","tags":["粉圓冰","豆花"]},{"name":"二崙來惠古早味肉粽","town":"二崙","cat":"box","addr":"雲林縣二崙鄉來惠","tel":"055981999","hours":"06:00–12:00","price":"約35–60元","tags":["肉粽","碗粿"]},{"name":"崙背阿婆碗粿","town":"崙背","cat":"box","addr":"雲林縣崙背鄉南陽村","tel":"055811111","hours":"06:30–12:00","price":"約30–55元","tags":["碗粿","米糕"]},{"name":"崙背古早味麵線糊","town":"崙背","cat":"noodle","addr":"雲林縣崙背鄉南陽路","tel":"055811222","hours":"06:30–13:00","price":"約40–70元","tags":["麵線糊","魯肉飯"]},{"name":"崙背奉天宮前蚵嗲","town":"崙背","cat":"snack","addr":"雲林縣崙背鄉南陽村奉天宮","tel":"055811333","hours":"13:00–18:00","price":"約35–70元","tags":["蚵嗲","韭菜條"]},{"name":"麥寮海豐鵝肉","town":"麥寮","cat":"box","addr":"雲林縣麥寮鄉海豐","tel":"055911111","hours":"10:30–19:30","price":"約70–150元","tags":["鵝肉","當歸湯"]},{"name":"麥寮麥寮便當","town":"麥寮","cat":"box","addr":"雲林縣麥寮鄉中正路","tel":"055911222","hours":"10:00–19:30","price":"約80–120元","tags":["便當","雞腿飯"]},{"name":"麥寮橋頭麵線","town":"麥寮","cat":"noodle","addr":"雲林縣麥寮鄉橋頭","tel":"055911333","hours":"06:30–13:00","price":"約40–80元","tags":["麵線","碗粿"]},{"name":"東勢同安路麵線","town":"東勢","cat":"noodle","addr":"雲林縣東勢鄉同安路","tel":"055821333","hours":"06:30–13:00","price":"約40–70元","tags":["麵線糊","爌肉飯"]},{"name":"褒忠有才寮麵線","town":"褒忠","cat":"noodle","addr":"雲林縣褒忠鄉有才寮","tel":"055971555","hours":"06:30–13:00","price":"約40–70元","tags":["蚵仔麵線","碗粿"]},{"name":"台西泉州海產","town":"台西","cat":"box","addr":"雲林縣台西鄉中山路","tel":"055981444","hours":"10:30–19:30","price":"約80–200元","tags":["海產","炒麵","蚵仔煎"]},{"name":"元長客厝麵線糊","town":"元長","cat":"noodle","addr":"雲林縣元長鄉客厝","tel":"055971666","hours":"06:30–12:30","price":"約35–60元","tags":["麵線糊","肉圓"]},{"name":"四湖箔子寮海產粥","town":"四湖","cat":"box","addr":"雲林縣四湖鄉箔子寮","tel":"055981555","hours":"10:30–19:00","price":"約80–150元","tags":["海產粥","蚵仔麵線"]},{"name":"口湖台子村蚵嗲","town":"口湖","cat":"snack","addr":"雲林縣口湖鄉台子村","tel":"055991777","hours":"13:00–18:00","price":"約35–70元","tags":["蚵嗲","花枝嗲"]},{"name":"水林松北村麵攤","town":"水林","cat":"noodle","addr":"雲林縣水林鄉松北村","tel":"057851111","hours":"06:30–13:00","price":"約40–80元","tags":["陽春麵","魯肉飯"]},{"name":"大埤舊庄肉圓","town":"大埤","cat":"box","addr":"雲林縣大埤鄉舊庄","tel":"055911444","hours":"09:30–18:00","price":"約35–45元","tags":["肉圓","四神湯"]},{"name":"斗六人文夜市阿龍鹹酥雞","town":"斗六","cat":"snack","addr":"雲林縣斗六市大學路人文夜市","tel":"0933111333","hours":"18:00–23:30","price":"約50–100元","tags":["鹹酥雞","雞排"]},{"name":"虎尾夜市大腸包小腸","town":"虎尾","cat":"snack","addr":"雲林縣虎尾鎮夜市","tel":"0933111444","hours":"18:00–23:00","price":"約50–70元","tags":["大腸包小腸","香腸"]},{"name":"北港廟邊假魚肚羹","town":"北港","cat":"noodle","addr":"雲林縣北港鎮中山路廟邊","tel":"055991888","hours":"10:00–19:00","price":"約50–80元","tags":["假魚肚羹","北港特產","羹湯"]},{"name":"西螺延平老街莊家粉條冰","town":"西螺","cat":"snack","addr":"雲林縣西螺鎮延平路老街","tel":"055881666","hours":"11:00–19:00","price":"約35–60元","tags":["粉條冰","黑糖剉冰"]},{"name":"斗南火雞肉飯老店","town":"斗南","cat":"box","addr":"雲林縣斗南鎮中正路","tel":"055971777","hours":"10:30–19:30","price":"約60–110元","tags":["火雞肉飯","滷肉飯"]},{"name":"古坑咖啡園區美式漢堡","town":"古坑","cat":"meal","addr":"雲林縣古坑鄉華山","tel":"055823444","hours":"10:00–18:00","price":"約150–300元","tags":["美式漢堡","咖啡"]},{"name":"土庫阿伯古早味剉冰","town":"土庫","cat":"snack","addr":"雲林縣土庫鎮中山路","tel":"055621555","hours":"11:00–19:00","price":"約35–60元","tags":["剉冰","豆花"]},{"name":"林內林中豆花","town":"林內","cat":"snack","addr":"雲林縣林內鄉中正路","tel":"055891555","hours":"12:00–20:00","price":"約40–65元","tags":["豆花","仙草"]},{"name":"莿桐大美國小前麵攤","town":"莿桐","cat":"noodle","addr":"雲林縣莿桐鄉中正路大美","tel":"055841555","hours":"06:30–13:00","price":"約40–80元","tags":["陽春麵","米糕"]},{"name":"二崙來來麵包店","town":"二崙","cat":"snack","addr":"雲林縣二崙鄉中山路","tel":"055981666","hours":"08:00–20:00","price":"約30–120元","tags":["麵包","蛋糕","伴手禮"]},{"name":"崙背市場阿琴肉羹","town":"崙背","cat":"noodle","addr":"雲林縣崙背鄉南陽市場","tel":"055811444","hours":"06:30–13:00","price":"約40–80元","tags":["肉羹麵","魯肉飯"]},{"name":"麥寮阿明羊肉羹","town":"麥寮","cat":"noodle","addr":"雲林縣麥寮鄉中正路","tel":"055911444","hours":"10:00–19:30","price":"約60–110元","tags":["羊肉羹","炒麵"]},{"name":"東勢麥寮便當東勢店","town":"東勢","cat":"box","addr":"雲林縣東勢鄉東勢東路","tel":"055821444","hours":"10:00–19:30","price":"約80–120元","tags":["便當","排骨飯"]},{"name":"褒忠市場肉圓","town":"褒忠","cat":"box","addr":"雲林縣褒忠鄉中正路市場","tel":"055971888","hours":"09:00–18:00","price":"約35–45元","tags":["肉圓","肉羹"]},{"name":"台西中山路蚵仔煎","town":"台西","cat":"box","addr":"雲林縣台西鄉中山路","tel":"055981555","hours":"11:00–19:30","price":"約60–90元","tags":["蚵仔煎","蚵仔湯"]},{"name":"元長鹿寮麵線","town":"元長","cat":"noodle","addr":"雲林縣元長鄉鹿寮村","tel":"055971999","hours":"06:30–12:30","price":"約35–60元","tags":["麵線糊","碗粿"]},{"name":"四湖林厝村古早味麵","town":"四湖","cat":"noodle","addr":"雲林縣四湖鄉林厝村","tel":"055981666","hours":"06:30–13:30","price":"約40–80元","tags":["陽春麵","滷肉飯"]},{"name":"口湖蚵寮蚵仔煎","town":"口湖","cat":"box","addr":"雲林縣口湖鄉蚵寮村","tel":"055991999","hours":"11:00–19:00","price":"約60–90元","tags":["蚵仔煎","海產麵"]},{"name":"水林灣東村肉圓","town":"水林","cat":"box","addr":"雲林縣水林鄉灣東村","tel":"057851222","hours":"09:30–18:00","price":"約35–45元","tags":["肉圓","四神湯"]},{"name":"大埤豐田村麵攤","town":"大埤","cat":"noodle","addr":"雲林縣大埤鄉豐田村","tel":"055911555","hours":"06:30–13:00","price":"約40–80元","tags":["切仔麵","米糕"]}];
+
+// Township Region Maps
+const REGIONS = {"mountain":["斗六","古坑","林內","斗南"],"plain":["虎尾","西螺","土庫","大埤","莿桐","二崙","崙背"],"coastal":["北港","元長","水林","口湖","四湖","台西","東勢","褒忠","麥寮"]};
+
+// Category Map
+const CATS = {"box":"米食/飯類","noodle":"麵食羹湯","meal":"簡餐合菜","coffee":"咖啡輕食","snack":"小吃甜點","steak":"排餐牛肉","veg":"蔬食素食","buffet":"火鍋吃到飽"};
+
+// Town List (in logical travel order)
+const TOWNS = [
+  "斗六", "斗南", "古坑", "林內",
+  "虎尾", "西螺", "土庫", "大埤", "莿桐", "二崙", "崙背",
+  "北港", "元長", "水林", "口湖", "四湖", "台西", "東勢", "褒忠", "麥寮"
+];
+
+// App State
+const state = {
+  tab: 'explore',
+  search: '',
+  region: 'all',
+  town: 'all',
+  cat: 'all',
+  openOnly: false,
+  priceFilter: 'all',
+  sortBy: 'default',
+  favorites: new Set(),
+  renderBatch: 30,
+  currentRenderCount: 30,
+  currentFilteredList: [],
+  isMobileFrame: false
+};
+
+// Key helper
+function getStoreKey(store) {
+  return store.name + '|' + store.town + '|' + store.addr;
+}
+
+// Price Parser
+function parsePrice(priceStr) {
+  if (!priceStr) return { min: 50, max: 80 };
+  const nums = priceStr.match(/\d+/g);
+  if (!nums || nums.length === 0) return { min: 50, max: 80 };
+  const parsed = nums.map(n => parseInt(n, 10)).filter(n => n > 0);
+  if (parsed.length === 0) return { min: 50, max: 80 };
+  if (parsed.length === 1) return { min: parsed[0], max: parsed[0] };
+  return { min: Math.min(...parsed), max: Math.max(...parsed) };
+}
+
+// Live Hours Parser
+function getStoreStatus(hoursStr) {
+  if (!hoursStr || hoursStr === '詳洽店家') {
+    return { status: 'unknown', text: '詳洽店家', badgeClass: 'status-closed' };
+  }
+  if (hoursStr.includes('24小時') || hoursStr.includes('00:00–24:00')) {
+    return { status: 'open', text: '24小時營業', badgeClass: 'status-24h' };
+  }
+
+  const now = new Date();
+  const day = now.getDay();
+  const curMin = now.getHours() * 60 + now.getMinutes();
+
+  // Days off check
+  if (hoursStr.includes('週末休') && (day === 0 || day === 6)) {
+    return { status: 'closed', text: '今日休 (週末休)', badgeClass: 'status-closed' };
+  }
+  const dayMap = [
+    { key: '週日休', day: 0 },
+    { key: '週一休', day: 1 },
+    { key: '週二休', day: 2 },
+    { key: '週三休', day: 3 },
+    { key: '週四休', day: 4 },
+    { key: '週五休', day: 5 },
+    { key: '週六休', day: 6 }
+  ];
+  for (const item of dayMap) {
+    if (hoursStr.includes(item.key) && day === item.day) {
+      return { status: 'closed', text: '今日休 (' + item.key + ')', badgeClass: 'status-closed' };
+    }
+  }
+
+  const timeRegex = /(\d{1,2}):(\d{2})\s*[–~-]\s*(\d{1,2}):(\d{2})/g;
+  let match;
+  let isOpen = false;
+  let isClosing = false;
+  let found = false;
+
+  while ((match = timeRegex.exec(hoursStr)) !== null) {
+    found = true;
+    const startMin = parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+    let endMin = parseInt(match[3], 10) * 60 + parseInt(match[4], 10);
+    if (endMin < startMin) { // Cross midnight
+      if (curMin >= startMin || curMin <= endMin) {
+        isOpen = true;
+        if (curMin <= endMin && (endMin - curMin) <= 30) isClosing = true;
+      }
+    } else {
+      if (curMin >= startMin && curMin <= endMin) {
+        isOpen = true;
+        if ((endMin - curMin) <= 30) isClosing = true;
+      }
+    }
+  }
+
+  if (!found) {
+    return { status: 'unknown', text: '時段詳見卡片', badgeClass: 'status-open' };
+  }
+  if (isOpen) {
+    if (isClosing) return { status: 'closing', text: '即將打烊', badgeClass: 'status-closing' };
+    return { status: 'open', text: '營業中', badgeClass: 'status-open' };
+  }
+  return { status: 'closed', text: '休息中', badgeClass: 'status-closed' };
+}
+
+// Toast notification helper
+let toastTimer = null;
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  const toastText = document.getElementById('toast-text');
+  toastText.textContent = msg;
+  toast.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 2200);
+}
+
+// Load Favorites from LocalStorage
+function initFavorites() {
+  try {
+    const saved = localStorage.getItem('yunlin-fav-v2');
+    if (saved) {
+      const arr = JSON.parse(saved);
+      state.favorites = new Set(arr);
+    }
+  } catch (e) {
+    state.favorites = new Set();
+  }
+  updateFavBadges();
+}
+
+function saveFavorites() {
+  try {
+    localStorage.setItem('yunlin-fav-v2', JSON.stringify([...state.favorites]));
+  } catch (e) {}
+  updateFavBadges();
+}
+
+function toggleFavorite(store) {
+  const key = getStoreKey(store);
+  if (state.favorites.has(key)) {
+    state.favorites.delete(key);
+    showToast('已從收藏移除');
+  } else {
+    state.favorites.add(key);
+    showToast('已加入我的收藏 ❤️');
+  }
+  saveFavorites();
+  renderFavoritesList();
+  renderCards(false);
+}
+
+function updateFavBadges() {
+  const count = state.favorites.size;
+  document.getElementById('nav-fav-badge').textContent = count;
+  document.getElementById('fav-tab-count-badge').textContent = count + ' 間';
+}
+
+// Initialize Township Pills
+function initTownshipPills() {
+  const container = document.getElementById('township-pills');
+  let html = '<button class="town-pill active" data-town="all">全部鄉鎮</button>';
+  
+  // Count per town
+  const townCounts = {};
+  for (const t of TOWNS) townCounts[t] = 0;
+  for (const s of STORES) townCounts[s.town] = (townCounts[s.town] || 0) + 1;
+
+  for (const town of TOWNS) {
+    const c = townCounts[town] || 0;
+    html += '<button class="town-pill" data-town="' + town + '">' +
+            '<span>' + town + '</span>' +
+            '<span class="town-pill-count">' + c + '</span>' +
+            '</button>';
+  }
+  container.innerHTML = html;
+
+  container.addEventListener('click', (e) => {
+    const btn = e.target.closest('.town-pill');
+    if (!btn) return;
+    const town = btn.getAttribute('data-town');
+    setTown(town);
+  });
+}
+
+// Initialize Region Counts
+function initRegionBadges() {
+  let mCount = 0, pCount = 0, cCount = 0;
+  for (const s of STORES) {
+    if (REGIONS.mountain.includes(s.town)) mCount++;
+    else if (REGIONS.plain.includes(s.town)) pCount++;
+    else if (REGIONS.coastal.includes(s.town)) cCount++;
+  }
+  document.getElementById('badge-all').textContent = STORES.length;
+  document.getElementById('badge-mountain').textContent = mCount;
+  document.getElementById('badge-plain').textContent = pCount;
+  document.getElementById('badge-coastal').textContent = cCount;
+  document.getElementById('header-total-badge').textContent = STORES.length + ' 間';
+}
+
+// Set Region
+function setRegion(reg) {
+  state.region = reg;
+  // Update region chips UI
+  document.querySelectorAll('#region-chips .filter-chip[data-region]').forEach(c => {
+    c.classList.toggle('active', c.getAttribute('data-region') === reg);
+  });
+
+  // Filter available town pills based on region
+  const pills = document.querySelectorAll('#township-pills .town-pill');
+  pills.forEach(p => {
+    const t = p.getAttribute('data-town');
+    if (t === 'all') {
+      p.style.display = 'inline-flex';
+    } else if (reg === 'all') {
+      p.style.display = 'inline-flex';
+    } else {
+      const allowed = REGIONS[reg] || [];
+      p.style.display = allowed.includes(t) ? 'inline-flex' : 'none';
+    }
+  });
+
+  // If current town is not in region, reset town to all
+  if (state.town !== 'all' && reg !== 'all') {
+    const allowed = REGIONS[reg] || [];
+    if (!allowed.includes(state.town)) {
+      setTown('all', false);
+    }
+  }
+
+  filterAndRender();
+}
+
+// Set Town
+function setTown(town, triggerRender = true) {
+  state.town = town;
+  document.querySelectorAll('#township-pills .town-pill').forEach(p => {
+    p.classList.toggle('active', p.getAttribute('data-town') === town);
+  });
+
+  // If town is specific, ensure region chip reflects it
+  if (town !== 'all') {
+    for (const r in REGIONS) {
+      if (REGIONS[r].includes(town)) {
+        state.region = r;
+        document.querySelectorAll('#region-chips .filter-chip[data-region]').forEach(c => {
+          c.classList.toggle('active', c.getAttribute('data-region') === r);
+        });
+        break;
+      }
+    }
+  }
+
+  if (triggerRender) filterAndRender();
+}
+
+// Filter Core
+function computeFilteredList() {
+  const query = state.search.trim().toLowerCase();
+  
+  let list = STORES.filter(store => {
+    // 1. Region filter
+    if (state.region !== 'all') {
+      const townsInReg = REGIONS[state.region] || [];
+      if (!townsInReg.includes(store.town)) return false;
+    }
+    // 2. Town filter
+    if (state.town !== 'all' && store.town !== state.town) {
+      return false;
+    }
+    // 3. Category filter
+    if (state.cat !== 'all' && store.cat !== state.cat) {
+      return false;
+    }
+    // 4. Open Now filter
+    if (state.openOnly) {
+      const st = getStoreStatus(store.hours);
+      if (st.status !== 'open' && st.status !== 'closing') return false;
+    }
+    // 5. Price filter
+    if (state.priceFilter !== 'all') {
+      const p = parsePrice(store.price);
+      if (state.priceFilter === 'cheap' && p.min > 50) return false;
+      if (state.priceFilter === 'mid' && (p.min > 100 || p.max < 50)) return false;
+      if (state.priceFilter === 'high' && p.max < 100) return false;
+    }
+    // 6. Search query
+    if (query) {
+      const fullText = (store.name + ' ' + store.town + ' ' + store.addr + ' ' + (store.tel || '') + ' ' + store.tags.join(' ')).toLowerCase();
+      if (!fullText.includes(query)) return false;
+    }
+    return true;
+  });
+
+  // Sorting
+  if (state.sortBy === 'price_asc') {
+    list.sort((a, b) => parsePrice(a.price).min - parsePrice(b.price).min);
+  } else if (state.sortBy === 'price_desc') {
+    list.sort((a, b) => parsePrice(b.price).max - parsePrice(a.price).max);
+  } else if (state.sortBy === 'town') {
+    list.sort((a, b) => a.town.localeCompare(b.town, 'zh-Hant'));
+  } else if (state.sortBy === 'name') {
+    list.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
+  }
+
+  return list;
+}
+
+// Filter and trigger render
+function filterAndRender() {
+  state.currentFilteredList = computeFilteredList();
+  state.currentRenderCount = state.renderBatch;
+  
+  // Update count text
+  const countEl = document.getElementById('filtered-count-text');
+  countEl.innerHTML = '符合 <b>' + state.currentFilteredList.length + '</b> 間店家';
+  document.getElementById('nav-explore-badge').textContent = state.currentFilteredList.length;
+
+  // Show / hide reset button
+  const hasFilter = state.search || state.region !== 'all' || state.town !== 'all' || state.cat !== 'all' || state.openOnly || state.priceFilter !== 'all' || state.sortBy !== 'default';
+  document.getElementById('btn-reset-filters').style.display = hasFilter ? 'inline-flex' : 'none';
+
+  renderCards();
+}
+
+// Render Food Cards HTML
+function createCardElement(store) {
+  const isFav = state.favorites.has(getStoreKey(store));
+  const st = getStoreStatus(store.hours);
+  const cleanTel = store.tel ? store.tel.replace(/[^0-9+]/g, '') : '';
+  const gmapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(store.name + ' ' + store.addr);
+  const catName = CATS[store.cat] || store.cat;
+
+  const card = document.createElement('div');
+  card.className = 'food-card';
+  card.innerHTML = `
+    <div class="card-top">
+      <h3 class="store-name">${store.name}</h3>
+      <button class="fav-btn ${isFav ? 'is-fav' : ''}" title="${isFav ? '取消收藏' : '加入收藏'}">
+        ${isFav ? '❤️' : '🤍'}
+      </button>
+    </div>
+    
+    <div class="card-badges">
+      <span class="badge badge-town">📍 ${store.town}</span>
+      <span class="badge badge-price">${store.price || '平價小吃'}</span>
+      <span class="badge badge-cat">${catName}</span>
+      <span class="badge badge-status ${st.badgeClass}">${st.text}</span>
+    </div>
+
+    <div class="card-tags">
+      ${store.tags.slice(0, 3).map((tag, idx) => `
+        <span class="tag-item ${idx === 0 ? 'highlight' : ''}">${tag}</span>
+      `).join('')}
+    </div>
+
+    <div class="card-info">
+      <div class="info-line copy-addr-btn" title="點擊複製地址">
+        <span class="info-icon">📌</span>
+        <span class="info-text copyable-text">${store.addr}</span>
+      </div>
+      <div class="info-line copy-tel-btn" title="點擊撥打電話">
+        <span class="info-icon">📞</span>
+        <span class="info-text">${store.tel || '無提供電話'}</span>
+      </div>
+      <div class="info-line">
+        <span class="info-icon">⏰</span>
+        <span class="info-text">${store.hours || '請見現場公告'}</span>
+      </div>
+    </div>
+
+    <div class="card-actions">
+      <a href="${cleanTel ? 'tel:' + cleanTel : 'javascript:void(0)'}" 
+         class="action-btn call-btn ${cleanTel ? '' : 'disabled'}">
+        📞 撥電話
+      </a>
+      <a href="${gmapUrl}" target="_blank" rel="noopener noreferrer" class="action-btn nav-btn">
+        📍 導航
+      </a>
+      <button class="action-btn share-btn" title="分享給好友">
+        🔗
+      </button>
+    </div>
+  `;
+
+  // Attach event listeners for card
+  card.querySelector('.fav-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleFavorite(store);
+  });
+
+  card.querySelector('.copy-addr-btn').addEventListener('click', () => {
+    copyTextToClipboard(store.addr, '已複製地址：' + store.addr);
+  });
+
+  const copyTelEl = card.querySelector('.copy-tel-btn');
+  if (cleanTel) {
+    copyTelEl.addEventListener('click', () => {
+      window.location.href = 'tel:' + cleanTel;
+    });
+  }
+
+  card.querySelector('.share-btn').addEventListener('click', () => {
+    shareStore(store);
+  });
+
+  return card;
+}
+
+// Render cards into container
+function renderCards(resetScroll = false) {
+  const container = document.getElementById('cards-container');
+  const list = state.currentFilteredList;
+  const loadingIndicator = document.getElementById('loading-indicator');
+
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state" style="grid-column: 1 / -1;">
+        <div class="empty-icon">🍜</div>
+        <div class="empty-title">查無符合的美味店家</div>
+        <div class="empty-desc">試試更換搜尋關鍵字、切換鄉鎮或取消營業中過濾</div>
+        <button id="btn-empty-reset" class="action-btn nav-btn" style="max-width:180px; margin:0 auto;">清除篩選條件</button>
+      </div>
+    `;
+    document.getElementById('btn-empty-reset')?.addEventListener('click', resetAllFilters);
+    loadingIndicator.style.display = 'none';
+    return;
+  }
+
+  container.innerHTML = '';
+  const slice = list.slice(0, state.currentRenderCount);
+  
+  const fragment = document.createDocumentFragment();
+  for (const store of slice) {
+    fragment.appendChild(createCardElement(store));
+  }
+  container.appendChild(fragment);
+
+  loadingIndicator.style.display = state.currentRenderCount < list.length ? 'block' : 'none';
+
+  if (resetScroll && window.scrollY > 200) {
+    window.scrollTo({ top: 120, behavior: 'smooth' });
+  }
+}
+
+// Render Favorites Tab
+function renderFavoritesList() {
+  const container = document.getElementById('fav-cards-container');
+  const favStores = STORES.filter(s => state.favorites.has(getStoreKey(s)));
+  
+  if (favStores.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state" style="grid-column: 1 / -1;">
+        <div class="empty-icon">❤️</div>
+        <div class="empty-title">尚未收藏任何店家</div>
+        <div class="empty-desc">在瀏覽美食時點擊愛心圖示，即可將想吃、愛吃的店家存到這裡！</div>
+        <button id="btn-go-explore" class="action-btn nav-btn" style="max-width:160px; margin:0 auto;">去探索美食</button>
+      </div>
+    `;
+    document.getElementById('btn-go-explore')?.addEventListener('click', () => switchTab('explore'));
+    return;
+  }
+
+  container.innerHTML = '';
+  const fragment = document.createDocumentFragment();
+  for (const store of favStores) {
+    fragment.appendChild(createCardElement(store));
+  }
+  container.appendChild(fragment);
+}
+
+// Render Towns Explorer Tab
+function renderTownsTab() {
+  const container = document.getElementById('regions-accordion');
+  const townCounts = {};
+  for (const s of STORES) townCounts[s.town] = (townCounts[s.town] || 0) + 1;
+
+  const sections = [
+    { key: 'mountain', icon: '⛰️', title: '山線地區 (4 鄉鎮)', towns: REGIONS.mountain, desc: '斗六商圈、古坑咖啡、林內綠意與斗南美食' },
+    { key: 'plain', icon: '🌾', title: '平原農產區 (7 鄉鎮)', towns: REGIONS.plain, desc: '虎尾糖都、西螺米醬、土庫當歸鴨、大埤酸菜' },
+    { key: 'coastal', icon: '🌊', title: '海線漁村區 (9 鄉鎮)', towns: REGIONS.coastal, desc: '北港朝天宮、口湖鰻魚鮮蚵、台西文蛤海產' }
+  ];
+
+  let html = '';
+  for (const sec of sections) {
+    let townsHtml = '';
+    for (const t of sec.towns) {
+      const c = townCounts[t] || 0;
+      townsHtml += `
+        <button class="town-jump-btn" data-jump-town="${t}">
+          <div class="town-jump-name">${t}</div>
+          <div class="town-jump-count">${c} 間人氣店 ➔</div>
+        </button>
+      `;
+    }
+
+    html += `
+      <div class="region-card">
+        <div class="region-card-header">
+          <div>
+            <div class="region-name">${sec.icon} ${sec.title}</div>
+            <p style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">${sec.desc}</p>
+          </div>
+          <button class="town-pill region-jump-btn" data-jump-reg="${sec.key}" style="flex-shrink:0;">看全區</button>
+        </div>
+        <div class="towns-grid">
+          ${townsHtml}
+        </div>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+
+  container.querySelectorAll('.town-jump-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const town = btn.getAttribute('data-jump-town');
+      setTown(town);
+      switchTab('explore');
+    });
+  });
+
+  container.querySelectorAll('.region-jump-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const reg = btn.getAttribute('data-jump-reg');
+      setRegion(reg);
+      setTown('all', true);
+      switchTab('explore');
+    });
+  });
+}
+
+// Switch Bottom Tabs
+function switchTab(tabKey) {
+  state.tab = tabKey;
+  
+  // Navigation active states
+  document.querySelectorAll('.bottom-nav .nav-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-tab') === tabKey);
+  });
+
+  // Sections toggle
+  document.getElementById('tab-explore').style.display = tabKey === 'explore' ? 'block' : 'none';
+  document.getElementById('tab-fav').style.display = tabKey === 'fav' ? 'block' : 'none';
+  document.getElementById('tab-towns').style.display = tabKey === 'towns' ? 'block' : 'none';
+
+  // Show / hide sticky search bar in Towns or Fav view if desired
+  const stickyBar = document.getElementById('sticky-filter-bar');
+  if (tabKey === 'towns') {
+    stickyBar.style.display = 'none';
+  } else {
+    stickyBar.style.display = 'flex';
+  }
+
+  if (tabKey === 'fav') {
+    renderFavoritesList();
+  } else if (tabKey === 'towns') {
+    renderTownsTab();
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Reset all filters
+function resetAllFilters() {
+  state.search = '';
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-clear-btn').style.display = 'none';
+  state.region = 'all';
+  state.town = 'all';
+  state.cat = 'all';
+  state.openOnly = false;
+  state.priceFilter = 'all';
+  state.sortBy = 'default';
+  document.getElementById('sort-select').value = 'default';
+
+  document.querySelectorAll('#region-chips .filter-chip[data-region]').forEach(c => {
+    c.classList.toggle('active', c.getAttribute('data-region') === 'all');
+  });
+  document.querySelectorAll('#region-chips .filter-chip[data-price]').forEach(c => {
+    c.classList.remove('price-active');
+  });
+  document.querySelectorAll('#township-pills .town-pill').forEach(p => {
+    p.classList.toggle('active', p.getAttribute('data-town') === 'all');
+    p.style.display = 'inline-flex';
+  });
+  document.querySelectorAll('#category-pills .town-pill').forEach(p => {
+    p.classList.toggle('active', p.getAttribute('data-cat') === 'all');
+  });
+  document.getElementById('btn-open-only').classList.remove('accent-active');
+
+  filterAndRender();
+  showToast('已重設所有篩選');
+}
+
+// Copy to clipboard helper
+function copyTextToClipboard(text, successMsg) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast(successMsg || '複製成功');
+    }).catch(() => {
+      fallbackCopy(text, successMsg);
+    });
+  } else {
+    fallbackCopy(text, successMsg);
+  }
+}
+
+function fallbackCopy(text, successMsg) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try {
+    document.execCommand('copy');
+    showToast(successMsg || '複製成功');
+  } catch (e) {
+    showToast('複製失敗，請手動複製');
+  }
+  document.body.removeChild(ta);
+}
+
+// Web Share or fallback
+function shareStore(store) {
+  const text = '推薦雲林在地美食【' + store.name + '】\n' +
+               '📍 地址：' + store.addr + '\n' +
+               '⏰ 營業時間：' + store.hours + '\n' +
+               '🏷️ 特色：' + store.tags.join('、');
+  const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(store.name + ' ' + store.addr);
+
+  if (navigator.share) {
+    navigator.share({
+      title: store.name + ' · 雲林美食',
+      text: text,
+      url: url
+    }).catch(() => {});
+  } else {
+    copyTextToClipboard(text + '\n導航：' + url, '已複製店家資訊與導航連結！');
+  }
+}
+
+// Random Picker Modal Logic
+let spinTimer = null;
+function openRandomModal() {
+  document.getElementById('modal-random').style.display = 'flex';
+  const tagEl = document.getElementById('slot-result-tag');
+  const nameEl = document.getElementById('slot-result-name');
+  const metaEl = document.getElementById('slot-result-meta');
+  const actionsEl = document.getElementById('slot-actions');
+  tagEl.textContent = '準備抽籤';
+  nameEl.textContent = '點擊「開始抽！」';
+  metaEl.textContent = '雲林 346 間名店即刻抽選';
+  actionsEl.style.display = 'none';
+}
+
+function startRandomSpin() {
+  const scope = document.getElementById('random-scope-select').value;
+  let pool = [];
+
+  if (scope === 'current') {
+    pool = state.currentFilteredList.length > 0 ? state.currentFilteredList : STORES;
+  } else if (scope === 'mountain') {
+    pool = STORES.filter(s => REGIONS.mountain.includes(s.town));
+  } else if (scope === 'plain') {
+    pool = STORES.filter(s => REGIONS.plain.includes(s.town));
+  } else if (scope === 'coastal') {
+    pool = STORES.filter(s => REGIONS.coastal.includes(s.town));
+  } else {
+    pool = STORES;
+  }
+
+  if (pool.length === 0) pool = STORES;
+
+  const tagEl = document.getElementById('slot-result-tag');
+  const nameEl = document.getElementById('slot-result-name');
+  const metaEl = document.getElementById('slot-result-meta');
+  const actionsEl = document.getElementById('slot-actions');
+  actionsEl.style.display = 'none';
+
+  tagEl.textContent = '🎲 抽選中...';
+  
+  let counter = 0;
+  if (spinTimer) clearInterval(spinTimer);
+
+  spinTimer = setInterval(() => {
+    counter++;
+    const tempStore = pool[Math.floor(Math.random() * pool.length)];
+    nameEl.textContent = tempStore.name;
+    metaEl.textContent = tempStore.town + ' · ' + tempStore.price;
+
+    if (counter >= 16) {
+      clearInterval(spinTimer);
+      const chosen = pool[Math.floor(Math.random() * pool.length)];
+      tagEl.textContent = '🎉 幸運中選！';
+      nameEl.textContent = chosen.name;
+      metaEl.textContent = '📍 ' + chosen.town + ' · ' + chosen.addr + ' (' + (chosen.tags[0] || chosen.price) + ')';
+      
+      // Update actions
+      const cleanTel = chosen.tel ? chosen.tel.replace(/[^0-9+]/g, '') : '';
+      const callBtn = document.getElementById('slot-call-btn');
+      if (cleanTel) {
+        callBtn.href = 'tel:' + cleanTel;
+        callBtn.classList.remove('disabled');
+      } else {
+        callBtn.href = 'javascript:void(0)';
+        callBtn.classList.add('disabled');
+      }
+
+      document.getElementById('slot-nav-btn').href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(chosen.name + ' ' + chosen.addr);
+      
+      const favBtn = document.getElementById('slot-fav-btn');
+      const isFav = state.favorites.has(getStoreKey(chosen));
+      favBtn.textContent = isFav ? '❤️' : '🤍';
+      favBtn.onclick = () => {
+        toggleFavorite(chosen);
+        favBtn.textContent = state.favorites.has(getStoreKey(chosen)) ? '❤️' : '🤍';
+      };
+
+      actionsEl.style.display = 'flex';
+      showToast('今日推薦：' + chosen.name);
+    }
+  }, 75);
+}
+
+// Download Offline HTML Version
+function downloadOfflineHtml() {
+  const fullHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'yunlin-food-map-offline.html';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  showToast('已開始下載離線單檔 HTML！');
+}
+
+// Infinite Scroll / Lazy Loading
+window.addEventListener('scroll', () => {
+  // Show/hide floating top button
+  const fabTop = document.getElementById('fab-top');
+  if (window.scrollY > 350) {
+    fabTop.classList.add('show');
+  } else {
+    fabTop.classList.remove('show');
+  }
+
+  // Load more items as user scrolls near bottom
+  if (state.tab === 'explore' && state.currentRenderCount < state.currentFilteredList.length) {
+    const scrollPos = window.innerHeight + window.scrollY;
+    const threshold = document.documentElement.scrollHeight - 300;
+    if (scrollPos >= threshold) {
+      state.currentRenderCount += state.renderBatch;
+      renderCards(false);
+    }
+  }
+}, { passive: true });
+
+// Document Ready Initialization
+document.addEventListener('DOMContentLoaded', () => {
+  initFavorites();
+  initRegionBadges();
+  initTownshipPills();
+
+  // Search Input Handlers
+  const searchInput = document.getElementById('search-input');
+  const searchClear = document.getElementById('search-clear-btn');
+  searchInput.addEventListener('input', (e) => {
+    state.search = e.target.value;
+    searchClear.style.display = state.search ? 'flex' : 'none';
+    filterAndRender();
+  });
+  searchClear.addEventListener('click', () => {
+    searchInput.value = '';
+    state.search = '';
+    searchClear.style.display = 'none';
+    filterAndRender();
+  });
+
+  // Open Only Toggle
+  document.getElementById('btn-open-only').addEventListener('click', function() {
+    state.openOnly = !state.openOnly;
+    this.classList.toggle('accent-active', state.openOnly);
+    filterAndRender();
+  });
+
+  // Region Chips click & Price Chips click
+  document.getElementById('region-chips').addEventListener('click', (e) => {
+    const chip = e.target.closest('.filter-chip');
+    if (!chip) return;
+    
+    // Region chip
+    if (chip.hasAttribute('data-region')) {
+      const reg = chip.getAttribute('data-region');
+      setRegion(reg);
+      return;
+    }
+
+    // Price chip
+    if (chip.hasAttribute('data-price')) {
+      const priceVal = chip.getAttribute('data-price');
+      if (state.priceFilter === priceVal) {
+        state.priceFilter = 'all';
+        chip.classList.remove('price-active');
+      } else {
+        state.priceFilter = priceVal;
+        document.querySelectorAll('#region-chips .filter-chip[data-price]').forEach(c => {
+          c.classList.toggle('price-active', c.getAttribute('data-price') === priceVal);
+        });
+      }
+      filterAndRender();
+    }
+  });
+
+  // Category Pills click
+  document.getElementById('category-pills').addEventListener('click', (e) => {
+    const pill = e.target.closest('.town-pill');
+    if (!pill) return;
+    const cat = pill.getAttribute('data-cat');
+    state.cat = cat;
+    document.querySelectorAll('#category-pills .town-pill').forEach(p => {
+      p.classList.toggle('active', p.getAttribute('data-cat') === cat);
+    });
+    filterAndRender();
+  });
+
+  // Sort Dropdown
+  document.getElementById('sort-select').addEventListener('change', (e) => {
+    state.sortBy = e.target.value;
+    filterAndRender();
+  });
+
+  // Reset Button
+  document.getElementById('btn-reset-filters').addEventListener('click', resetAllFilters);
+
+  // Bottom Nav
+  document.querySelectorAll('.bottom-nav .nav-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.getAttribute('data-tab');
+      if (tab === 'random') {
+        openRandomModal();
+      } else {
+        switchTab(tab);
+      }
+    });
+  });
+
+  // Header Buttons
+  document.getElementById('btn-header-random').addEventListener('click', openRandomModal);
+  document.getElementById('fab-random').addEventListener('click', openRandomModal);
+  document.getElementById('fab-top').addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  document.getElementById('btn-header-pwa').addEventListener('click', () => {
+    document.getElementById('modal-pwa').style.display = 'flex';
+  });
+  document.getElementById('btn-header-download').addEventListener('click', downloadOfflineHtml);
+  document.getElementById('btn-modal-download')?.addEventListener('click', downloadOfflineHtml);
+
+  // Modal Closers
+  document.querySelectorAll('.modal-close, .modal-overlay').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target === el || el.classList.contains('modal-close')) {
+        document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+      }
+    });
+  });
+
+  // Random Modal Spin Trigger
+  document.getElementById('btn-do-spin').addEventListener('click', startRandomSpin);
+
+  // Favorites Tab Tools
+  document.getElementById('btn-copy-all-fav').addEventListener('click', () => {
+    const favStores = STORES.filter(s => state.favorites.has(getStoreKey(s)));
+    if (favStores.length === 0) {
+      showToast('目前沒有收藏店家');
+      return;
+    }
+    const textList = favStores.map((s, i) => (i + 1) + '. 【' + s.name + '】 (' + s.town + ')\n   地址：' + s.addr + (s.tel ? ' / 電話：' + s.tel : '')).join('\n\n');
+    copyTextToClipboard('⭐ 我的雲林美食收藏名單：\n\n' + textList, '已複製全部收藏清單！');
+  });
+
+  document.getElementById('btn-clear-all-fav').addEventListener('click', () => {
+    if (state.favorites.size === 0) return;
+    if (confirm('確定要清空所有收藏的店家嗎？')) {
+      state.favorites.clear();
+      saveFavorites();
+      renderFavoritesList();
+      renderCards(false);
+      showToast('已清空收藏名單');
+    }
+  });
+
+  // Device Frame Toggle on desktop
+  if (window.innerWidth >= 768) {
+    const devBtn = document.getElementById('btn-device-toggle');
+    devBtn.style.display = 'inline-flex';
+    devBtn.addEventListener('click', () => {
+      state.isMobileFrame = !state.isMobileFrame;
+      const appWrapper = document.getElementById('app-wrapper');
+      if (state.isMobileFrame) {
+        appWrapper.classList.remove('responsive-mode');
+        appWrapper.classList.add('mobile-frame-mode');
+        document.getElementById('device-toggle-icon').textContent = '💻';
+        showToast('已切換為手機模擬畫面');
+      } else {
+        appWrapper.classList.remove('mobile-frame-mode');
+        appWrapper.classList.add('responsive-mode');
+        document.getElementById('device-toggle-icon').textContent = '📱';
+        showToast('已切換為寬螢幕自適應模式');
+      }
+    });
+  }
+
+  // Initial Filter & Render
+  filterAndRender();
+});
+</script>
+</body>
+</html>
