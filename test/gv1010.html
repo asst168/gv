@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>梅山玉虛宮 - 點燈祈安登記</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            sanctuary: {
+              bg: '#FAF6EE',         // 溫暖宣紙米黃
+              card: '#FFFFFF',
+              border: '#E8DDD0',     // 暖素雅邊框
+              red: '#8A2218',        // 典雅朱砂暗紅（莊嚴）
+              redHover: '#731A12',
+              gold: '#B68226',       // 沉香暖金
+              goldLight: '#FAF2E4',  // 溫暖燭光底色
+              text: '#382921',       // 沉香木深褐（比純黑更溫和莊重）
+              muted: '#7C6B5E'       // 暖灰褐次要字
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @media print {
+      body * { visibility: hidden !important; }
+      #receipt-modal, #receipt-modal * { visibility: visible !important; }
+      #receipt-modal { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border: none; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-sanctuary-bg text-sanctuary-text antialiased pb-28 min-h-screen">
+
+<div id="app" class="max-w-md mx-auto px-4 py-5">
+
+  <!-- 頂部莊嚴標題 -->
+  <header class="text-center mb-5">
+    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-sanctuary-goldLight border border-sanctuary-gold/30 text-sanctuary-gold text-[11px] font-medium tracking-widest mb-1.5 shadow-sm">
+      <i class="fa-solid fa-sparkles text-[10px]"></i> 玄天上帝・護佑吉祥
+    </div>
+    <h1 class="text-2xl font-black tracking-wider text-sanctuary-red flex items-center justify-center gap-2">
+      梅山玉虛宮
+    </h1>
+    <div class="flex items-center justify-center gap-2 my-1">
+      <span class="h-[1px] w-8 bg-sanctuary-gold/40"></span>
+      <p class="text-xs text-sanctuary-muted tracking-wide">祈安植福・線上點燈登疏</p>
+      <span class="h-[1px] w-8 bg-sanctuary-gold/40"></span>
+    </div>
+  </header>
+
+  <form @submit.prevent="handleSubmit" class="space-y-4">
+
+    <!-- 1. 點燈項目 (溫馨暖光卡片) -->
+    <div class="bg-sanctuary-card rounded-2xl shadow-sm border border-sanctuary-border p-4">
+      <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-sanctuary-border/60">
+        <h2 class="text-sm font-bold text-sanctuary-text flex items-center gap-2">
+          <span class="w-5 h-5 rounded-full bg-sanctuary-red text-amber-50 text-[11px] flex items-center justify-center font-serif font-bold">壹</span>
+          選擇祈福燈別
+        </h2>
+        <span class="text-[11px] text-sanctuary-muted">點選 ＋ － 調整盞數</span>
+      </div>
+
+      <div class="divide-y divide-sanctuary-border/50">
+        <div 
+          v-for="lamp in lamps" 
+          :key="lamp.id" 
+          :class="lamp.count > 0 ? 'bg-amber-50/40 -mx-2 px-2 rounded-xl transition-colors' : ''"
+          class="py-2.5 flex items-center justify-between"
+        >
+          <div>
+            <div class="text-sm font-bold text-sanctuary-text flex items-center gap-1.5">
+              {{ lamp.name }}
+              <span v-if="lamp.tag" class="text-[10px] bg-amber-100/70 text-sanctuary-gold border border-amber-300/50 px-1.5 py-0.2 rounded font-normal">{{ lamp.tag }}</span>
+            </div>
+            <div class="text-xs text-sanctuary-gold font-bold mt-0.5">NT$ {{ lamp.price.toLocaleString() }}</div>
+          </div>
+          
+          <!-- 數量調整按鈕 -->
+          <div class="flex items-center gap-2">
+            <button 
+              type="button" 
+              @click="decreaseCount(lamp)" 
+              :disabled="lamp.count === 0"
+              class="w-7 h-7 rounded-full bg-sanctuary-bg text-sanctuary-text border border-sanctuary-border disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center active:scale-95 text-xs font-bold transition shadow-xs"
+            >-</button>
+            <span class="w-5 text-center font-bold text-sm text-sanctuary-text">{{ lamp.count }}</span>
+            <button 
+              type="button" 
+              @click="increaseCount(lamp)" 
+              class="w-7 h-7 rounded-full bg-sanctuary-red text-amber-50 flex items-center justify-center active:scale-95 text-xs font-bold hover:bg-sanctuary-redHover transition shadow-sm"
+            >+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 平安燈專屬六人姓名欄位 (勾選平安燈才展開) -->
+      <div v-if="hasPeaceLamp" class="mt-3 p-3 bg-sanctuary-goldLight/70 rounded-xl border border-sanctuary-gold/40">
+        <div class="text-xs font-bold text-sanctuary-gold mb-2 flex items-center gap-1.5">
+          <i class="fa-solid fa-users-rays text-sm"></i> 平安燈 閤家祈福名單 (最多可填 6 位)：
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <input 
+            v-for="i in 6" 
+            :key="i"
+            v-model="formData.peaceNames[i-1]"
+            type="text" 
+            :placeholder="'姓名 ' + i"
+            class="px-2.5 py-1.5 text-xs bg-white rounded-lg border border-sanctuary-gold/40 focus:outline-none focus:border-sanctuary-red text-sanctuary-text shadow-2xs"
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 祈福信眾資料 (溫暖素雅排列) -->
+    <div class="bg-sanctuary-card rounded-2xl shadow-sm border border-sanctuary-border p-4">
+      <div class="flex items-center justify-between mb-3 pb-2 border-b border-sanctuary-border/60">
+        <h2 class="text-sm font-bold text-sanctuary-text flex items-center gap-2">
+          <span class="w-5 h-5 rounded-full bg-sanctuary-red text-amber-50 text-[11px] flex items-center justify-center font-serif font-bold">貳</span>
+          信眾植福資料
+        </h2>
+        <span class="text-[11px] text-sanctuary-muted">恭呈疏文・神前祈福</span>
+      </div>
+
+      <div class="space-y-2.5 text-xs">
+        <div>
+          <label class="block font-semibold text-sanctuary-text mb-1">主要祈福人姓名 <span class="text-sanctuary-red">*</span></label>
+          <input v-model="formData.name" required type="text" placeholder="請輸入姓名" class="w-full px-3 py-2 rounded-xl border border-sanctuary-border bg-stone-50/40 focus:bg-white focus:outline-none focus:border-sanctuary-red transition">
+        </div>
+        <div>
+          <label class="block font-semibold text-sanctuary-text mb-1">聯絡手機 / 電話 <span class="text-sanctuary-red">*</span></label>
+          <input v-model="formData.phone" required type="tel" placeholder="例：0912-345678" class="w-full px-3 py-2 rounded-xl border border-sanctuary-border bg-stone-50/40 focus:bg-white focus:outline-none focus:border-sanctuary-red transition">
+        </div>
+        <div>
+          <label class="block font-semibold text-sanctuary-text mb-1">通訊地址 (寄送感謝收據)</label>
+          <input v-model="formData.address" type="text" placeholder="例：嘉義縣梅山鄉..." class="w-full px-3 py-2 rounded-xl border border-sanctuary-border bg-stone-50/40 focus:bg-white focus:outline-none focus:border-sanctuary-red transition">
+        </div>
+        <div>
+          <label class="block font-semibold text-sanctuary-text mb-1">農曆 / 國曆生辰與時辰 (選填)</label>
+          <input v-model="formData.birth" type="text" placeholder="例：農曆 68年5月12日 吉時 (太歲/文昌建議提供)" class="w-full px-3 py-2 rounded-xl border border-sanctuary-border bg-stone-50/40 focus:bg-white focus:outline-none focus:border-sanctuary-red transition">
+        </div>
+        <div>
+          <label class="block font-semibold text-sanctuary-text mb-1">備註 / 祈願事項</label>
+          <input v-model="formData.remark" type="text" placeholder="祈願闔家安康或特別說明" class="w-full px-3 py-2 rounded-xl border border-sanctuary-border bg-stone-50/40 focus:bg-white focus:outline-none focus:border-sanctuary-red transition">
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 劃撥繳費簡約資訊 (暖檀沉香底) -->
+    <div class="bg-sanctuary-goldLight/60 rounded-2xl p-3.5 border border-sanctuary-gold/30 text-xs">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-sanctuary-muted text-[11px]">郵政劃撥戶名：<strong class="text-sanctuary-text">梅山玉虛宮</strong></div>
+          <div class="text-sanctuary-muted text-[11px] mt-0.5">劃撥帳號：<strong class="text-base text-sanctuary-red font-mono tracking-wider font-bold">31584285</strong></div>
+        </div>
+        <button type="button" @click="copyText('31584285')" class="px-2.5 py-1.5 bg-white hover:bg-stone-50 border border-sanctuary-gold/40 rounded-lg text-sanctuary-text text-[11px] font-bold shadow-xs active:scale-95 transition">
+          <i class="fa-regular fa-copy text-sanctuary-gold mr-0.5"></i> 複製帳號
+        </button>
+      </div>
+    </div>
+
+    <!-- 廟方聯絡資訊 (莊嚴雅緻的唯一頁底) -->
+    <footer class="text-center text-[11px] text-sanctuary-muted space-y-1 pt-3 pb-2 border-t border-sanctuary-border/60">
+      <p class="font-medium text-sanctuary-text/80">梅山玉虛宮 管理委員會 敬啟</p>
+      <p>廟址：603 嘉義縣梅山鄉中山路72號</p>
+      <p>電話：05-2621135 ｜ 傳真：05-2623899</p>
+      <p>信箱：msyusyu@yahoo.com.tw</p>
+    </footer>
+
+    <!-- 手機底部浮動結算列 (優雅溫暖懸浮) -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-sanctuary-border p-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-20">
+      <div class="max-w-md mx-auto flex items-center justify-between gap-3">
+        <div>
+          <div class="text-[11px] text-sanctuary-muted">共 {{ totalCount }} 盞 ｜ 祈福功德金</div>
+          <div class="text-xl font-black text-sanctuary-red leading-tight font-serif">NT$ {{ totalPrice.toLocaleString() }}</div>
+        </div>
+        <button 
+          type="submit" 
+          :disabled="totalCount === 0"
+          class="flex-1 py-3 px-4 bg-sanctuary-red hover:bg-sanctuary-redHover disabled:opacity-40 disabled:cursor-not-allowed text-amber-50 font-bold text-sm rounded-xl transition shadow-md active:scale-[0.99] flex items-center justify-center gap-1.5"
+        >
+          <i class="fa-solid fa-paper-plane text-xs text-amber-200"></i>
+          <span>確認並送出登記</span>
+        </button>
+      </div>
+    </div>
+
+  </form>
+
+  <!-- 送出成功對話盒 (確認明細、寄 Email、列印/PDF、LINE 複製) -->
+  <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 bg-stone-900/60 backdrop-blur-xs">
+    <div id="receipt-modal" class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-sanctuary-gold/40 max-h-[90vh] overflow-y-auto">
+      
+      <!-- 收據標題 -->
+      <div class="text-center pb-3 border-b border-sanctuary-border">
+        <div class="w-10 h-10 rounded-full bg-sanctuary-goldLight text-sanctuary-gold flex items-center justify-center mx-auto mb-1.5 text-base border border-sanctuary-gold/30">
+          <i class="fa-solid fa-peace"></i>
+        </div>
+        <h3 class="text-lg font-bold text-sanctuary-text tracking-wide">梅山玉虛宮 點燈祈安疏單</h3>
+        <p class="text-[11px] text-sanctuary-muted mt-0.5">神前燈火長明・祈庇善信合家平安</p>
+      </div>
+
+      <!-- 明細清單 -->
+      <div class="py-3 text-xs space-y-1.5">
+        <div class="flex justify-between">
+          <span class="text-sanctuary-muted">祈福大德：</span>
+          <span class="font-bold text-sanctuary-text">{{ formData.name }} ({{ formData.phone }})</span>
+        </div>
+        <div v-if="formData.address" class="flex justify-between">
+          <span class="text-sanctuary-muted">通訊地址：</span>
+          <span class="text-sanctuary-text text-right">{{ formData.address }}</span>
+        </div>
+        <div v-if="formData.birth" class="flex justify-between">
+          <span class="text-sanctuary-muted">生辰時辰：</span>
+          <span class="text-sanctuary-text">{{ formData.birth }}</span>
+        </div>
+
+        <div class="pt-2 border-t border-sanctuary-border/60">
+          <div class="text-sanctuary-muted mb-1 font-semibold">奉點燈別：</div>
+          <div v-for="item in selectedLamps" :key="item.id" class="flex justify-between py-0.5">
+            <span class="text-sanctuary-text">{{ item.name }} × {{ item.count }}</span>
+            <span class="font-medium text-sanctuary-gold">NT$ {{ (item.price * item.count).toLocaleString() }}</span>
+          </div>
+        </div>
+
+        <!-- 平安燈名單 -->
+        <div v-if="filledPeaceNames.length > 0" class="p-2.5 bg-sanctuary-goldLight rounded-xl text-sanctuary-text text-[11px] mt-1.5 border border-sanctuary-gold/30">
+          <strong class="text-sanctuary-gold block mb-0.5">平安燈 祈福名錄：</strong>
+          <span class="font-medium">{{ filledPeaceNames.join('、') }}</span>
+        </div>
+
+        <div class="flex justify-between pt-2.5 border-t border-sanctuary-border text-sm font-bold">
+          <span class="text-sanctuary-text">功德金總計：</span>
+          <span class="text-sanctuary-red text-base font-serif font-black">NT$ {{ totalPrice.toLocaleString() }}</span>
+        </div>
+      </div>
+
+      <!-- 操作按鈕區 (列印時隱藏) -->
+      <div class="space-y-2 mt-3 no-print">
+        <!-- 透過 Email 傳送按鈕 -->
+        <button 
+          @click="sendEmail" 
+          class="w-full py-2.5 px-3 bg-sanctuary-red hover:bg-sanctuary-redHover text-amber-50 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-[0.99]"
+        >
+          <i class="fa-solid fa-envelope text-amber-200"></i>
+          <span>開啟信箱 寄送登記資料給廟方</span>
+        </button>
+
+        <!-- 複製至 LINE 按鈕 -->
+        <button 
+          @click="copyLineText" 
+          class="w-full py-2 px-3 bg-[#06C755] hover:bg-[#05b64e] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition active:scale-[0.99]"
+        >
+          <i class="fa-brands fa-line text-sm"></i>
+          <span>複製資料（貼至 LINE 傳給廟方）</span>
+        </button>
+
+        <!-- 列印 / 存為 PDF 按鈕 -->
+        <button 
+          @click="printReceipt" 
+          class="w-full py-2 px-3 bg-sanctuary-bg hover:bg-stone-200/70 border border-sanctuary-border text-sanctuary-text rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-[0.99]"
+        >
+          <i class="fa-solid fa-print text-sanctuary-muted"></i>
+          <span>列印或存為 PDF 存根</span>
+        </button>
+
+        <button 
+          @click="showModal = false" 
+          class="w-full py-1 text-sanctuary-muted hover:text-sanctuary-text text-xs text-center transition"
+        >
+          返回修改
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const { createApp, ref, computed } = Vue;
+
+  createApp({
+    setup() {
+      const lamps = ref([
+        { id: 1, name: '安太歲', price: 300, count: 0, tag: '本命流年' },
+        { id: 2, name: '光明燈', price: 350, count: 0, tag: '元辰光彩' },
+        { id: 3, name: '光明燈燈首', price: 1000, count: 0, tag: '尊榮限量' },
+        { id: 4, name: '文昌燈', price: 1000, count: 0, tag: '功名利達' },
+        { id: 5, name: '發財燈', price: 1000, count: 0, tag: '廣納財源' },
+        { id: 6, name: '月老燈', price: 1000, count: 0, tag: '良緣美滿' },
+        { id: 7, name: '平安燈 (合家最多6位)', price: 3600, count: 0, tag: '闔府吉慶' }
+      ]);
+
+      const formData = ref({
+        name: '',
+        phone: '',
+        address: '',
+        birth: '',
+        remark: '',
+        peaceNames: ['', '', '', '', '', '']
+      });
+
+      const showModal = ref(false);
+
+      const increaseCount = (lamp) => lamp.count++;
+      const decreaseCount = (lamp) => { if (lamp.count > 0) lamp.count--; };
+
+      const selectedLamps = computed(() => lamps.value.filter(l => l.count > 0));
+      const totalCount = computed(() => lamps.value.reduce((sum, l) => sum + l.count, 0));
+      const totalPrice = computed(() => lamps.value.reduce((sum, l) => sum + (l.price * l.count), 0));
+
+      const hasPeaceLamp = computed(() => {
+        const item = lamps.value.find(l => l.id === 7);
+        return item && item.count > 0;
+      });
+
+      const filledPeaceNames = computed(() => formData.value.peaceNames.filter(n => n && n.trim() !== ''));
+
+      // 複製劃撥帳號
+      const copyText = (text) => {
+        navigator.clipboard.writeText(text);
+        alert('已複製梅山玉虛宮郵政劃撥帳號：' + text);
+      };
+
+      // 產生文字格式的登記內容
+      const generateSummaryText = () => {
+        let lampStr = selectedLamps.value.map(l => `${l.name} x ${l.count} (NT$ ${l.price * l.count})`).join('\n');
+        let peaceStr = filledPeaceNames.value.length > 0 ? `\n平安燈閤家名冊：${filledPeaceNames.value.join('、')}` : '';
+        return `【梅山玉虛宮 點燈祈安登記】\n` +
+               `善信姓名：${formData.value.name}\n` +
+               `聯絡電話：${formData.value.phone}\n` +
+               `通訊地址：${formData.value.address || '無'}\n` +
+               `生辰八字：${formData.value.birth || '無'}\n` +
+               `祈願備註：${formData.value.remark || '無'}\n` +
+               `-------------------------\n` +
+               `點奉燈別：\n${lampStr}${peaceStr}\n` +
+               `功德金總計：NT$ ${totalPrice.value} 元\n` +
+               `郵政劃撥：31584285 (戶名：梅山玉虛宮)`;
+      };
+
+      // 1. 透過 Email 傳送
+      const sendEmail = () => {
+        const targetEmail = 'msyusyu@yahoo.com.tw';
+        const subject = encodeURIComponent(`梅山玉虛宮點燈祈安登記 - ${formData.value.name}`);
+        const body = encodeURIComponent(generateSummaryText());
+        window.location.href = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
+      };
+
+      // 2. 複製資料至 LINE
+      const copyLineText = () => {
+        navigator.clipboard.writeText(generateSummaryText());
+        alert('已複製完整祈福明細！您可以直接在 LINE 中貼上傳送給廟方工作人員。');
+      };
+
+      // 3. 列印 / 存為 PDF
+      const printReceipt = () => {
+        window.print();
+      };
+
+      const handleSubmit = () => {
+        if (totalCount.value === 0) {
+          alert('請至少選擇 1 盞祈福燈別！');
+          return;
+        }
+        showModal.value = true;
+      };
+
+      return {
+        lamps,
+        formData,
+        showModal,
+        increaseCount,
+        decreaseCount,
+        selectedLamps,
+        totalCount,
+        totalPrice,
+        hasPeaceLamp,
+        filledPeaceNames,
+        copyText,
+        sendEmail,
+        copyLineText,
+        printReceipt,
+        handleSubmit
+      };
+    }
+  }).mount('#app');
+</script>
+
+</body>
+</html>
