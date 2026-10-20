@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>家常菜 - 影音食譜庫</title>
+<style>
+  :root {
+    --bg-primary: #f6f8fa;
+    --bg-card: #ffffff;
+    --bg-card-hover: #ffffff;
+    --text-primary: #2d3748;
+    --text-secondary: #718096;
+    --text-muted: #a0aec0;
+    --border-color: #e2e8f0;
+    --primary: #27ae60;
+    --primary-hover: #219653;
+    --primary-light: #e8f8f0;
+    --accent: #e67e22;
+    --accent-hover: #d35400;
+    --danger: #e74c3c;
+    --header-gradient: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 10px 25px rgba(0,0,0,0.12);
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --badge-meat: #ff7675;
+    --badge-veg: #2ed573;
+    --badge-egg: #f1c40f;
+    --badge-seafood: #0984e3;
+    --badge-soup: #e17055;
+    --badge-other: #a29bfe;
+  }
+
+  [data-theme="dark"] {
+    --bg-primary: #0f172a;
+    --bg-card: #1e293b;
+    --bg-card-hover: #243248;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border-color: #334155;
+    --header-gradient: linear-gradient(135deg, #090d16 0%, #1e293b 100%);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-lg: 0 10px 25px rgba(0,0,0,0.5);
+    --primary-light: #163828;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; transition: background-color 0.2s, color 0.2s; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    padding: 15px;
+    min-height: 100vh;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  header {
+    background: var(--header-gradient);
+    color: #fff;
+    padding: 18px 24px;
+    border-radius: var(--radius-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-left h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+  .header-badges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .header-status { font-size: 12px; background: rgba(255,255,255,0.18); padding: 4px 12px; border-radius: 20px; backdrop-filter: blur(4px); }
+  .status-synced { background: #27ae60 !important; color: #fff; font-weight: bold; }
+  .status-unsynced { background: #e67e22 !important; color: #fff; font-weight: bold; }
+
+  .theme-toggle {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .theme-toggle:hover { background: rgba(255,255,255,0.25); }
+
+  .file-alert-banner {
+    display: none;
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    color: #795548;
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  [data-theme="dark"] .file-alert-banner {
+    background: #2a220a;
+    border-color: #5d4606;
+    color: #ffe082;
+  }
+  .btn-jump {
+    background: #27ae60;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .btn-jump:hover { background: #219150; }
+
+  .controls { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+  .control-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; }
+  .btn-group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+  .btn {
+    padding: 7px 14px;
+    border: 1px solid transparent;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    box-shadow: var(--shadow-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    user-select: none;
+  }
+  .btn:hover { background: var(--border-color); transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 2px 8px rgba(39, 174, 96, 0.35); }
+
+  .btn-add { background: var(--accent); color: white; }
+  .btn-add:hover { background: var(--accent-hover); }
+  .btn-linkfile { background: #16a085; color: white; }
+  .btn-linkfile:hover { background: #138d75; }
+  .btn-json { background: #607d8b; color: white; }
+  .btn-json:hover { background: #546e7a; }
+
+  .search-box { position: relative; display: flex; align-items: center; }
+  .search-input {
+    padding: 7px 14px 7px 32px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border-radius: 20px;
+    width: 200px;
+    font-size: 13px;
+    outline: none;
+    box-shadow: var(--shadow-sm);
+  }
+  .search-input:focus {
+    border-color: var(--primary);
+    width: 240px;
+    box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.2);
+    transition: width 0.25s ease;
+  }
+  .search-icon { position: absolute; left: 10px; color: var(--text-muted); font-size: 13px; pointer-events: none; }
+  .sort-select {
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border-radius: 20px;
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .meta-bar {
+    font-size: 13px;
+    color: var(--text-secondary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 4px 8px 4px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .card {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid var(--border-color);
+    position: relative;
+  }
+  .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); background: var(--bg-card-hover); }
+  
+  .card-header { position: relative; cursor: pointer; aspect-ratio: 16 / 9; background: #000; overflow: hidden; }
+  .card-header img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease; }
+  .card:hover .card-header img { transform: scale(1.04); }
+  
+  .play-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .card-header:hover .play-overlay { opacity: 1; }
+  .play-icon {
+    background: var(--danger);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .favorite-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    backdrop-filter: blur(4px);
+    z-index: 2;
+    transition: transform 0.15s, background-color 0.15s;
+  }
+  .favorite-btn:hover { transform: scale(1.15); background: rgba(0, 0, 0, 0.75); }
+  .favorite-btn.active { color: #ff4757; text-shadow: 0 0 4px rgba(255, 71, 87, 0.6); }
+
+  .card-body { padding: 12px 14px; flex-grow: 1; display: flex; flex-direction: column; }
+  .badge-category {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    padding: 3px 8px;
+    border-radius: 6px;
+    align-self: flex-start;
+    margin-bottom: 8px;
+    letter-spacing: 0.3px;
+  }
+  .cat-meat { background-color: var(--badge-meat); }
+  .cat-veg { background-color: var(--badge-veg); }
+  .cat-egg { background-color: var(--badge-egg); color: #333; }
+  .cat-seafood { background-color: var(--badge-seafood); }
+  .cat-soup { background-color: var(--badge-soup); }
+  .cat-rice { background-color: #d68910; }
+  .cat-other { background-color: var(--badge-other); }
+
+  .card-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; color: var(--text-primary); line-height: 1.4; }
+  .card-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; word-break: break-word; white-space: pre-wrap; flex-grow: 1; }
+  
+  .card-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border-color);
+    padding: 10px 14px;
+    background: var(--bg-primary);
+    font-size: 12px;
+  }
+  .card-actions a { color: var(--primary); text-decoration: none; font-weight: bold; display: flex; align-items: center; gap: 3px; }
+  .card-actions a:hover { text-decoration: underline; }
+  .action-btns { display: flex; gap: 10px; }
+  .edit-btn, .del-btn, .copy-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+  .edit-btn { color: var(--primary); }
+  .edit-btn:hover { background: var(--primary-light); }
+  .del-btn { color: var(--danger); }
+  .del-btn:hover { background: rgba(231, 76, 60, 0.1); }
+  .copy-btn { color: var(--text-secondary); }
+  .copy-btn:hover { color: var(--text-primary); }
+
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(3px);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 15px;
+    animation: fadeIn 0.15s ease-out;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal-content {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    padding: 24px;
+    border-radius: var(--radius-md);
+    width: 100%;
+    max-width: 440px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+    position: relative;
+  }
+  .modal-content h3 { margin-bottom: 16px; font-size: 18px; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary); }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.2);
+  }
+  .modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+
+  .player-modal-content {
+    background: #111827;
+    padding: 14px;
+    border-radius: var(--radius-md);
+    width: 100%;
+    max-width: 860px;
+    position: relative;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+  }
+  .video-container { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: #000; }
+  .video-container iframe { width: 100%; height: 100%; border: none; }
+  .close-player {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    background: var(--danger);
+    color: white;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .close-player:hover { transform: scale(1.1); }
+  .player-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    color: #e2e8f0;
+    font-size: 13px;
+    padding: 0 6px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .player-footer a { color: #60a5fa; text-decoration: none; font-weight: 600; }
+  .player-footer a:hover { text-decoration: underline; }
+
+  .toast-container { position: fixed; top: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .toast {
+    background: #1e293b;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: auto;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast-success { border-left: 4px solid #2ecc71; }
+  .toast-info { border-left: 4px solid #3498db; }
+  .toast-warning { border-left: 4px solid #f1c40f; }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-secondary); grid-column: 1 / -1; }
+  .empty-state h4 { font-size: 16px; margin-bottom: 6px; color: var(--text-primary); }
+
+  @media (max-width: 650px) {
+    header h1 { font-size: 18px; }
+    .search-input { width: 100%; }
+    .search-input:focus { width: 100%; }
+    .search-box { width: 100%; }
+    .control-row { flex-direction: column; align-items: stretch; }
+    .btn-group { justify-content: flex-start; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="container">
+  <header>
+    <div class="header-left">
+      <h1>🍲 家常菜 - 影音食譜庫</h1>
+      <button class="theme-toggle" onclick="toggleTheme()" id="themeToggleBtn" title="切換深淺模式">
+        <span id="themeIcon">🌙</span> <span id="themeText">夜間</span>
+      </button>
+    </div>
+    <div class="header-badges">
+      <span class="header-status" id="dataSourceStatus">讀取中...</span>
+    </div>
+  </header>
+
+  <div class="file-alert-banner" id="fileAlertBanner">
+    <span>💡 <b>目前為本機檔案模式</b>：點擊影片將開新分頁播放避免 YouTube 跨網域限制；推薦透過您的專屬伺服器網址瀏覽。</span>
+    <a class="btn-jump" href="https://mini.tail0fcdc2.ts.net/food.html">前往伺服器 ↗</a>
+  </div>
+
+  <div class="controls">
+    <!-- 分類過濾與搜尋排序 -->
+    <div class="control-row">
+      <div class="btn-group" id="categoryButtonGroup">
+        <button class="btn active" onclick="filterCategory('全部')">全部</button>
+        <button class="btn" onclick="filterCategory('❤️ 收藏')">❤️ 收藏</button>
+        <button class="btn" onclick="filterCategory('肉類')">肉類</button>
+        <button class="btn" onclick="filterCategory('蛋/豆腐')">蛋/豆腐</button>
+        <button class="btn" onclick="filterCategory('海鮮')">海鮮</button>
+        <button class="btn" onclick="filterCategory('蔬菜')">蔬菜</button>
+        <button class="btn" onclick="filterCategory('湯品')">湯品</button>
+      </div>
+
+      <div class="btn-group">
+        <select class="sort-select" id="sortSelect" onchange="renderGrid()">
+          <option value="default">預設排序 (最新優先)</option>
+          <option value="title-asc">菜名字母 / 筆劃</option>
+          <option value="fav-first">❤️ 收藏料理優先</option>
+          <option value="category">依分類分組</option>
+        </select>
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" class="search-input" placeholder="搜尋菜名或備註..." oninput="renderGrid()">
+        </div>
+      </div>
+    </div>
+
+    <!-- 食譜管理操作 -->
+    <div class="control-row">
+      <div class="btn-group">
+        <button class="btn btn-add" onclick="openModalForAdd()">＋ 新增料理</button>
+        <button class="btn btn-linkfile" id="btnLinkFile" onclick="bindLocalFile()" title="綁定硬碟中的 cooking_recipes_backup.json，之後修改自動寫回（Chrome/Edge）">🔗 綁定磁碟 JSON</button>
+        <button class="btn btn-json" onclick="exportJSON()" title="備份 JSON">📥 匯出</button>
+        <button class="btn btn-json" onclick="document.getElementById('importFile').click()" title="還原 JSON">📤 匯入</button>
+        <input type="file" id="importFile" style="display:none" accept=".json" onchange="importJSON(event)">
+      </div>
+    </div>
+  </div>
+
+  <div class="meta-bar">
+    <span id="recipeCount">顯示 0 道菜</span>
+    <span id="envTip" style="font-size: 12px; opacity: 0.85;">💡 提示：點擊卡片右上角 ❤️ 可收藏常用食譜</span>
+  </div>
+
+  <div class="grid" id="recipeGrid"></div>
+</div>
+
+<div class="modal" id="recipeModal" onclick="handleBackdropClick(event, 'recipeModal')">
+  <div class="modal-content">
+    <h3 id="modalTitle">新增料理食譜</h3>
+    <input type="hidden" id="editIndex" value="">
+    <div class="form-group">
+      <label>菜名：</label>
+      <input type="text" id="inputTitle" placeholder="例如：蒜泥白切肉">
+    </div>
+    <div class="form-group">
+      <label>分類：</label>
+      <select id="inputCategory" onchange="checkCustomCategory(this.value)">
+        <option value="肉類">肉類</option>
+        <option value="蛋/豆腐">蛋/豆腐</option>
+        <option value="海鮮">海鮮</option>
+        <option value="蔬菜">蔬菜</option>
+        <option value="湯品">湯品</option>
+        <option value="custom">＋ 自訂其他分類...</option>
+      </select>
+      <input type="text" id="inputCustomCategory" placeholder="請輸入新分類名稱" style="display:none; margin-top:6px;">
+    </div>
+    <div class="form-group">
+      <label>YouTube 網址：</label>
+      <input type="text" id="inputUrl" placeholder="例如：https://www.youtube.com/watch?v=... 或 shorts">
+    </div>
+    <div class="form-group">
+      <label>備註 / 心得 / 調味料重點：</label>
+      <textarea id="inputDesc" rows="3" placeholder="例如：肉質鮮嫩，沾蒜頭醬油絕配；小火煮8分鐘。"></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-add" id="btnSave" onclick="saveRecipe()">儲存食譜</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="playerModal" onclick="handleBackdropClick(event, 'playerModal')">
+  <div class="player-modal-content">
+    <button class="close-player" onclick="closePlayer()" title="關閉 (ESC)">✕</button>
+    <div class="video-container">
+      <iframe id="modalYtIframe" src="" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <div class="player-footer">
+      <span id="playerVideoTitle" style="font-weight: bold;"></span>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <a href="javascript:void(0)" onclick="copyCurrentVideoUrl()">📋 複製連結</a>
+        <a id="playerExternalLink" href="#" target="_blank">另開原分頁 ↗</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const JSON_FILE_NAME = 'cooking_recipes_backup.json';
+const isLocalFile = window.location.protocol === 'file:';
+const LS_KEY = 'my_cooking_recipes';
+const CAT_BASE = ['肉類', '蛋/豆腐', '海鮮', '蔬菜', '湯品'];
+
+const defaultRecipes = [
+  {
+    id: 1792483966626,
+    title: "蘿蔔排骨湯",
+    category: "湯品",
+    url: "https://www.youtube.com/watch?v=tR4OaTqh76g",
+    desc: "蘿蔔，玉米都適用。",
+    favorite: true
+  },
+  {
+    id: 1,
+    title: "蒜泥白切肉",
+    category: "肉類",
+    url: "https://www.youtube.com/watch?v=cP90MzdUMFk",
+    desc: "肉質鮮嫩，沾蒜頭醬油絕配",
+    favorite: true
+  },
+  {
+    id: 2,
+    title: "小白菜炒冬粉",
+    category: "蔬菜",
+    url: "https://youtu.be/FByUORosacE",
+    desc: "清爽吸汁，超下飯",
+    favorite: false
+  },
+  {
+    id: 3,
+    title: "蕃茄炒蛋",
+    category: "蛋/豆腐",
+    url: "https://www.youtube.com/watch?v=IG7t-P3PHN0",
+    desc: "經典滑嫩酸甜",
+    favorite: false
+  }
+];
+
+let recipes = [];
+let currentCategory = "全部";
+let localFileHandle = null;
+let currentPlayingUrl = '';
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  const icon = type === 'success' ? '✅' : type === 'warning' ? '⚠️' : '💡';
+  toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+  container.appendChild(toast);
+  
+  setTimeout(() => toast.classList.add('show'), 10);
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 250);
+  }, 3200);
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('cooking_theme') || 'light';
+  applyTheme(saved);
+}
+
+function applyTheme(theme) {
+  if (theme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.getElementById('themeIcon').innerText = '☀️';
+    document.getElementById('themeText').innerText = '日間';
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    document.getElementById('themeIcon').innerText = '🌙';
+    document.getElementById('themeText').innerText = '夜間';
+  }
+  localStorage.setItem('cooking_theme', theme);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+function getYouTubeId(url) {
+  if (!url) return '';
+  const regExp = /(?:youtube\.com\/(?:watch\?.*v=|embed\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const match = url.match(regExp);
+  return match ? match[1] : '';
+}
+
+// ===== JSON 資料整理：容錯、去重、補欄位 =====
+function stripBom(t) { return t.charCodeAt(0) === 0xFEFF ? t.slice(1) : t; }
+
+function normalizeRecipes(input) {
+  const src = Array.isArray(input) ? input : (input && Array.isArray(input.recipes) ? input.recipes : null);
+  const res = { list: [], bad: 0, dup: 0, idFixed: 0, valid: src !== null };
+  if (!src) return res;
+  const byKey = new Map(), ids = new Set();
+  src.forEach((r, i) => {
+    const title = r && String(r.title || '').trim();
+    const url = r && String(r.url || '').trim();
+    if (!title || !url) { res.bad++; return; }
+    const key = getYouTubeId(url) || url;
+    const fav = r.favorite === true || r.favorite === 'true';
+    if (byKey.has(key)) { if (fav) byKey.get(key).favorite = true; res.dup++; return; }
+    let id = Number(r.id);
+    if (!Number.isFinite(id) || id <= 0 || ids.has(id)) {
+      id = Date.now() + i;
+      while (ids.has(id)) id++;
+      res.idFixed++;
+    }
+    ids.add(id);
+    const item = { id, title, category: String(r.category || '').trim() || '其他', url, desc: String(r.desc || '').trim(), favorite: fav };
+    byKey.set(key, item);
+    res.list.push(item);
+  });
+  return res;
+}
+
+function reportNormalize(n) {
+  if (n.bad || n.dup || n.idFixed) {
+    showToast(`JSON 已整理：略過無效 ${n.bad}、重複 ${n.dup}、修正編號 ${n.idFixed}`, 'info');
+  }
+}
+
+// ===== 磁碟檔案代碼 (FileSystemFileHandle) 存進 IndexedDB，重開頁面仍記得 =====
+function idbOpen() {
+  return new Promise((res, rej) => {
+    const q = indexedDB.open('food_db', 1);
+    q.onupgradeneeded = () => q.result.createObjectStore('kv');
+    q.onsuccess = () => res(q.result);
+    q.onerror = () => rej(q.error);
+  });
+}
+async function idbGet(k) {
+  const db = await idbOpen();
+  return new Promise(res => {
+    const r = db.transaction('kv').objectStore('kv').get(k);
+    r.onsuccess = () => res(r.result || null);
+    r.onerror = () => res(null);
+  });
+}
+async function idbSet(k, v) {
+  const db = await idbOpen();
+  return new Promise(res => {
+    const t = db.transaction('kv', 'readwrite');
+    t.objectStore('kv').put(v, k);
+    t.oncomplete = () => res();
+    t.onerror = () => res();
+  });
+}
+async function verifyPermission(h) {
+  const o = { mode: 'readwrite' };
+  if ((await h.queryPermission(o)) === 'granted') return true;
+  return (await h.requestPermission(o)) === 'granted';
+}
+function updateBindButton() {
+  const b = document.getElementById('btnLinkFile');
+  if (localFileHandle) { b.innerText = '✅ 已綁定 ' + localFileHandle.name; b.style.background = '#27ae60'; }
+  else { b.innerText = '🔗 綁定磁碟 JSON'; b.style.background = ''; }
+}
+function setSync(ok, text) {
+  const el = document.getElementById('dataSourceStatus');
+  el.className = 'header-status ' + (ok ? 'status-synced' : 'status-unsynced');
+  el.innerText = text;
+}
+
+async function init() {
+  initTheme();
+  const statusEl = document.getElementById('dataSourceStatus');
+  const envTipEl = document.getElementById('envTip');
+  const fileAlertBanner = document.getElementById('fileAlertBanner');
+
+  if (isLocalFile) {
+    fileAlertBanner.style.display = 'flex';
+    envTipEl.innerHTML = '⚡ 本機檔案模式：點擊卡片將開新分頁播放，避免 153 / 跨域限制';
+  } else {
+    envTipEl.innerText = '💡 提示：可按鍵盤 ESC 快速關閉影片彈窗，點擊 ❤️ 可收藏料理';
+  }
+
+  let loaded = false;
+
+  // 1. 同目錄 / 伺服器上的 JSON
+  try {
+    const res = await fetch(JSON_FILE_NAME, { cache: 'no-cache' });
+    if (res.ok) {
+      const n = normalizeRecipes(JSON.parse(stripBom(await res.text())));
+      if (n.list.length) {
+        recipes = n.list;
+        statusEl.innerText = `📁 已讀取同目錄 ${JSON_FILE_NAME}`;
+        loaded = true;
+        reportNormalize(n);
+      }
+    }
+  } catch (err) {}
+
+  // 2. 曾綁定的磁碟 JSON（已授權才自動讀）
+  try {
+    localFileHandle = await idbGet('handle');
+    updateBindButton();
+    if (!loaded && localFileHandle && (await localFileHandle.queryPermission({ mode: 'readwrite' })) === 'granted') {
+      const n = normalizeRecipes(JSON.parse(stripBom(await (await localFileHandle.getFile()).text())));
+      if (n.list.length) {
+        recipes = n.list;
+        statusEl.innerText = '🔗 已讀取綁定的磁碟 JSON';
+        loaded = true;
+        reportNormalize(n);
+      }
+    }
+  } catch (err) {}
+
+  // 3. 瀏覽器暫存 / 範例
+  if (!loaded) {
+    const localData = localStorage.getItem(LS_KEY);
+    let n = null;
+    try { n = localData ? normalizeRecipes(JSON.parse(localData)) : null; } catch (e) {}
+    if (n && n.list.length) {
+      recipes = n.list;
+      statusEl.innerText = '💾 使用暫存快取';
+    } else {
+      recipes = defaultRecipes;
+      statusEl.innerText = '✨ 使用範例食譜';
+    }
+  }
+
+  updateCategoryButtons();
+  renderGrid();
+}
+
+function getCategoryBadgeClass(category) {
+  switch (category) {
+    case '肉類': return 'badge-category cat-meat';
+    case '蔬菜': return 'badge-category cat-veg';
+    case '蛋/豆腐': return 'badge-category cat-egg';
+    case '海鮮': return 'badge-category cat-seafood';
+    case '湯品': return 'badge-category cat-soup';
+    case '米飯': return 'badge-category cat-rice';
+    default: return 'badge-category cat-other';
+  }
+}
+
+function getAllCategories() {
+  const set = new Set(CAT_BASE);
+  recipes.forEach(r => { if (r.category) set.add(r.category); });
+  return [...set];
+}
+
+function updateCategoryButtons() {
+  const cats = getAllCategories();
+  if (!['全部', '❤️ 收藏'].includes(currentCategory) && !cats.includes(currentCategory)) currentCategory = '全部';
+
+  const btn = (val, n) => `<button class="btn ${currentCategory === val ? 'active' : ''}" onclick="filterCategory(${escapeHtml(JSON.stringify(val))})">${escapeHtml(val)} <small>(${n})</small></button>`;
+  let html = btn('全部', recipes.length) + btn('❤️ 收藏', recipes.filter(r => r.favorite).length);
+  cats.forEach(c => { html += btn(c, recipes.filter(r => r.category === c).length); });
+  document.getElementById('categoryButtonGroup').innerHTML = html;
+
+  // 編輯視窗的分類下拉選單同步（JSON 內出現新分類，例如「米飯」，也會自動加入）
+  const sel = document.getElementById('inputCategory');
+  const prev = sel.value;
+  sel.innerHTML = cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') +
+                  '<option value="custom">＋ 自訂其他分類...</option>';
+  if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+}
+
+function renderGrid() {
+  const grid = document.getElementById('recipeGrid');
+  const countEl = document.getElementById('recipeCount');
+  const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+  const sortOption = document.getElementById('sortSelect').value;
+  grid.innerHTML = '';
+
+  let filtered = recipes.filter(item => {
+    let matchCat = true;
+    if (currentCategory === '❤️ 收藏') {
+      matchCat = Boolean(item.favorite);
+    } else if (currentCategory !== '全部') {
+      matchCat = item.category === currentCategory;
+    }
+    const matchKey = !keyword ||
+                     item.title.toLowerCase().includes(keyword) ||
+                     (item.category || '').toLowerCase().includes(keyword) ||
+                     (item.desc && item.desc.toLowerCase().includes(keyword));
+    return matchCat && matchKey;
+  });
+
+  if (sortOption === 'title-asc') {
+    filtered.sort((a, b) => a.title.localeCompare(b.title, 'zh-Hant'));
+  } else if (sortOption === 'fav-first') {
+    filtered.sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0));
+  } else if (sortOption === 'category') {
+    filtered.sort((a, b) => (a.category || '').localeCompare(b.category || '', 'zh-Hant'));
+  } else {
+    filtered.sort((a, b) => (b.id || 0) - (a.id || 0));
+  }
+
+  countEl.innerText = `顯示 ${filtered.length} 道料理 (全部共 ${recipes.length} 道)`;
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div style="font-size: 40px; margin-bottom: 10px;">🍳</div>
+        <h4>沒有找到符合條件的料理</h4>
+        <p>可以嘗試更換搜尋關鍵字，或點擊「＋ 新增料理」！</p>
+      </div>
+    `;
+    return;
+  }
+
+  filtered.forEach(item => {
+    const ytId = getYouTubeId(item.url);
+    const imgUrl = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : '';
+    const isFav = Boolean(item.favorite);
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-header" onclick="playById(${item.id})">
+        <img src="${imgUrl}" alt="${escapeHtml(item.title)}" loading="lazy" onerror="this.onerror=null;this.src='https://img.youtube.com/vi/${ytId}/mqdefault.jpg'">
+        <button class="favorite-btn ${isFav ? 'active' : ''}" title="${isFav ? '取消收藏' : '加入收藏'}" onclick="toggleFavorite(event, ${item.id})">
+          ${isFav ? '❤️' : '🤍'}
+        </button>
+        <div class="play-overlay"><span class="play-icon">▶ 播放教學</span></div>
+      </div>
+      <div class="card-body">
+        <span class="${getCategoryBadgeClass(item.category)}">${escapeHtml(item.category || '未分類')}</span>
+        <div class="card-title">${escapeHtml(item.title)}</div>
+        <div class="card-desc">${escapeHtml(item.desc || '暫無料理筆記')}</div>
+      </div>
+      <div class="card-actions">
+        <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">YouTube ↗</a>
+        <div class="action-btns">
+          <button class="copy-btn" onclick="copyRecipeText(${item.id})" title="複製食譜重點">📋 複製</button>
+          <button class="edit-btn" onclick="openModalForEdit(${item.id})">編輯</button>
+          <button class="del-btn" onclick="deleteRecipe(${item.id})">刪除</button>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function filterCategory(cat) {
+  currentCategory = cat;
+  updateCategoryButtons();
+  renderGrid();
+}
+
+async function toggleFavorite(e, id) {
+  e.stopPropagation();
+  const item = recipes.find(r => r.id === id);
+  if (!item) return;
+  item.favorite = !item.favorite;
+  updateCategoryButtons();
+  renderGrid();
+  showToast(item.favorite ? `已將「${item.title}」加入收藏 ❤️` : `已取消收藏「${item.title}」`, 'info');
+  await persistRecipes(false);
+}
+
+function copyRecipeText(id) {
+  const item = recipes.find(r => r.id === id);
+  if (!item) return;
+  const text = `🍲【${item.title}】(${item.category})\n筆記：${item.desc || '無'}\n教學網址：${item.url}`;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('食譜資訊已複製至剪貼簿！', 'success');
+  }).catch(() => {
+    showToast('複製失敗，請手動複製', 'warning');
+  });
+}
+
+function playById(id) {
+  const r = recipes.find(x => x.id === id);
+  if (r) playVideoModal(r.title, r.url);
+}
+
+function playVideoModal(title, url) {
+  const ytId = getYouTubeId(url);
+  if (!ytId) {
+    showToast('YouTube 網址格式不正確！', 'warning');
+    return;
+  }
+
+  currentPlayingUrl = url;
+
+  if (isLocalFile) {
+    window.open(`https://www.youtube.com/watch?v=${ytId}`, '_blank');
+  } else {
+    const embedUrl = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3`;
+    const iframe = document.getElementById('modalYtIframe');
+    iframe.src = embedUrl;
+    document.getElementById('playerVideoTitle').innerText = title;
+    document.getElementById('playerExternalLink').href = url;
+    document.getElementById('playerModal').style.display = 'flex';
+  }
+}
+
+function closePlayer() {
+  document.getElementById('modalYtIframe').src = '';
+  document.getElementById('playerModal').style.display = 'none';
+}
+
+function copyCurrentVideoUrl() {
+  if (currentPlayingUrl) {
+    navigator.clipboard.writeText(currentPlayingUrl);
+    showToast('已複製 YouTube 連結！', 'success');
+  }
+}
+
+function checkCustomCategory(val) {
+  const customInput = document.getElementById('inputCustomCategory');
+  if (val === 'custom') {
+    customInput.style.display = 'block';
+    customInput.focus();
+  } else {
+    customInput.style.display = 'none';
+  }
+}
+
+function openModalForAdd() {
+  document.getElementById('modalTitle').innerText = '新增料理食譜';
+  document.getElementById('editIndex').value = '';
+  document.getElementById('inputTitle').value = '';
+  document.getElementById('inputUrl').value = '';
+  document.getElementById('inputDesc').value = '';
+  document.getElementById('inputCategory').value = '肉類';
+  document.getElementById('inputCustomCategory').style.display = 'none';
+  document.getElementById('inputCustomCategory').value = '';
+  document.getElementById('recipeModal').style.display = 'flex';
+}
+
+function openModalForEdit(id) {
+  const item = recipes.find(r => r.id === id);
+  if (!item) return;
+  
+  document.getElementById('modalTitle').innerText = '修改料理食譜';
+  document.getElementById('editIndex').value = item.id;
+  document.getElementById('inputTitle').value = item.title;
+  document.getElementById('inputUrl').value = item.url;
+  document.getElementById('inputDesc').value = item.desc || '';
+
+  const select = document.getElementById('inputCategory');
+  const customInput = document.getElementById('inputCustomCategory');
+  
+  let found = false;
+  for (let opt of select.options) {
+    if (opt.value === item.category) {
+      select.value = item.category;
+      customInput.style.display = 'none';
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    select.value = 'custom';
+    customInput.style.display = 'block';
+    customInput.value = item.category || '';
+  }
+
+  document.getElementById('recipeModal').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('recipeModal').style.display = 'none';
+}
+
+async function saveRecipe() {
+  const editId = document.getElementById('editIndex').value;
+  const title = document.getElementById('inputTitle').value.trim();
+  const selectCat = document.getElementById('inputCategory').value;
+  const customCat = document.getElementById('inputCustomCategory').value.trim();
+  const category = (selectCat === 'custom' ? (customCat || '其他') : selectCat);
+  const url = document.getElementById('inputUrl').value.trim();
+  const desc = document.getElementById('inputDesc').value.trim();
+
+  if (!title || !url) {
+    showToast('請務必填寫菜名與 YouTube 網址！', 'warning');
+    return;
+  }
+
+  const key = getYouTubeId(url) || url;
+  const dupItem = recipes.find(r => String(r.id) !== editId && (getYouTubeId(r.url) || r.url) === key);
+  if (dupItem) {
+    showToast(`此影片已存在於「${dupItem.title}」，不重複新增`, 'warning');
+    return;
+  }
+
+  if (editId === '') {
+    recipes.unshift({ id: Date.now(), title, category, url, desc, favorite: false });
+    showToast(`成功新增料理「${title}」！`, 'success');
+  } else {
+    const idx = recipes.findIndex(r => r.id == editId);
+    if (idx !== -1) {
+      recipes[idx] = { ...recipes[idx], title, category, url, desc };
+      showToast(`已更新「${title}」！`, 'success');
+    }
+  }
+
+  closeModal();
+  updateCategoryButtons();
+  renderGrid();
+  await persistRecipes(true);
+}
+
+async function deleteRecipe(id) {
+  const item = recipes.find(r => r.id === id);
+  if (!item) return;
+  if (confirm(`確定要刪除料理【${item.title}】嗎？`)) {
+    recipes = recipes.filter(r => r.id !== id);
+    updateCategoryButtons();
+    renderGrid();
+    showToast(`已刪除「${item.title}」`, 'info');
+    await persistRecipes(true);
+  }
+}
+
+let warnedUnsynced = false;
+
+// 寫入順序：伺服器 /api/save → 已綁定磁碟檔 → 僅瀏覽器暫存（提醒一次）
+async function persistRecipes(notice = true) {
+  const jsonStr = JSON.stringify(recipes, null, 2);
+  try { localStorage.setItem(LS_KEY, jsonStr); } catch (e) {}
+
+  if (!isLocalFile) {
+    try {
+      const r = await fetch('/api/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: jsonStr });
+      if (r.ok) {
+        setSync(true, '🟢 伺服器已寫入 JSON');
+        if (notice) showToast(`${JSON_FILE_NAME} 已同步更新！`, 'success');
+        return true;
+      }
+    } catch (e) {}
+  }
+
+  if (localFileHandle) {
+    try {
+      if (await verifyPermission(localFileHandle)) {
+        const w = await localFileHandle.createWritable();
+        await w.write(jsonStr);
+        await w.close();
+        setSync(true, '🟢 已寫入磁碟 JSON');
+        if (notice) showToast('已寫入磁碟 JSON！', 'success');
+        return true;
+      }
+    } catch (err) { console.warn('寫入檔案出錯:', err); }
+  }
+
+  setSync(false, '🟡 未寫入 JSON（僅瀏覽器暫存）');
+  if (!warnedUnsynced) {
+    warnedUnsynced = true;
+    showToast('尚未寫入 JSON 檔：請按「🔗 綁定磁碟 JSON」或「📥 匯出」', 'warning');
+  }
+  return false;
+}
+
+async function bindLocalFile() {
+  if (!('showOpenFilePicker' in window)) {
+    showToast('此瀏覽器不支援直接寫檔（請用 Chrome / Edge），可改用「匯出」', 'warning');
+    return;
+  }
+  try {
+    const [h] = await window.showOpenFilePicker({ id: 'food-export', types: [{ description: 'JSON 檔案', accept: { 'application/json': ['.json'] } }] });
+    if (!(await verifyPermission(h))) { showToast('未取得寫入授權', 'warning'); return; }
+    localFileHandle = h;
+    await idbSet('handle', h);
+    updateBindButton();
+
+    // 先看檔案內容，避免用畫面舊資料誤蓋掉磁碟檔
+    let n = null;
+    try { n = normalizeRecipes(JSON.parse(stripBom(await (await h.getFile()).text()))); } catch (e) {}
+    if (n && n.list.length && confirm(`該檔有 ${n.list.length} 道料理。\n\n確定＝以該檔內容為準載入\n取消＝以目前畫面資料覆寫該檔`)) {
+      recipes = n.list;
+      updateCategoryButtons();
+      renderGrid();
+      reportNormalize(n);
+    }
+    await persistRecipes(true);
+  } catch (err) {
+    if (err.name !== 'AbortError') showToast('綁定失敗：' + err.message, 'warning');
+  }
+}
+
+async function exportJSON() {
+  const jsonStr = JSON.stringify(recipes, null, 2);
+
+  // Chrome / Edge：開「另存新檔」視窗，由您決定位置；預設停在已綁定 JSON 所在資料夾（例如 K:\），之後瀏覽器會記住上次位置
+  if ('showSaveFilePicker' in window) {
+    try {
+      const opts = {
+        id: 'food-export',
+        suggestedName: JSON_FILE_NAME,
+        types: [{ description: 'JSON 檔案', accept: { 'application/json': ['.json'] } }]
+      };
+      if (localFileHandle) opts.startIn = localFileHandle;
+      const h = await window.showSaveFilePicker(opts);
+      const w = await h.createWritable();
+      await w.write(jsonStr);
+      await w.close();
+      showToast(`已匯出到：${h.name}`, 'success');
+    } catch (err) {
+      if (err.name !== 'AbortError') showToast('匯出失敗：' + err.message, 'warning');
+    }
+    return;
+  }
+
+  // 其他瀏覽器：一般下載（位置由瀏覽器設定決定）
+  const url = URL.createObjectURL(new Blob([jsonStr], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = JSON_FILE_NAME;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast('已匯出食譜備份檔案（下載資料夾）', 'success');
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  event.target.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    let data;
+    try { data = JSON.parse(stripBom(e.target.result)); }
+    catch (err) { showToast('解析 JSON 失敗：' + err.message, 'warning'); return; }
+
+    const n = normalizeRecipes(data);
+    if (!n.valid || !n.list.length) { showToast('JSON 格式不正確或沒有有效食譜！', 'warning'); return; }
+
+    const info = `讀到 ${n.list.length} 道有效料理（略過無效 ${n.bad}、重複 ${n.dup}）。`;
+    if (confirm(info + '\n\n確定＝合併進現有食譜（重複影片略過）\n取消＝下一步可選「整批取代」')) {
+      recipes = normalizeRecipes([...recipes, ...n.list]).list;
+      showToast(`已合併，目前共 ${recipes.length} 道`, 'success');
+    } else if (confirm(`整批取代？\n現有 ${recipes.length} 道將被 ${n.list.length} 道取代。`)) {
+      recipes = n.list;
+      showToast(`已取代，目前共 ${recipes.length} 道`, 'success');
+    } else {
+      return;
+    }
+    updateCategoryButtons();
+    renderGrid();
+    await persistRecipes(true);
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function handleBackdropClick(e, modalId) {
+  if (e.target.id === modalId) {
+    if (modalId === 'playerModal') closePlayer();
+    if (modalId === 'recipeModal') closeModal();
+  }
+}
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closePlayer();
+    closeModal();
+  }
+});
+
+function escapeHtml(text) {
+  return String(text).replace(/[&<>"']/g, function(m) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+  });
+}
+
+init();
+</script>
+</body>
+</html>
