@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👗 今日服飾-早安特價圖卡產生器</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+        .form-section {
+            flex: 1;
+            min-width: 320px;
+        }
+        .preview-section {
+            flex: 1;
+            min-width: 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            border-bottom: 3px solid #06C755;
+            padding-bottom: 8px;
+            font-size: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: bold;
+            color: #444;
+            margin-bottom: 5px;
+        }
+        input[type="text"], select, textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        textarea { height: 60px; resize: vertical; }
+        
+        .btn-random {
+            background: #e67e22;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        .btn-action {
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+        .btn-download { background-color: #06C755; }
+        .btn-download:hover { background-color: #05b04b; }
+        
+        .btn-copy { background-color: #3498db; }
+        .btn-copy:hover { background-color: #2980b9; }
+        
+        canvas {
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-width: 100%;
+            height: auto;
+            background: #eee;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 左側表單控制區 -->
+    <div class="form-section">
+        <h2>👗 今日服飾-早安特價圖卡設定</h2>
+        
+        <div class="input-group">
+            <label>1. 上傳穿搭 / 美女底圖：</label>
+            <input type="file" id="imageInput" accept="image/*" onchange="loadImage(event)">
+        </div>
+
+        <div class="input-group">
+            <label>2. 專屬店名 / 品牌浮水印：</label>
+            <input type="text" id="shopNameInput" value="✨ 今日服飾" placeholder="輸入您的店名..." oninput="drawCanvas()">
+        </div>
+
+        <div class="input-group">
+            <label>
+                3. 早安問候語：
+                <button class="btn-random" onclick="randomGreeting()">🎲 換一句語錄</button>
+            </label>
+            <textarea id="greetingInput" placeholder="輸入早安問候語..." oninput="drawCanvas()"></textarea>
+        </div>
+
+        <div class="input-group">
+            <label>4. 主打商品名稱：</label>
+            <input type="text" id="titleInput" value="✨ 韓系溫柔質感針織上衣" placeholder="例如：春季新品爆款外套" oninput="drawCanvas()">
+        </div>
+
+        <div class="input-group">
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label>原價：</label>
+                    <input type="text" id="originPriceInput" value="原價 $1,280" placeholder="原價 $..." oninput="drawCanvas()">
+                </div>
+                <div style="flex: 1;">
+                    <label>早安特惠價：</label>
+                    <input type="text" id="salePriceInput" value="今日早安價 $590" placeholder="早安價 $..." oninput="drawCanvas()">
+                </div>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>5. 視覺色彩風格：</label>
+            <select id="styleSelect" onchange="drawCanvas()">
+                <option value="rose">🌸 櫻花浪漫粉</option>
+                <option value="emerald" selected>🌿 質感莫蘭迪綠</option>
+                <option value="ocean">🌊 清爽蔚藍</option>
+                <option value="gold">✨ 鎏金奢華</option>
+                <option value="dark">🖋️ 沉穩酷黑</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- 右側即時畫布預覽與下載 -->
+    <div class="preview-section">
+        <h2 style="width: 100%; text-align: center;">📱 即時成品預覽</h2>
+        <!-- 畫布設定 720x1080 (高畫質 2:3 比例) -->
+        <canvas id="cardCanvas" width="720" height="1080"></canvas>
+        <button class="btn-action btn-copy" onclick="copyCaption()">📋 一鍵複製早安推播文案</button>
+        <button class="btn-action btn-download" onclick="downloadImage()">📥 一鍵下載宣傳圖片 (PNG)</button>
+    </div>
+</div>
+
+<script>
+const GREETINGS = [
+    "早安！願嶄新的一天，為您帶來無盡的幸運與美麗 ✨",
+    "晨光初現，把最好的穿搭獻給最美的您 🌸",
+    "新的一天，從一件舒適好穿的精緻好衣開始 ☀️",
+    "早安！今日微風正好，別忘了保持好心情 🧋",
+    "每一天都是新品登場的舞台，展現屬於您的自信美 💃"
+];
+
+const THEME_STYLES = {
+    rose: { bannerBg: "#E91E63", bannerText: "#FFFFFF" },
+    emerald: { bannerBg: "#2E7D32", bannerText: "#FFFFFF" },
+    ocean: { bannerBg: "#0288D1", bannerText: "#FFFFFF" },
+    gold: { bannerBg: "#B78103", bannerText: "#FFFFFF" },
+    dark: { bannerBg: "#212121", bannerText: "#FFFFFF" }
+};
+
+let userImage = null;
+
+window.onload = function() {
+    randomGreeting();
+    drawCanvas(); // 初始化畫布
+};
+
+function randomGreeting() {
+    const quote = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
+    document.getElementById('greetingInput').value = quote;
+    drawCanvas();
+}
+
+function loadImage(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+            userImage = img;
+            drawCanvas();
+        };
+        img.src = evt.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function drawCanvas() {
+    const canvas = document.getElementById('cardCanvas');
+    if (!canvas || !canvas.getContext) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    
+    const theme = THEME_STYLES[document.getElementById('styleSelect').value];
+    const shopName = document.getElementById('shopNameInput').value || "";
+    const greeting = document.getElementById('greetingInput').value || "";
+    const title = document.getElementById('titleInput').value || "";
+    const originPrice = document.getElementById('originPriceInput').value || "";
+    const salePrice = document.getElementById('salePriceInput').value || "";
+
+    // 1. 整個畫布底色設為乾淨白灰背景
+    ctx.fillStyle = "#FAFAFA";
+    ctx.fillRect(0, 0, w, h);
+
+    // 2. 頂部早安問候專區（高度 150px）
+    ctx.fillStyle = theme.bannerBg;
+    ctx.fillRect(0, 0, w, 150);
+
+    ctx.fillStyle = theme.bannerText;
+    ctx.font = "bold 30px 'Microsoft JhengHei', sans-serif";
+    ctx.fillText("☀️ GOOD MORNING 早安問候", 35, 55);
+
+    ctx.font = "22px 'Microsoft JhengHei', sans-serif";
+    ctx.fillText(greeting, 35, 105);
+
+    // 3. 底部特價資訊專區（高度 250px）
+    const panelH = 250;
+    const panelY = h - panelH;
+
+    ctx.fillStyle = "#111111"; // 質感深色底面板
+    ctx.fillRect(0, panelY, w, panelH);
+
+    // 商品名稱標題
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 34px 'Microsoft JhengHei', sans-serif";
+    ctx.fillText(title, 35, panelY + 50);
+
+    // 原價 (帶劃線)
+    if (originPrice) {
+        ctx.fillStyle = "#AAAAAA";
+        ctx.font = "24px 'Microsoft JhengHei', sans-serif";
+        ctx.fillText(originPrice, 35, panelY + 100);
+        
+        const textWidth = ctx.measureText(originPrice).width;
+        ctx.strokeStyle = "#FF4D4D";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(35, panelY + 92);
+        ctx.lineTo(35 + textWidth, panelY + 92);
+        ctx.stroke();
+    }
+
+    // 早安特惠價大標籤
+    if (salePrice) {
+        const badgeW = 460;
+        const badgeH = 75;
+        const badgeX = 35;
+        const badgeY = panelY + 130;
+
+        ctx.fillStyle = theme.bannerBg;
+        ctx.beginPath();
+        ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 12);
+        ctx.fill();
+
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 36px 'Microsoft JhengHei', sans-serif";
+        ctx.fillText(salePrice, badgeX + 25, badgeY + 50);
+    }
+
+    // 4. 中間穿搭圖片嵌入或提示文字
+    const topArea = 150;     
+    const bottomArea = 250;  
+    const availH = h - topArea - bottomArea; 
+    const margin = 20;       
+
+    const targetW = w - (margin * 2);
+    const targetH = availH - (margin * 2);
+    const renderX = margin;
+    const renderY = topArea + margin;
+
+    if (userImage) {
+        const imgRatio = userImage.width / userImage.height;
+        let renderW, renderH;
+
+        if (imgRatio > (targetW / targetH)) {
+            renderW = targetW;
+            renderH = targetW / imgRatio;
+        } else {
+            renderH = targetH;
+            renderW = targetH * imgRatio;
+        }
+
+        const finalX = renderX + (targetW - renderW) / 2;
+        const finalY = renderY + (targetH - renderH) / 2;
+
+        // 畫白色相框陰影
+        ctx.save();
+        ctx.shadowColor = "rgba(0, 0, 0, 0.15)";
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(finalX - 5, finalY - 5, renderW + 10, renderH + 10);
+        ctx.restore();
+
+        // 繪製照片
+        ctx.drawImage(userImage, finalX, finalY, renderW, renderH);
+
+        // 5. 在圖片右下角疊加半透明店名浮水印
+        if (shopName) {
+            ctx.save();
+            ctx.font = "bold 20px 'Microsoft JhengHei', sans-serif";
+            const textMetrics = ctx.measureText(shopName);
+            const pad = 12;
+            const bgW = textMetrics.width + (pad * 2);
+            const bgH = 36;
+            const bgX = (finalX + renderW) - bgW - 15;
+            const bgY = (finalY + renderH) - bgH - 15;
+
+            ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+            ctx.beginPath();
+            ctx.roundRect(bgX, bgY, bgW, bgH, 6);
+            ctx.fill();
+
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillText(shopName, bgX + pad, bgY + 25);
+            ctx.restore();
+        }
+    } else {
+        // 尚未上傳時的提示框
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(renderX, renderY, targetW, targetH);
+        
+        ctx.strokeStyle = "#DDDDDD";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 8]);
+        ctx.strokeRect(renderX, renderY, targetW, targetH);
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = "#888888";
+        ctx.font = "26px 'Microsoft JhengHei', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("📷 請從左側點選上傳美女穿搭底圖", renderX + targetW / 2, renderY + targetH / 2 - 10);
+        ctx.textAlign = "left";
+    }
+}
+
+// 一鍵複製推播文案
+function copyCaption() {
+    const shop = document.getElementById('shopNameInput').value || "【專櫃服飾】";
+    const greeting = document.getElementById('greetingInput').value || "";
+    const title = document.getElementById('titleInput').value || "";
+    const origin = document.getElementById('originPriceInput').value || "";
+    const sale = document.getElementById('salePriceInput').value || "";
+
+    const caption = `☀️ ${shop} - 今日早安限定特惠 ☀️\n\n` +
+                    `${greeting}\n\n` +
+                    `👗 主打推薦：${title}\n` +
+                    `🏷️ 優惠資訊：${origin} ➔ ${sale}\n\n` +
+                    `✨ 限量現貨供應中，喜歡的水水們歡迎直接私訊小編保留唷！❤️`;
+
+    navigator.clipboard.writeText(caption).then(() => {
+        alert("📋 成功複製早安推播文案！可直接貼到 LINE 記事本或群組囉！");
+    }).catch(err => {
+        alert("複製失敗，請手動複製：" + err);
+    });
+}
+
+function downloadImage() {
+    const canvas = document.getElementById('cardCanvas');
+    const link = document.createElement('a');
+    link.download = `morning_fashion_${Date.now()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
+</script>
+
+</body>
+</html>
