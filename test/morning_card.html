@@ -124,6 +124,13 @@
             .btn-action { padding: 14px 20px; font-size: 16px; }
             .drop-zone .tip { display: none; }
         }
+
+        #saveOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.88); z-index:999;
+            flex-direction:column; align-items:center; justify-content:center; padding:12px; box-sizing:border-box; }
+        #saveOverlay img { max-width:100%; max-height:72vh; border-radius:8px; -webkit-touch-callout:default; user-select:auto; }
+        #saveOverlay p { color:#fff; font-size:17px; margin:12px 0 8px; text-align:center; line-height:1.5; }
+        #saveOverlay button { background:#06C755; color:#fff; border:none; border-radius:6px; padding:12px 28px; font-size:16px; margin:4px; }
+        #saveOverlay button.gray { background:#666; }
     </style>
 </head>
 <body>
@@ -204,6 +211,14 @@
     </div>
 </div>
 
+<div id="saveOverlay">
+    <p>👆 長按圖片 → 選「儲存到相簿」<br>（Android 可選「下載圖片」）</p>
+    <img id="saveImg" alt="成品圖">
+    <div>
+        <button id="shareBtn" style="display:none" onclick="shareImg()">📤 分享</button>
+        <button class="gray" onclick="document.getElementById('saveOverlay').style.display='none'">關閉</button>
+    </div>
+</div>
 <script>
 const GREETINGS = [
     "早安！願嶄新的一天，為您帶來無盡的幸運與美麗 ✨",
@@ -494,24 +509,31 @@ function copyCaption() {
     });
 }
 
+let lastFile = null;
+function shareImg() {
+    if (lastFile) navigator.share({files: [lastFile]}).catch(() => {});
+}
 function downloadImage() {
     const canvas = document.getElementById('cardCanvas');
     const name = `morning_fashion_${Date.now()}.png`;
-    canvas.toBlob(async blob => {
-        const file = new File([blob], name, {type: 'image/png'});
-        // 手機：叫出分享選單（可存相簿、傳 LINE）
-        if (navigator.canShare && navigator.canShare({files: [file]})) {
-            try { await navigator.share({files: [file]}); return; } catch (e) { if (e.name === 'AbortError') return; }
-        }
-        // 電腦：一般下載
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.download = name;
-        link.href = url;
-        link.click();
-        // LINE 內建瀏覽器等不支援下載時的備案
-        setTimeout(() => { if (/Line\//i.test(navigator.userAgent)) window.open(url); }, 300);
-    }, 'image/png');
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (isMobile) {
+        // 手機：直接顯示圖片，長按存檔（所有瀏覽器、LINE 內建瀏覽器皆可）
+        document.getElementById('saveImg').src = canvas.toDataURL('image/png');
+        document.getElementById('saveOverlay').style.display = 'flex';
+        canvas.toBlob(blob => {
+            lastFile = new File([blob], name, {type: 'image/png'});
+            if (navigator.canShare && navigator.canShare({files: [lastFile]}))
+                document.getElementById('shareBtn').style.display = 'inline-block';
+        }, 'image/png');
+        return;
+    }
+    // 電腦：一般下載
+    const link = document.createElement('a');
+    link.download = name;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
 }
 </script>
 
