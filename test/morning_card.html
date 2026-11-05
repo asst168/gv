@@ -6,7 +6,7 @@
     <title>👗今日服飾早安特價卡片產生器</title>
     <style>
         body {
-            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            font-family: 'Microsoft JhengHei','PingFang TC','Noto Sans TC',Arial,sans-serif;
             background-color: #f4f6f8;
             margin: 0;
             padding: 20px;
@@ -113,6 +113,16 @@
             max-width: 100%;
             height: auto;
             background: #eee;
+        }
+
+        /* ===== 手機版 ===== */
+        @media (max-width: 700px) {
+            body { padding: 8px; }
+            .container { padding: 14px; gap: 16px; }
+            .form-section, .preview-section { min-width: 0; width: 100%; }
+            input[type="text"], select, textarea { font-size: 16px; } /* 避免 iPhone 自動放大 */
+            .btn-action { padding: 14px 20px; font-size: 16px; }
+            .drop-zone .tip { display: none; }
         }
     </style>
 </head>
@@ -303,10 +313,10 @@ function drawCanvas() {
     ctx.fillRect(0, 0, w, 150);
 
     ctx.fillStyle = theme.bannerText;
-    ctx.font = "bold 30px 'Microsoft JhengHei', sans-serif";
+    ctx.font = "bold 30px 'Microsoft JhengHei','PingFang TC','Noto Sans TC',sans-serif";
     ctx.fillText("☀️ GOOD MORNING 早安問候", 35, 55);
 
-    ctx.font = "22px 'Microsoft JhengHei', sans-serif";
+    ctx.font = "22px 'Microsoft JhengHei','PingFang TC','Noto Sans TC',sans-serif";
     ctx.fillText(greeting, 35, 105);
 
     // 3. 底部特價資訊區
@@ -318,13 +328,13 @@ function drawCanvas() {
 
     // 商品名稱標題
     ctx.fillStyle = theme.textColor;
-    ctx.font = "bold 34px 'Microsoft JhengHei', sans-serif";
+    ctx.font = "bold 34px 'Microsoft JhengHei','PingFang TC','Noto Sans TC',sans-serif";
     ctx.fillText(title, 35, panelY + 50);
 
     // 原價 (帶劃線)
     if (originPrice) {
         ctx.fillStyle = "#777777";
-        ctx.font = "24px 'Microsoft JhengHei', sans-serif";
+        ctx.font = "24px 'Microsoft JhengHei','PingFang TC','Noto Sans TC',sans-serif";
         ctx.fillText(originPrice, 35, panelY + 95);
         
         const textWidth = ctx.measureText(originPrice).width;
@@ -349,7 +359,7 @@ function drawCanvas() {
         ctx.fill();
 
         ctx.fillStyle = "#FFFFFF";
-        ctx.font = "bold 32px 'Microsoft JhengHei', sans-serif";
+        ctx.font = "bold 32px 'Microsoft JhengHei','PingFang TC','Noto Sans TC',sans-serif";
         ctx.fillText(salePrice, badgeX + 20, badgeY + 46);
     }
 
@@ -370,7 +380,7 @@ function drawCanvas() {
         ctx.stroke();
 
         ctx.fillStyle = theme.textColor;
-        ctx.font = "bold 24px 'Microsoft JhengHei', sans-serif";
+        ctx.font = "bold 24px 'Microsoft JhengHei','PingFang TC','Noto Sans TC',sans-serif";
         ctx.textAlign = "center";
         ctx.fillText(badgeText, bX + (bW / 2), bY + 43);
         ctx.textAlign = "left";
@@ -379,7 +389,7 @@ function drawCanvas() {
     // 底部促銷小提示（最底下一行）
     if (ctaText) {
         ctx.fillStyle = "#666666";
-        ctx.font = "bold 18px 'Microsoft JhengHei', sans-serif";
+        ctx.font = "bold 18px 'Microsoft JhengHei','PingFang TC','Noto Sans TC',sans-serif";
         ctx.fillText(ctaText, 35, panelY + 225);
     }
 
@@ -423,7 +433,7 @@ function drawCanvas() {
         // 店名浮水印
         if (shopName) {
             ctx.save();
-            ctx.font = "bold 20px 'Microsoft JhengHei', sans-serif";
+            ctx.font = "bold 20px 'Microsoft JhengHei','PingFang TC','Noto Sans TC',sans-serif";
             const textMetrics = ctx.measureText(shopName);
             const pad = 12;
             const bgW = textMetrics.width + (pad * 2);
@@ -451,10 +461,10 @@ function drawCanvas() {
         ctx.setLineDash([]);
 
         ctx.fillStyle = "#444444";
-        ctx.font = "26px 'Microsoft JhengHei', sans-serif";
+        ctx.font = "26px 'Microsoft JhengHei','PingFang TC','Noto Sans TC',sans-serif";
         ctx.textAlign = "center";
         ctx.fillText("📂 請將美女穿搭圖片直接拖拉到這裡", renderX + targetW / 2, renderY + targetH / 2 - 15);
-        ctx.font = "18px 'Microsoft JhengHei', sans-serif";
+        ctx.font = "18px 'Microsoft JhengHei','PingFang TC','Noto Sans TC',sans-serif";
         ctx.fillStyle = "#888888";
         ctx.fillText("( 或點選左側檔案上傳 / 建議尺寸 720×1080 )", renderX + targetW / 2, renderY + targetH / 2 + 25);
         ctx.textAlign = "left";
@@ -486,10 +496,22 @@ function copyCaption() {
 
 function downloadImage() {
     const canvas = document.getElementById('cardCanvas');
-    const link = document.createElement('a');
-    link.download = `morning_fashion_${Date.now()}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    const name = `morning_fashion_${Date.now()}.png`;
+    canvas.toBlob(async blob => {
+        const file = new File([blob], name, {type: 'image/png'});
+        // 手機：叫出分享選單（可存相簿、傳 LINE）
+        if (navigator.canShare && navigator.canShare({files: [file]})) {
+            try { await navigator.share({files: [file]}); return; } catch (e) { if (e.name === 'AbortError') return; }
+        }
+        // 電腦：一般下載
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = name;
+        link.href = url;
+        link.click();
+        // LINE 內建瀏覽器等不支援下載時的備案
+        setTimeout(() => { if (/Line\//i.test(navigator.userAgent)) window.open(url); }, 300);
+    }, 'image/png');
 }
 </script>
 
