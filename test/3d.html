@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>極簡寶特瓶浮空投影 (KISS Hologram Pro)</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    [hidden] { display: none !important; }
+
+    :root {
+      --gap: 110px;
+      --guide-size: 140px;
+      --ct: none;
+      --filter-fx: none;
+      --blend-mode: normal;
+      --vignette-mask: none;
+    }
+
+    body {
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", Roboto, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      height: 100dvh;
+      width: 100vw;
+      position: relative;
+    }
+
+    #stage {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      touch-action: none;
+      background: #000;
+    }
+
+    #bottle-guide {
+      position: absolute;
+      width: var(--guide-size);
+      height: var(--guide-size);
+      border: 1.5px dashed rgba(56, 189, 248, 0.4);
+      border-radius: 50%;
+      pointer-events: none;
+      transition: opacity .3s, width .2s, height .2s, border-radius .2s;
+      z-index: 2;
+    }
+    #bottle-guide.pyramid { border-radius: 8px; border-color: rgba(244, 114, 182, 0.45); }
+    #crosshair {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      pointer-events: none;
+      opacity: .5;
+      z-index: 2;
+    }
+    #crosshair::before, #crosshair::after {
+      content: ''; position: absolute; background: #38bdf8;
+    }
+    #crosshair::before { top: 11px; left: 0; width: 24px; height: 2px; }
+    #crosshair::after { top: 0; left: 11px; width: 2px; height: 24px; }
+
+    #group {
+      position: relative;
+      width: 0;
+      height: 0;
+      transition: transform .15s cubic-bezier(.2, 0, .2, 1);
+      z-index: 1;
+    }
+    #group.dragging { transition: none; }
+
+    .arm { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+    .view {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform: translate(-50%, calc(-50% - var(--gap, 0px)));
+      cursor: pointer;
+    }
+
+    .content {
+      transform: var(--ct, none);
+      filter: var(--filter-fx, none);
+      mix-blend-mode: var(--blend-mode, normal);
+      -webkit-mask-image: var(--vignette-mask, none);
+      mask-image: var(--vignette-mask, none);
+    }
+    .media {
+      max-width: 190px;
+      max-height: 190px;
+      display: block;
+      pointer-events: none;
+      object-fit: contain;
+    }
+    .char {
+      width: 200px;
+      height: 200px;
+      display: block;
+      pointer-events: none;
+    }
+
+    #toast {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(15, 23, 42, .9);
+      border: 1px solid rgba(56, 189, 248, .5);
+      padding: 10px 22px;
+      border-radius: 24px;
+      font-size: 17px;
+      font-weight: 600;
+      color: #38bdf8;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .2s ease, transform .2s ease;
+      z-index: 100;
+      white-space: nowrap;
+      box-shadow: 0 8px 24px rgba(0,0,0,.7);
+    }
+
+    .btn {
+      background: #1e293b;
+      color: #f1f5f9;
+      border: 1px solid #475569;
+      padding: 9px 15px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,.4);
+      touch-action: manipulation;
+      transition: all .15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn:active {
+      background: #2563eb;
+      border-color: #60a5fa;
+      transform: scale(.95);
+    }
+    .btn-accent {
+      background: #dc2626;
+      border-color: #f87171;
+      color: #fff;
+    }
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 13px;
+      border-radius: 12px;
+    }
+    .btn-active {
+      background: #b91c1c !important;
+      border-color: #fca5a5 !important;
+      color: #fff !important;
+    }
+
+    #top-bar {
+      position: absolute;
+      top: calc(12px + env(safe-area-inset-top, 0px));
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 14px;
+      z-index: 10;
+      transition: opacity .3s, transform .3s;
+    }
+    #top-bar .group-left { display: flex; gap: 8px; }
+
+    #bottom-dock {
+      position: absolute;
+      bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+      left: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      z-index: 10;
+      transition: opacity .3s, transform .3s;
+    }
+
+    .tab-bar {
+      display: flex;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 4px;
+      border-radius: 16px;
+      border: 1px solid #334155;
+      gap: 4px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: #dc2626;
+      color: #fff;
+    }
+
+    .panel {
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid #334155;
+      border-radius: 18px;
+      padding: 10px 14px;
+      max-width: 95vw;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .slider-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #cbd5e1;
+      background: rgba(30, 41, 59, 0.6);
+      padding: 4px 10px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+    }
+    .slider-item input[type="range"] {
+      width: 110px;
+      accent-color: #38bdf8;
+    }
+
+    .cinema #bottom-dock,
+    .cinema #top-bar,
+    .cinema #bottle-guide,
+    .cinema #crosshair {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(15px);
+    }
+    .cinema #top-bar { transform: translateY(-15px); }
+  </style>
+</head>
+<body>
+
+  <!-- 頂部列 -->
+  <div id="top-bar">
+    <div class="group-left">
+      <button class="btn btn-small" onclick="$('file-input').click()">📁 匯入圖影</button>
+      <button class="btn btn-small" id="btn-pause" onclick="togglePlayPause()">⏸ 暫停</button>
+      <input type="file" id="file-input" accept="image/*,video/*" style="display:none" onchange="loadMedia(event)">
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn btn-small" id="btn-guide-toggle" onclick="toggleGuide()">🎯 準星</button>
+      <button class="btn btn-small btn-accent" onclick="toggleCinema(true)">全黑劇院 ⛶</button>
+    </div>
+  </div>
+
+  <!-- 中央投影舞台 -->
+  <div id="stage">
+    <div id="crosshair"></div>
+    <div id="bottle-guide"></div>
+    <div id="group"></div>
+  </div>
+
+  <!-- 懸浮提示 -->
+  <div id="toast">100%</div>
+
+  <!-- 底部多功能面板 -->
+  <div id="bottom-dock">
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('char', this)">🐾 角色動作</button>
+      <button class="tab-btn" onclick="switchTab('align', this)">📐 投影調校</button>
+      <button class="tab-btn" onclick="switchTab('fx', this)">✨ 視覺特效</button>
+      <button class="tab-btn" onclick="togglePanelCollapse()" id="btn-collapse">🔽 收合</button>
+    </div>
+
+    <div id="panel-container" class="panel">
+      <!-- 分頁 1：角色動作 -->
+      <div id="tab-char" class="tab-content">
+        <!-- 角色選擇 -->
+        <div class="row" style="margin-bottom:6px;">
+          <button class="btn btn-small" data-char="0" onclick="selectChar(0)">🐶 狗</button>
+          <button class="btn btn-small" data-char="1" onclick="selectChar(1)">🐱 貓</button>
+          <button class="btn btn-small" data-char="2" onclick="selectChar(2)">🧧 拜年萌娃</button>
+          <button class="btn btn-small" data-char="3" onclick="selectChar(3)">🐼 熊貓</button>
+          <button class="btn btn-small" data-char="4" onclick="selectChar(4)">🐧 企鵝</button>
+          <button class="btn btn-small" id="btn-rand" onclick="toggleRand()">🎲 隨機</button>
+        </div>
+
+        <!-- 動作選擇 -->
+        <div class="row" style="margin-bottom:6px;">
+          <button class="btn btn-small" data-act="0" onclick="selectAct(0)">🐾 走路</button>
+          <button class="btn btn-small" data-act="1" onclick="selectAct(1)">🦘 跳躍</button>
+          <button class="btn btn-small" data-act="2" onclick="selectAct(2)">👋 拜年</button>
+          <button class="btn btn-small" data-act="3" onclick="selectAct(3)">💃 跳舞</button>
+          <button class="btn btn-small" onclick="cycleTurn()" id="btn-turn">🔄 運鏡</button>
+        </div>
+
+        <!-- 動作速度調節列 -->
+        <div class="row">
+          <div class="slider-item">
+            <span>⚡ 速度</span>
+            <input type="range" id="speed-slider" min="0.3" max="2.5" step="0.1" value="1.0" oninput="setSpeed(this.value)">
+            <span id="speed-val" style="min-width:32px; font-weight:bold; color:#38bdf8;">1.0x</span>
+          </div>
+          <button class="btn btn-small" onclick="setSpeed(0.5)">0.5x</button>
+          <button class="btn btn-small" onclick="setSpeed(1.0)">1.0x</button>
+          <button class="btn btn-small" onclick="setSpeed(1.5)">1.5x</button>
+          <button class="btn btn-small" onclick="setSpeed(2.0)">2.0x</button>
+        </div>
+      </div>
+
+      <!-- 分頁 2：投影調校 -->
+      <div id="tab-align" class="tab-content" hidden>
+        <div class="row" style="margin-bottom:6px;">
+          <button class="btn btn-small btn-accent" id="btn-mode" onclick="toggleMode()">◫ 四視角</button>
+          <button class="btn btn-small" onclick="flip('fx')">⇋ 左右</button>
+          <button class="btn btn-small" onclick="flip('fy')">⇅ 上下</button>
+          <button class="btn btn-small" onclick="rotate90()">⟳ 90°</button>
+          <button class="btn btn-small" onclick="resetView()">↺ 置中還原</button>
+        </div>
+        <div class="row">
+          <div class="slider-item">
+            <span>四角間距</span>
+            <input type="range" id="gap" min="20" max="320" step="5" oninput="setGap(this.value)">
+          </div>
+          <div class="slider-item">
+            <span>瓶口直徑</span>
+            <input type="range" id="guide-size" min="50" max="240" step="5" value="140" oninput="setGuideSize(this.value)">
+          </div>
+          <button class="btn btn-small" onclick="toggleGuideShape()" id="btn-shape">圓形瓶口</button>
+        </div>
+      </div>
+
+      <!-- 分頁 3：視覺特效 -->
+      <div id="tab-fx" class="tab-content" hidden>
+        <div class="row">
+          <button class="btn btn-small" id="btn-glow" onclick="toggleGlow()">🌟 全息高亮 (開)</button>
+          <button class="btn btn-small" id="btn-vignette" onclick="toggleVignette()">🌫 中心羽化 (開)</button>
+          <button class="btn btn-small" id="btn-blend" onclick="toggleBlend()">🖤 黑底濾透 (開)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部常駐微調縮放列 -->
+    <div class="row" style="gap:12px;">
+      <button class="btn btn-small" onclick="zoom(-0.15)">➖ 縮小</button>
+      <button class="btn btn-small" onclick="cycleSize()">🔍 尺寸</button>
+      <button class="btn btn-small btn-accent" onclick="zoom(0.15)">➕ 放大</button>
+    </div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const group = $('group'), toast = $('toast'), stage = $('stage');
+    const KEY = 'holo-v7', RES = 360, R = 9.5;
+
+    const S = {
+      scale: 1, x: 0, y: 0, mode: 'quad', fx: 1, fy: 1, rot: 0, gap: 110,
+      char: 2, actIdx: 3, speed: 1.0, tm: 0, rand: false, isPaused: false,
+      glow: true, vignette: true, blendScreen: true,
+      guideVisible: true, guideShape: 'circle', guideSize: 140
+    };
+
+    let media = { type: 'char', url: null };
+    let views = [];
+    let toastTimer, saveTimer;
+    let wake = null;
+    let panelCollapsed = false;
+
+    try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+    S.scale = clamp(+S.scale || 1);
+    S.speed = clampSpeed(+S.speed || 1.0);
+
+    function clamp(v) { return Math.min(Math.max(0.3, v), 4.0); }
+    function clampSpeed(v) { return Math.min(Math.max(0.3, v), 2.5); }
+    function save() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }, 300);
+    }
+    function showToast(t) {
+      toast.textContent = t;
+      toast.style.opacity = '1';
+      toast.style.transform = 'translate(-50%, -50%) scale(1.05)';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translate(-50%, -50%) scale(1)';
+      }, 850);
+    }
+
+    /* ================= 常亮防螢幕休眠 ================= */
+    async function lockWake() {
+      if ('wakeLock' in navigator && !wake) {
+        try {
+          wake = await navigator.wakeLock.request('screen');
+          wake.addEventListener('release', () => { wake = null; });
+        } catch (e) {}
+      }
+    }
+    window.addEventListener('pointerdown', () => lockWake(), { once: true });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') lockWake();
+    });
+
+    /* ================= 3D 角色（Three.js Toon） ================= */
+    let ready = false, renderer, scene, cam, rigs = [], G_S, G_C;
+
+    function loadScript(src, ok, fail) {
+      const s = document.createElement('script');
+      s.src = src; s.onload = ok; s.onerror = fail;
+      document.head.appendChild(s);
+    }
+
+    loadScript('three.min.js', initThree, () =>
+      loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js', initThree,
+        () => showToast('載入 3D 引擎失敗，請檢查網路')));
+
+    function initThree() {
+      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+      renderer.setPixelRatio(1);
+      renderer.setSize(RES, RES);
+      scene = new THREE.Scene();
+      cam = new THREE.PerspectiveCamera(35, 1, 0.1, 60);
+      scene.add(cam);
+
+      scene.add(new THREE.HemisphereLight(0xfff7ed, 0x475569, 0.72));
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.62);
+      dirLight.position.set(2, 3, 4);
+      cam.add(dirLight);
+
+      G_S = new THREE.SphereGeometry(1, 28, 20);
+      G_C = new THREE.ConeGeometry(1, 2, 16);
+      ready = true;
+      setModel();
+    }
+
+    function P(g, color, x, y, z, sx, sy, sz) {
+      const m = new THREE.Mesh(G_S, new THREE.MeshToonMaterial({ color }));
+      m.position.set(x, y, z);
+      m.scale.set(sx, sy ?? sx, sz ?? sx);
+      g.add(m);
+      return m;
+    }
+    function C(g, color, x, y, z, sx, sy, sz, rx, rz) {
+      const m = new THREE.Mesh(G_C, new THREE.MeshToonMaterial({ color }));
+      m.position.set(x, y, z);
+      m.scale.set(sx, sy, sz);
+      m.rotation.x = rx || 0; m.rotation.z = rz || 0;
+      g.add(m);
+      return m;
+    }
+
+    function newRig(NY, cy) {
+      const g = new THREE.Group(), body = new THREE.Group(), head = new THREE.Group();
+      head.position.set(0, NY, 0); body.add(head); g.add(body);
+      return { g, body, head, NY, cy, eyes: [], wags: [], armL: null, armR: null, legL: null, legR: null };
+    }
+    const H = (A, c, x, y, z, sx, sy, sz) => P(A.head, c, x, y - A.NY, z, sx, sy, sz);
+    function wagO(A, o, ax, amp, sp) { A.wags.push({ o, ax, amp, sp, base: o.rotation[ax] }); }
+
+    function eyes2(A, y, z, dx, r) {
+      [-1, 1].forEach(s => {
+        const eg = new THREE.Group();
+        eg.position.set(s * dx, y - A.NY, z);
+        P(eg, 0xffffff, 0, 0, 0, r);
+        P(eg, 0x111827, 0, -r * .05, r * .7, r * .55);
+        P(eg, 0xffffff, r * .2, r * .2, r * 1.2, r * .18);
+        A.head.add(eg);
+        A.eyes.push(eg);
+      });
+    }
+
+    function chibiEyes(A, y, z, dx, r) {
+      [-1, 1].forEach(s => {
+        const eg = new THREE.Group();
+        eg.position.set(s * dx, y - A.NY, z);
+        P(eg, 0xffffff, 0, 0, 0, r, r * 1.05, r * 0.45);
+        P(eg, 0x0f172a, 0, 0, r * 0.25, r * 0.82, r * 0.9, r * 0.3);
+        P(eg, 0x0284c7, 0, -r * 0.3, r * 0.35, r * 0.65, r * 0.4, r * 0.2);
+        P(eg, 0xffffff, -s * r * 0.22, r * 0.25, r * 0.45, r * 0.3, r * 0.3, r * 0.2);
+        P(eg, 0xffffff, s * r * 0.25, -r * 0.15, r * 0.45, r * 0.16, r * 0.16, r * 0.15);
+        const brow = P(A.head, 0x451a03, s * dx, (y - A.NY) + r * 1.45, z + 0.05, r * 0.8, r * 0.12, r * 0.1);
+        brow.rotation.z = -s * 0.18;
+        A.head.add(eg);
+        A.eyes.push(eg);
+      });
+    }
+
+    function arm(A, s, c, x, y, z, sx, sy, sz, rest) {
+      const p = new THREE.Group();
+      p.position.set(x, y, z);
+      p.rotation.z = s * rest;
+      p.userData.rest = s * rest;
+      P(p, c, 0, -sy * .75, 0, sx, sy, sz);
+      A.body.add(p);
+      if (s > 0) A.armR = p; else A.armL = p;
+    }
+    function leg(A, s, c, x, z, fy, sx, sy, sz) {
+      const p = new THREE.Group();
+      p.position.set(x, .3, z);
+      P(p, c, 0, fy, .05, sx, sy, sz);
+      A.g.add(p);
+      if (s > 0) A.legR = p; else A.legL = p;
+    }
+
+    /* ---- 角色模型庫 ---- */
+    function dog() {
+      const A = newRig(1.25, 1.3), f = 0xf59e0b, l = 0xfde68a, d = 0xb45309;
+      P(A.body, f, 0, .55, 0, .8, .85, .7); P(A.body, l, 0, .5, .45, .45, .55, .35);
+      H(A, f, 0, 1.7, 0, .92, .85, .85);
+      eyes2(A, 1.85, .66, .33, .17);
+      H(A, l, 0, 1.52, .72, .42, .32, .4);
+      H(A, 0x111827, 0, 1.62, 1.08, .13, .1, .1);
+      H(A, 0xfb7185, 0, 1.28, 1.02, .1, .14, .08);
+      [-1, 1].forEach(s => {
+        const e = H(A, d, s * .9, 1.6, 0, .22, .5, .3);
+        e.rotation.z = s * .25; wagO(A, e, 'z', s * .12, 5);
+        arm(A, s, f, s * .78, .95, .15, .2, .4, .2, .12);
+        leg(A, s, l, s * .35, .3, -.35, .28, .2, .35);
+      });
+      const tail = new THREE.Group(); tail.position.set(0, .3, -.65); tail.rotation.x = -.7;
+      P(tail, f, 0, .55, 0, .13, .55, .13); A.body.add(tail); wagO(A, tail, 'z', .8, 12);
+      return A;
+    }
+
+    function cat() {
+      const A = newRig(1.25, 1.3), o = 0xfb923c, w = 0xfff7ed, p = 0xf9a8d4;
+      P(A.body, o, 0, .55, 0, .8, .85, .7); P(A.body, w, 0, .5, .45, .45, .55, .35);
+      H(A, o, 0, 1.7, 0, .95, .85, .85); eyes2(A, 1.8, .66, .35, .2); H(A, p, 0, 1.62, .82, .1, .07, .07);
+      [-1, 1].forEach(s => {
+        const e = C(A.head, o, s * .55, 2.45 - A.NY, 0, .28, .4, .22, 0, -s * .35); wagO(A, e, 'z', s * .15, 5);
+        const i = C(A.head, p, s * .55, 2.42 - A.NY, .12, .15, .28, .1, 0, -s * .35); wagO(A, i, 'z', s * .15, 5);
+        H(A, 0xfda4af, s * .6, 1.55, .62, .14, .1, .08);
+        arm(A, s, o, s * .78, .95, .15, .2, .4, .2, .12);
+        leg(A, s, w, s * .35, .3, -.35, .28, .2, .35);
+      });
+      const tail = new THREE.Group(); tail.position.set(0, .3, -.65); tail.rotation.x = -.6;
+      P(tail, o, 0, .6, 0, .15, .6, .15); A.body.add(tail); wagO(A, tail, 'z', .6, 6);
+      return A;
+    }
+
+    function doll() {
+      const A = newRig(1.15, 1.3);
+      const skin = 0xf5ba96, red = 0xdc2626, fur = 0xfffbeb, gold = 0xf59e0b, hair = 0x3d1d0e, shoes = 0xb91c1c;
+
+      P(A.body, red, 0, .54, 0, .78, .8, .72);
+      P(A.body, gold, -.15, .72, .38, .08, .04, .04);
+      P(A.body, gold, .15, .72, .38, .08, .04, .04);
+      P(A.body, gold, 0, .72, .39, .05, .05, .05);
+      [-0.28, 0, 0.28].forEach(x => P(A.body, fur, x, .92, .32, .16, .14, .16));
+      P(A.body, fur, 0, .94, -.25, .42, .15, .2);
+      [-0.32, 0, 0.32].forEach(x => P(A.body, fur, x, .24, 0, .32, .14, .32));
+
+      H(A, skin, 0, 1.68, 0, .96, .88, .88);
+      H(A, hair, 0, 1.86, -.15, 1.02, .82, .92);
+      H(A, hair, 0, 2.12, .26, .9, .38, .62);
+      [-1, 1].forEach(s => {
+        const bang = H(A, hair, s * .5, 2.05, .45, .38, .35, .26); bang.rotation.z = -s * 0.22;
+        const sideH = H(A, hair, s * .78, 1.76, .35, .22, .5, .26); sideH.rotation.z = -s * 0.1;
+      });
+
+      chibiEyes(A, 1.72, .76, .35, .17);
+      H(A, 0x881337, 0, 1.46, .84, .16, .11, .06);
+      H(A, 0xf43f5e, 0, 1.44, .86, .11, .06, .05);
+
+      [-1, 1].forEach(s => {
+        H(A, 0xf43f5e, s * .55, 1.52, .7, .22, .14, .1);
+        const bunGroup = new THREE.Group();
+        bunGroup.position.set(s * .88, 2.18 - A.NY, -.02);
+        P(bunGroup, hair, 0, 0, 0, .38, .38, .38);
+        P(bunGroup, red, 0, .14, 0, .3, .16, .3);
+        P(bunGroup, fur, 0, .28, 0, .14, .14, .14);
+
+        const tassel = new THREE.Group();
+        tassel.position.set(0, -.18, .12);
+        P(tassel, gold, 0, 0, 0, .07, .07, .07);
+        P(tassel, red, 0, -.22, 0, .06, .26, .06);
+        bunGroup.add(tassel);
+        wagO(A, tassel, 'z', s * .35, 7);
+        A.head.add(bunGroup);
+        wagO(A, bunGroup, 'z', s * .12, 6);
+
+        arm(A, s, red, s * .76, .95, .12, .22, .32, .22, .15);
+        if (s > 0 && A.armR) { P(A.armR, fur, 0, -.32, 0, .24, .12, .24); P(A.armR, skin, 0, -.42, 0, .14, .14, .14); }
+        if (s < 0 && A.armL) { P(A.armL, fur, 0, -.32, 0, .24, .12, .24); P(A.armL, skin, 0, -.42, 0, .14, .14, .14); }
+
+        leg(A, s, 0xffffff, s * .32, .25, -.3, .22, .22, .28);
+        if (s > 0 && A.legR) { P(A.legR, shoes, 0, -.32, .05, .24, .18, .34); P(A.legR, gold, 0, -.26, .16, .12, .08, .08); }
+        if (s < 0 && A.legL) { P(A.legL, shoes, 0, -.32, .05, .24, .18, .34); P(A.legL, gold, 0, -.26, .16, .12, .08, .08); }
+      });
+      return A;
+    }
+
+    function panda() {
+      const A = newRig(1.25, 1.3), w = 0xf8fafc, k = 0x374151;
+      P(A.body, w, 0, .55, 0, .85, .9, .75);
+      H(A, w, 0, 1.7, 0, .95, .85, .85);
+      [-1, 1].forEach(s => {
+        const ear = H(A, k, s * .7, 2.35, 0, .3); wagO(A, ear, 'z', 0.1, 5);
+        const patch = H(A, k, s * .4, 1.8, .68, .22, .3, .1); patch.rotation.z = s * .4;
+        arm(A, s, k, s * .85, .95, .2, .25, .45, .25, .1);
+        leg(A, s, k, s * .4, .3, -.35, .3, .22, .35);
+      });
+      eyes2(A, 1.82, .72, .4, .12);
+      H(A, 0x111827, 0, 1.6, .83, .12, .08, .08);
+      P(A.body, w, 0, .35, -.72, .22);
+      return A;
+    }
+
+    function penguin() {
+      const A = newRig(1.5, 1.2), b = 0x3b82f6, d = 0x1d4ed8, w = 0xf8fafc, o = 0xfb923c;
+      P(A.body, b, 0, .85, 0, 1, 1.25, .9); P(A.body, w, 0, .8, .5, .7, .95, .5);
+      H(A, b, 0, 2.1, 0, .8, .75, .75); H(A, w, 0, 2.0, .5, .6, .5, .4);
+      eyes2(A, 2.2, .85, .28, .14);
+      C(A.head, o, 0, 2.0 - A.NY, 1.0, .14, .17, .14, Math.PI / 2, 0);
+      [-1, 1].forEach(s => {
+        arm(A, s, d, s * 1.0, 1.5, 0, .18, .6, .4, .3);
+        leg(A, s, o, s * .4, .5, -.7, .35, .12, .5);
+      });
+      return A;
+    }
+
+    const CHARS = [
+      { name: '🐶 萌犬', fn: dog },
+      { name: '🐱 橘貓', fn: cat },
+      { name: '🧧 拜年萌娃', fn: doll },
+      { name: '🐼 熊貓', fn: panda },
+      { name: '🐧 企鵝', fn: penguin }
+    ];
+    const ACTS = [
+      { id: 'walk', name: '🐾 輕快走路' },
+      { id: 'hop', name: '🦘 開心跳躍' },
+      { id: 'wave', name: '👋 拜年招手' },
+      { id: 'dance', name: '💃 歡喜跳舞' }
+    ];
+    const TURNS = ['🎥 環繞運鏡', '左右擺動', '連續自轉', '正面定格'];
+
+    function mk(ci, t) {
+      const A = CHARS[ci].fn();
+      A.yaw = 0; A.pitch = .05; A.dist = R; A.spd = 1;
+      A.ci = ci; A.actT0 = t; A.born = t;
+      A.actIdx = S.actIdx;
+      A.ph = S.rand ? Math.random() * 6.28 : 0;
+      scene.add(A.g);
+      return A;
+    }
+
+    // ⚡ 修復：防止時間軸差異使縮放為 0 造成角色隱形
+    const pop = x => {
+      if (x < 0 || x >= 0.35) return 1;
+      const u = x / 0.35;
+      return 0.85 + 0.15 * Math.sin(u * Math.PI * 0.5);
+    };
+
+    function animate(A, t) {
+      const cur = ACTS[A.actIdx % ACTS.length];
+      const tt = (t - A.actT0);
+      A.act = cur.id;
+
+      let y = 0, bz = 0, sq = 0, st = 0;
+      let hz = Math.sin(t * 1.7) * .06, hx = Math.sin(t * 1.3) * .04;
+      let aL = 0, aR = 0, axL = 0, axR = 0, lL = 0, lR = 0;
+      const breath = Math.sin(t * 2.2) * .02;
+
+      if (cur.id === 'dance') {
+        const s = Math.sin(tt * 6.5);
+        const c = Math.cos(tt * 6.5);
+        const fastS = Math.sin(tt * 13);
+        y = Math.abs(fastS) * .18; bz = s * .2; sq = (1 - Math.abs(fastS)) * .12;
+        hz = -s * .22 + Math.sin(tt * 13) * .05; hx = Math.abs(s) * .08;
+        aR = 1.9 + c * 0.7; aL = -(1.9 - c * 0.7); axR = s * 0.45; axL = -s * 0.45;
+        lL = s * 0.4; lR = -s * 0.4;
+      } else if (cur.id === 'hop') {
+        const u = Math.abs(Math.sin(tt * 5));
+        y = u * .85; sq = (1 - u) * .22; st = u * .08;
+        aR = u * 1.4; aL = -u * 1.4; hx -= u * .15;
+      } else if (cur.id === 'wave') {
+        aR = 2.4 + Math.sin(tt * 12) * .55; aL = -0.3;
+        hz = 0.2 + Math.sin(tt * 3) * .08; y = Math.abs(Math.sin(tt * 4)) * .06;
+      } else {
+        const s = Math.sin(tt * 11);
+        lL = s * .8; lR = -s * .8; axL = -s * .7; axR = s * .7;
+        y = Math.abs(s) * .14; bz = s * .06; hz = s * .06; hx = Math.abs(s) * .06;
+      }
+
+      A.g.position.y = y;
+      A.g.scale.setScalar(pop(t - A.born));
+      A.body.rotation.z = bz;
+      A.body.scale.set(1 + sq * .5, 1 + breath - sq + st, 1 + sq * .5);
+      A.head.rotation.z = hz; A.head.rotation.x = hx;
+      if (A.armR) { A.armR.rotation.z = A.armR.userData.rest + aR; A.armR.rotation.x = axR; }
+      if (A.armL) { A.armL.rotation.z = A.armL.userData.rest + aL; A.armL.rotation.x = axL; }
+      if (A.legR) A.legR.rotation.x = lR;
+      if (A.legL) A.legL.rotation.x = lL;
+      A.eyes.forEach(g => g.scale.y = ((t % 3.4) < .12 ? .1 : 1));
+      A.wags.forEach(w => w.o.rotation[w.ax] = w.base + Math.sin(t * w.sp) * w.amp);
+    }
+
+    const ORBIT = { walk: 1.0, hop: .9, wave: .6, dance: 1.3 };
+    function camFollow(A, dt, t) {
+      const k = 1 - Math.exp(-dt * 4), P2 = Math.PI * 2;
+      if (S.tm === 0) {
+        A.spd += (ORBIT[A.act] - A.spd) * k;
+        A.yaw = (A.yaw + A.spd * dt) % P2;
+        A.pitch += (.1 + .1 * Math.sin(t * .7 + A.ph) - A.pitch) * k;
+        A.dist += (R - A.dist) * k;
+      } else {
+        const dy = (((0 - A.yaw + Math.PI) % P2) + P2) % P2 - Math.PI;
+        A.yaw += dy * k; A.pitch += (.05 - A.pitch) * k; A.dist += (R - A.dist) * k;
+      }
+    }
+
+    /* ---- 畫面渲染與主循環 ---- */
+    let last = performance.now(), spinAng = 0, simTime = 0;
+
+    function renderViews() {
+      if (!ready || !views.length || !rigs.length || media.type !== 'char') return;
+      views.forEach(v => {
+        const A = rigs[S.rand ? v.k : 0];
+        if (!A) return;
+        rigs.forEach(r => r.g.visible = (r === A));
+        const az = A.yaw + (S.rand ? 0 : v.k * Math.PI / 2);
+        const cp = Math.cos(A.pitch) * A.dist;
+        cam.position.set(Math.sin(az) * cp, A.cy + Math.sin(A.pitch) * A.dist, Math.cos(az) * cp);
+        cam.lookAt(0, A.cy, 0);
+        renderer.render(scene, cam);
+        v.ctx.clearRect(0, 0, RES, RES);
+        v.ctx.drawImage(renderer.domElement, 0, 0);
+      });
+    }
+
+    function tick(now) {
+      requestAnimationFrame(tick);
+      const rawDt = Math.min((now - last) / 1000, 0.1);
+      last = now;
+
+      if (document.hidden || !ready || !views.length || !rigs.length || media.type !== 'char') return;
+
+      const dt = S.isPaused ? 0 : (rawDt * S.speed);
+      simTime += dt;
+      spinAng += dt * 0.9;
+
+      for (let i = 0; i < rigs.length; i++) {
+        const A = rigs[i];
+        A.g.rotation.y = S.tm === 2 ? spinAng + A.ph : S.tm === 1 ? Math.sin(simTime * 0.6 + A.ph) * 0.9 : 0;
+        animate(A, simTime);
+        camFollow(A, dt, simTime);
+      }
+
+      renderViews();
+    }
+    requestAnimationFrame(tick);
+
+    // ⚡ 修復：統一時間基準為 simTime，並立即繪製首幀
+    function setModel() {
+      if (!ready) return;
+      rigs.forEach(A => scene.remove(A.g));
+      rigs = [];
+      const t = simTime;
+      if (!views.length || media.type !== 'char') return;
+      if (S.rand) {
+        const order = CHARS.map((_, i) => i).sort(() => Math.random() - .5);
+        views.forEach((v, i) => rigs.push(mk(order[i % order.length], t)));
+      } else {
+        rigs.push(mk(S.char % CHARS.length, t));
+      }
+      for (let i = 0; i < rigs.length; i++) {
+        animate(rigs[i], simTime);
+      }
+      renderViews();
+    }
+
+    /* ================= 內容與視角產生 ================= */
+    function makeMedia(k) {
+      if (media.type === 'video') {
+        const v = document.createElement('video');
+        v.className = 'media';
+        v.src = media.url;
+        v.autoplay = v.loop = v.muted = true;
+        v.playsInline = true;
+        v.setAttribute('webkit-playsinline', 'true');
+        v.playbackRate = S.speed;
+        v.play().catch(() => {});
+        return v;
+      }
+      if (media.type === 'image') {
+        const i = new Image();
+        i.className = 'media';
+        i.src = media.url;
+        i.draggable = false;
+        return i;
+      }
+      const c = document.createElement('canvas');
+      c.width = c.height = RES;
+      c.className = 'char';
+      views.push({ ctx: c.getContext('2d'), k });
+      return c;
+    }
+
+    function build() {
+      group.innerHTML = '';
+      views = [];
+      const angles = S.mode === 'quad' ? [0, 90, 180, 270] : [0];
+      angles.forEach((a, k) => {
+        const arm = document.createElement('div'); arm.className = 'arm';
+        arm.style.transform = `rotate(${a}deg)`;
+        const view = document.createElement('div'); view.className = 'view';
+        const c = document.createElement('div'); c.className = 'content';
+        c.appendChild(makeMedia(k));
+        view.appendChild(c);
+        arm.appendChild(view);
+        group.appendChild(arm);
+      });
+      if (ready) setModel();
+      updateLook();
+    }
+
+    function syncUI() {
+      document.querySelectorAll('[data-char]').forEach(b => {
+        b.classList.toggle('btn-active', !S.rand && +b.dataset.char === S.char);
+      });
+      document.querySelectorAll('[data-act]').forEach(b => {
+        b.classList.toggle('btn-active', +b.dataset.act === S.actIdx);
+      });
+      $('btn-rand').classList.toggle('btn-active', S.rand);
+    }
+
+    function updateLook() {
+      group.style.setProperty('--gap', (S.mode === 'quad' ? S.gap : 0) + 'px');
+      group.style.setProperty('--ct', `scale(${S.fx}, ${S.fy}) rotate(${S.rot}deg)`);
+
+      const glowFilter = S.glow ? 'contrast(1.1) brightness(1.02) drop-shadow(0 0 10px rgba(56,189,248,0.35))' : 'none';
+      group.style.setProperty('--filter-fx', glowFilter);
+      group.style.setProperty('--blend-mode', S.blendScreen ? 'screen' : 'normal');
+
+      const vignette = S.vignette && S.mode === 'quad'
+        ? 'linear-gradient(to top, rgba(0,0,0,1) 15%, rgba(0,0,0,0) 95%)'
+        : 'none';
+      group.style.setProperty('--vignette-mask', vignette);
+
+      document.documentElement.style.setProperty('--guide-size', S.guideSize + 'px');
+      $('bottle-guide').classList.toggle('pyramid', S.guideShape === 'pyramid');
+      $('bottle-guide').style.opacity = S.guideVisible ? '1' : '0';
+      $('crosshair').style.opacity = S.guideVisible ? '0.6' : '0';
+
+      $('gap').value = S.gap;
+      $('guide-size').value = S.guideSize;
+      $('speed-slider').value = S.speed;
+      $('speed-val').textContent = S.speed.toFixed(1) + 'x';
+      $('btn-mode').textContent = S.mode === 'quad' ? '◫ 四視角' : '▢ 單視角';
+      $('btn-glow').classList.toggle('btn-active', S.glow);
+      $('btn-vignette').classList.toggle('btn-active', S.vignette);
+      $('btn-blend').classList.toggle('btn-active', S.blendScreen);
+      $('btn-turn').textContent = TURNS[S.tm];
+      $('btn-shape').textContent = S.guideShape === 'pyramid' ? '方形金字塔' : '圓形瓶口';
+
+      document.querySelectorAll('video.media').forEach(v => v.playbackRate = S.speed);
+      syncUI();
+    }
+
+    function apply(msg) {
+      group.style.transform = `translate(${S.x}px, ${S.y}px) scale(${S.scale})`;
+      if (msg) showToast(msg);
+      save();
+    }
+
+    /* ================= 互動控制函數 ================= */
+    function setSpeed(v) {
+      S.speed = clampSpeed(Math.round(+v * 10) / 10);
+      updateLook(); save();
+      showToast('⚡ 速度：' + S.speed.toFixed(1) + 'x');
+    }
+    function zoom(d) {
+      S.scale = clamp(S.scale + d);
+      apply(Math.round(S.scale * 100) + '%');
+    }
+    function resetView() {
+      S.scale = 1; S.x = 0; S.y = 0;
+      apply('已置中還原 100%');
+    }
+    function cycleSize() {
+      if (S.scale < 0.9) S.scale = 1.0;
+      else if (S.scale < 1.3) S.scale = 1.5;
+      else if (S.scale < 1.8) S.scale = 2.0;
+      else S.scale = 0.75;
+      apply(Math.round(S.scale * 100) + '%');
+    }
+    function toggleMode() {
+      S.mode = S.mode === 'quad' ? 'single' : 'quad';
+      build(); save();
+      showToast(S.mode === 'quad' ? '切換：四視角' : '切換：單視角');
+    }
+    function flip(k) {
+      S[k] *= -1; updateLook(); save();
+      showToast((k === 'fx' ? '水平鏡像 ' : '垂直翻轉 ') + (S[k] < 0 ? '開' : '關'));
+    }
+    function rotate90() {
+      S.rot = (S.rot + 90) % 360; updateLook(); save();
+      showToast('旋轉 ' + S.rot + '°');
+    }
+    function setGap(v) { S.gap = +v; updateLook(); save(); }
+    function setGuideSize(v) { S.guideSize = +v; updateLook(); save(); }
+    function toggleGuideShape() {
+      S.guideShape = S.guideShape === 'circle' ? 'pyramid' : 'circle';
+      updateLook(); save();
+      showToast(S.guideShape === 'pyramid' ? '改為方形金字塔' : '改為圓形瓶口');
+    }
+    function toggleGuide() {
+      S.guideVisible = !S.guideVisible; updateLook(); save();
+      showToast(S.guideVisible ? '顯示校正準星' : '隱藏校正準星');
+    }
+    function cycleTurn() {
+      S.tm = (S.tm + 1) % TURNS.length; save();
+      updateLook(); showToast(TURNS[S.tm]);
+    }
+    function toggleRand() {
+      S.rand = !S.rand; setModel(); syncUI(); save();
+      showToast('四面獨立角色 ' + (S.rand ? '開' : '關'));
+    }
+    function togglePlayPause() {
+      S.isPaused = !S.isPaused;
+      $('btn-pause').textContent = S.isPaused ? '▶ 播放' : '⏸ 暫停';
+      showToast(S.isPaused ? '動作已暫停' : '動作繼續');
+    }
+
+    // ⚡ 修復：選擇角色時關閉 S.rand，保證選中的角色立即出現
+    function selectChar(idx) {
+      if (media.type !== 'char') {
+        releaseUrl(); media = { type: 'char', url: null };
+        build();
+      }
+      S.rand = false;
+      S.char = idx; 
+      setModel(); 
+      syncUI(); 
+      save();
+      showToast(CHARS[idx].name);
+    }
+
+    function selectAct(idx) {
+      S.actIdx = idx;
+      const t = simTime;
+      rigs.forEach(A => { A.actIdx = idx; A.actT0 = t; });
+      syncUI(); save();
+      showToast(ACTS[idx].name);
+    }
+
+    function toggleGlow() {
+      S.glow = !S.glow; updateLook(); save();
+      showToast('全息高亮 ' + (S.glow ? '開啟' : '關閉'));
+    }
+    function toggleVignette() {
+      S.vignette = !S.vignette; updateLook(); save();
+      showToast('中心羽化 ' + (S.vignette ? '開啟' : '關閉'));
+    }
+    function toggleBlend() {
+      S.blendScreen = !S.blendScreen; updateLook(); save();
+      showToast('黑底濾透 ' + (S.blendScreen ? '開啟' : '關閉'));
+    }
+
+    function switchTab(name, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      ['char', 'align', 'fx'].forEach(tab => {
+        const el = $('tab-' + tab);
+        if (el) el.hidden = (tab !== name);
+      });
+      if (panelCollapsed) togglePanelCollapse();
+    }
+
+    function togglePanelCollapse() {
+      panelCollapsed = !panelCollapsed;
+      $('panel-container').hidden = panelCollapsed;
+      $('btn-collapse').textContent = panelCollapsed ? '🔼 展開' : '🔽 收合';
+    }
+
+    function releaseUrl() { if (media.url) URL.revokeObjectURL(media.url); }
+    function loadMedia(e) {
+      const f = e.target.files[0]; if (!f) return;
+      releaseUrl();
+      media = {
+        type: f.type.startsWith('video/') ? 'video' : 'image',
+        url: URL.createObjectURL(f)
+      };
+      build(); resetView();
+      e.target.value = '';
+      showToast('已載入自訂媒體');
+    }
+
+    /* ---- 劇院模式與全螢幕事件同步 ---- */
+    function toggleCinema(forceState) {
+      const shouldOn = typeof forceState === 'boolean' ? forceState : !document.body.classList.contains('cinema');
+      document.body.classList.toggle('cinema', shouldOn);
+
+      if (shouldOn) {
+        showToast('全黑劇院模式（輕觸邊緣或按 ESC 退出）');
+        try { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {}); } catch (e) {}
+        lockWake();
+      } else {
+        if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement && document.body.classList.contains('cinema')) {
+        toggleCinema(false);
+      }
+    });
+
+    /* ================= 觸控與指針操作 ================= */
+    const ptrs = new Map();
+    let g = null;
+    const dist = () => {
+      const p = [...ptrs.values()];
+      return p.length < 2 ? 1 : Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) || 1;
+    };
+    function rebase() {
+      const p = [...ptrs.values()][0]; if (!p) return;
+      g.sx = p.x; g.sy = p.y; g.ox = S.x; g.oy = S.y;
+      g.d0 = dist(); g.s0 = S.scale;
+    }
+
+    stage.addEventListener('pointerdown', e => {
+      try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+      ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      group.classList.add('dragging');
+      if (!g) g = { moved: false, onObj: !!e.target.closest('.view') };
+      rebase();
+      if (ptrs.size > 1) g.moved = true;
+    });
+
+    stage.addEventListener('pointermove', e => {
+      if (!ptrs.has(e.pointerId) || !g) return;
+      ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (ptrs.size === 1) {
+        const dx = e.clientX - g.sx, dy = e.clientY - g.sy;
+        if (!g.moved && Math.hypot(dx, dy) < 6) return;
+        g.moved = true; S.x = g.ox + dx; S.y = g.oy + dy; apply();
+      } else if (ptrs.size === 2) {
+        S.scale = clamp(g.s0 * dist() / g.d0);
+        apply(Math.round(S.scale * 100) + '%');
+      }
+    });
+
+    function endPtr(e) {
+      if (!ptrs.delete(e.pointerId) || !g) return;
+      if (e.type === 'pointercancel') g.moved = true;
+      if (ptrs.size === 0) {
+        group.classList.remove('dragging');
+        if (!g.moved) onTap(g.onObj);
+        g = null;
+      } else rebase();
+    }
+    stage.addEventListener('pointerup', endPtr);
+    stage.addEventListener('pointercancel', endPtr);
+
+    function onTap(onObj) {
+      if (document.body.classList.contains('cinema')) return toggleCinema(false);
+      if (onObj) cycleSize();
+    }
+
+    window.addEventListener('wheel', e => {
+      e.preventDefault();
+      zoom(e.deltaY < 0 ? 0.15 : -0.15);
+    }, { passive: false });
+
+    window.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT') return;
+      switch (e.key.toLowerCase()) {
+        case ' ': togglePlayPause(); break;
+        case 'f': toggleCinema(); break;
+        case 'c': selectChar((S.char + 1) % CHARS.length); break;
+        case 'a': selectAct((S.actIdx + 1) % ACTS.length); break;
+        case '[': setSpeed(S.speed - 0.1); break;
+        case ']': setSpeed(S.speed + 0.1); break;
+        case 'm': toggleMode(); break;
+        case 'r': resetView(); break;
+        case 'arrowup': S.y -= 5; apply(); break;
+        case 'arrowdown': S.y += 5; apply(); break;
+        case 'arrowleft': S.x -= 5; apply(); break;
+        case 'arrowright': S.x += 5; apply(); break;
+        case '+': case '=': zoom(0.15); break;
+        case '-': case '_': zoom(-0.15); break;
+      }
+    });
+
+    // 啟動初始化
+    build();
+    apply();
+  </script>
+</body>
+</html>
