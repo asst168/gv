@@ -1,0 +1,2569 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>離線版多欄位 QR-Code 產生與管理系統 (支援 Big5/UTF-8 智慧防亂碼)</title>
+    <style>
+        /* ==========================================================================
+           1. 基礎變數與全局樣式 (純原生，零外部依賴)
+           ========================================================================== */
+        :root {
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-subtle: #f1f5f9;
+            --border-color: #cbd5e1;
+            --border-light: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-light: #eff6ff;
+            --success: #059669;
+            --success-hover: #047857;
+            --danger: #dc2626;
+            --danger-hover: #b91c1c;
+            --warning: #d97706;
+            --radius: 8px;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Microsoft JhengHei", "PingFang TC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        /* 頂部標題 */
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-card);
+            padding: 16px 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 16px;
+            border-left: 5px solid var(--primary);
+            gap: 12px;
+        }
+
+        header h1 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge-offline {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #dcfce7;
+            color: #166534;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 999px;
+            border: 1px solid #bbf7d0;
+        }
+
+        .badge-offline::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            background: #16a34a;
+            border-radius: 50%;
+        }
+
+        /* 卡片樣式 */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-light);
+        }
+
+        .card-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border-light);
+            gap: 12px;
+        }
+
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .step-num {
+            background: var(--primary);
+            color: #fff;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        /* 表單控制項 */
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="color"],
+        select,
+        textarea {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            color: var(--text-main);
+            background: #fff;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        input[type="color"] {
+            padding: 2px 4px;
+            height: 38px;
+            width: 50px;
+            cursor: pointer;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        /* 欄位設定網格 */
+        .field-names-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+            margin-top: 14px;
+            padding: 14px;
+            background: var(--bg-subtle);
+            border-radius: 6px;
+            border: 1px dashed var(--border-color);
+        }
+
+        .field-name-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .field-name-item span {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            min-width: 28px;
+        }
+
+        .field-name-item input {
+            width: 100%;
+            padding: 6px 10px;
+            font-size: 0.9rem;
+        }
+
+        /* 按鈕樣式 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-hover); }
+
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-success:hover { background: var(--success-hover); }
+
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger:hover { background: var(--danger-hover); }
+
+        .btn-outline { background: #fff; color: var(--text-main); border-color: var(--border-color); }
+        .btn-outline:hover { background: var(--bg-subtle); border-color: #94a3b8; }
+
+        .btn-sm { padding: 5px 10px; font-size: 0.82rem; }
+
+        /* 工作區網格 */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .data-inputs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .format-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border-light);
+            align-items: flex-end;
+        }
+
+        /* 即時預覽框 */
+        .preview-box {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .qr-canvas-wrapper {
+            background: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 180px;
+            min-height: 180px;
+        }
+
+        .qr-raw-text {
+            width: 100%;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            background: #fff;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            padding: 6px 8px;
+            word-break: break-all;
+            max-height: 80px;
+            overflow-y: auto;
+            text-align: left;
+            font-family: Consolas, Monaco, monospace;
+        }
+
+        /* 表格與搜尋工具列 */
+        .table-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .search-box {
+            position: relative;
+            max-width: 320px;
+            width: 100%;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding-left: 32px;
+        }
+
+        .search-box svg {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+        }
+
+        table.data-table th,
+        table.data-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-light);
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        table.data-table th {
+            background: var(--bg-subtle);
+            font-weight: 700;
+            color: var(--text-muted);
+            white-space: nowrap;
+            border-top: 1px solid var(--border-light);
+        }
+
+        table.data-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .qr-thumb-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .qr-thumb {
+            width: 60px;
+            height: 60px;
+            display: block;
+            border: 1px solid var(--border-light);
+            background: #fff;
+            padding: 2px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 16px;
+            color: var(--text-muted);
+        }
+
+        /* 提示通知條 */
+        #toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            background: #1e293b;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.2s ease-out;
+            max-width: 380px;
+        }
+
+        .toast.success { border-left: 4px solid #10b981; }
+        .toast.error { border-left: 4px solid #ef4444; }
+        .toast.info { border-left: 4px solid #3b82f6; }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* 彈窗 Modal */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 16px;
+        }
+
+        .modal-backdrop.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #fff;
+            border-radius: var(--radius);
+            max-width: 720px;
+            width: 100%;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-box h3 {
+            margin-bottom: 12px;
+            font-size: 1.15rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .drag-active {
+            border-color: var(--primary) !important;
+            background-color: var(--primary-light) !important;
+        }
+
+        /* 批次匯入即時預覽表格小卡片 */
+        .batch-preview-table-container {
+            margin-top: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow-x: auto;
+            max-height: 160px;
+            background: #fff;
+        }
+
+        .batch-preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        .batch-preview-table th, .batch-preview-table td {
+            border: 1px solid var(--border-light);
+            padding: 4px 8px;
+            white-space: nowrap;
+        }
+
+        .batch-preview-table th {
+            background: #f1f5f9;
+            font-weight: 600;
+        }
+
+        /* 列印模式樣式 */
+        #print-area { display: none; }
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 10mm 12mm;
+            }
+
+            body {
+                background: #fff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                color: #000 !important;
+            }
+
+            .no-print, header, .container, #toast-container, .modal-backdrop {
+                display: none !important;
+            }
+
+            #print-area { display: block !important; width: 100%; }
+
+            .print-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+                border-bottom: 2px solid #000;
+                padding-bottom: 6px;
+                margin-bottom: 14px;
+            }
+
+            .print-header h2 { font-size: 16pt; font-weight: bold; margin: 0; }
+            .print-meta { font-size: 9pt; color: #333; }
+
+            .print-list-view .print-row-item {
+                display: flex;
+                align-items: center;
+                border: 1px solid #777;
+                border-radius: 4px;
+                padding: 8px 12px;
+                margin-bottom: 8px;
+                page-break-inside: avoid;
+                break-inside: avoid;
+                background: #fff;
+            }
+
+            .print-seq {
+                font-size: 11pt;
+                font-weight: bold;
+                min-width: 32px;
+                text-align: center;
+                border-right: 1px solid #ccc;
+                padding-right: 8px;
+                margin-right: 12px;
+            }
+
+            .print-qr-box { flex-shrink: 0; margin-right: 16px; }
+            .print-qr-box img { width: 82px; height: 82px; display: block; }
+            .print-fields-grid {
+                flex: 1;
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 4px 16px;
+                font-size: 10pt;
+            }
+            .print-field-entry {
+                display: flex;
+                align-items: baseline;
+                border-bottom: 1px dotted #ccc;
+                padding: 2px 0;
+            }
+            .print-field-label { font-weight: bold; margin-right: 6px; white-space: nowrap; }
+            .print-field-value { word-break: break-all; }
+
+            .print-grid-view {
+                display: grid;
+                grid-template-columns: repeat(var(--print-cols, 3), 1fr);
+                gap: 8px;
+            }
+            .print-grid-item {
+                border: 1px dashed #666;
+                border-radius: 4px;
+                padding: 8px;
+                page-break-inside: avoid;
+                break-inside: avoid;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            .print-grid-item img { width: 86px; height: 86px; margin-bottom: 6px; }
+            .print-grid-desc { font-size: 8.5pt; line-height: 1.3; width: 100%; word-break: break-all; }
+            .print-grid-desc-strong {
+                font-weight: bold;
+                font-size: 9.5pt;
+                margin-bottom: 2px;
+                border-bottom: 1px solid #ddd;
+                padding-bottom: 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container no-print">
+    <!-- 頂部標題列 -->
+    <header>
+        <h1>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            離線版多欄位 QR-Code 產生與管理系統
+        </h1>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <button type="button" class="btn btn-outline btn-sm" id="btn-export-backup" title="匯出完整系統設定與資料備份 (.json)">💾 備份系統資料</button>
+            <button type="button" class="btn btn-outline btn-sm" id="btn-import-backup" title="從 .json 檔還原">📂 還原資料</button>
+            <input type="file" id="backup-file-input" accept=".json" style="display: none;">
+            <span class="badge-offline">純單機離線 · 零外部依賴</span>
+        </div>
+    </header>
+
+    <!-- 第一步：設定 QR-Code 欄位結構 -->
+    <section class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <span class="step-num">1</span>
+                設定 QR-Code 欄位結構
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-outline btn-sm" id="btn-reset-fields">恢復預設欄位</button>
+                <button type="button" class="btn btn-primary btn-sm" id="btn-save-fields">💾 儲存欄位設定</button>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="field-count">欄位數量 (1 ~ 10 欄)</label>
+                <input type="number" id="field-count" min="1" max="10" value="4" style="width: 110px;">
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); padding-bottom: 8px;">
+                提示：自訂欄位名稱將同步反應於即時預覽、清單表格、CSV 匯出及 A4 列印報表。
+            </div>
+        </div>
+
+        <div class="field-names-grid" id="field-names-container">
+            <!-- 動態產生欄位名稱設定框 -->
+        </div>
+    </section>
+
+    <!-- 第二步：輸入資料 / 批次匯入與即時預覽 -->
+    <section class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <span class="step-num">2</span>
+                輸入資料與即時預覽
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button type="button" class="btn btn-outline btn-sm" id="btn-open-batch" style="color: var(--primary); font-weight: 700; border-color: var(--primary);">📋 批次貼上 / 匯入 CSV (支援 Big5/UTF-8 防亂碼)</button>
+                <span style="font-size: 0.83rem; color: var(--text-muted);">
+                    ⌨️ 提示：按 <strong>Enter</strong> 跳下一欄，最後一欄直接加入！
+                </span>
+            </div>
+        </div>
+
+        <div class="workspace-grid">
+            <!-- 左側：輸入框與 QR 格式配置 -->
+            <div>
+                <!-- 編輯狀態指示列 -->
+                <div id="editing-indicator" style="display: none; background: #fef3c7; border-left: 4px solid var(--warning); padding: 8px 12px; margin-bottom: 12px; border-radius: 4px; font-size: 0.88rem; justify-content: space-between; align-items: center;">
+                    <span>⚠️ 目前正在<strong>編輯現有項目</strong>（儲存時將更新原記錄）</span>
+                    <button type="button" class="btn btn-outline btn-sm" id="btn-cancel-edit" style="background: #fff;">取消編輯</button>
+                </div>
+
+                <div class="data-inputs-grid" id="data-inputs-container">
+                    <!-- 動態產生輸入欄位 -->
+                </div>
+
+                <div class="format-options">
+                    <div class="form-group">
+                        <label for="delimiter-select">QR 內容分隔符號</label>
+                        <select id="delimiter-select">
+                            <option value="\n" selected>換行符號 (\n)</option>
+                            <option value=",">逗號 ( , )</option>
+                            <option value="|">直線 ( | )</option>
+                            <option value="\t">Tab 定位鍵 (\t)</option>
+                            <option value=";">分號 ( ; )</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="include-label-select">QR 內容格式</label>
+                        <select id="include-label-select">
+                            <option value="true" selected>包含欄位名稱 (例如：姓名:王小明)</option>
+                            <option value="false">僅純數值 (例如：王小明)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ecc-select">糾錯等級</label>
+                        <select id="ecc-select">
+                            <option value="L">L (7% 低容錯-小尺寸)</option>
+                            <option value="M" selected>M (15% 標準推薦)</option>
+                            <option value="Q">Q (25% 高容錯)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="qr-fg-color">QR 顏色</label>
+                        <input type="color" id="qr-fg-color" value="#000000" title="自訂前景色">
+                    </div>
+
+                    <div style="margin-left: auto; display: flex; gap: 8px; padding-top: 16px;">
+                        <button type="button" class="btn btn-outline" id="btn-clear-inputs">清除輸入</button>
+                        <button type="button" class="btn btn-success" id="btn-add-record">➕ 加入清單</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右側：即時 QR-Code 預覽與下載 -->
+            <div class="preview-box">
+                <div style="font-size: 0.88rem; font-weight: 700; color: var(--text-main);">即時 QR-Code 預覽</div>
+                <div class="qr-canvas-wrapper" id="live-qr-container">
+                    <canvas id="live-qr-canvas" width="180" height="180"></canvas>
+                </div>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px; width: 100%;">
+                    <button type="button" class="btn btn-outline btn-sm" id="btn-download-live-qr" style="flex: 1;">💾 下載 PNG</button>
+                    <button type="button" class="btn btn-outline btn-sm" id="btn-copy-live-qr" style="flex: 1;">📋 複製圖片</button>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; align-self: flex-start;">編碼內容預覽：</div>
+                <div class="qr-raw-text" id="live-qr-text">(尚未輸入資料)</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 第三步：資料管理清單與報表列印 -->
+    <section class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <span class="step-num">3</span>
+                已產生資料清單 (<span id="record-count">0</span> 筆)
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-danger btn-sm" id="btn-clear-all">🗑️ 清空全部</button>
+                <button type="button" class="btn btn-outline btn-sm" id="btn-export-csv">📥 匯出 .CSV (Excel 適用防亂碼)</button>
+                <button type="button" class="btn btn-primary btn-sm" id="btn-open-print-dialog">🖨️ A4 報表/標籤列印</button>
+            </div>
+        </div>
+
+        <!-- 搜尋工具列 -->
+        <div class="table-toolbar">
+            <div class="search-box">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="search-input" placeholder="搜尋任意欄位內容...">
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);" id="search-result-info"></div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table" id="records-table">
+                <thead id="records-thead">
+                    <!-- 動態表頭 -->
+                </thead>
+                <tbody id="records-tbody">
+                    <!-- 動態資料列 -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<!-- ==========================================================================
+     批次匯入 Modal (強化 Big5 雙引擎解碼 + RFC-4180 標準解析 + 即時欄位預覽)
+     ========================================================================== -->
+<div class="modal-backdrop" id="batch-modal">
+    <div class="modal-box">
+        <h3>📋 批次匯入 (Excel 貼上 / CSV 檔案)</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+            可直接由 <strong>Excel</strong> 複製表格後在下方貼上，或選取 / 拖曳 <code>.csv / .txt</code> 檔案至此。
+        </p>
+
+        <!-- 檔案選擇與編碼設定區塊 -->
+        <div style="background: var(--bg-subtle); padding: 12px 14px; border-radius: 6px; margin-bottom: 12px; border: 1px solid var(--border-color);">
+            <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 8px;">
+                <div class="form-group" style="flex: 1; min-width: 220px;">
+                    <label for="batch-csv-file">選擇 CSV / TXT 檔案：</label>
+                    <input type="file" id="batch-csv-file" accept=".csv,.txt,.tsv" style="font-size: 0.85rem; padding: 4px;">
+                </div>
+
+                <div class="form-group" style="width: 190px;">
+                    <label for="batch-encoding-select">中文編碼格式：</label>
+                    <select id="batch-encoding-select" style="font-size: 0.85rem; padding: 6px 8px;">
+                        <option value="auto" selected>✨ 自動識別 (推薦)</option>
+                        <option value="big5">🇹🇼 Big5 / ANSI (Excel/ERP)</option>
+                        <option value="utf-8">🌐 UTF-8 (Unicode)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 即時編碼辨識結果與快捷切換鈕 -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 0.8rem; border-top: 1px dashed var(--border-color); padding-top: 8px;">
+                <div id="batch-encoding-status" style="color: var(--primary); font-weight: 700;">
+                    💡 提示：支援繁體中文 Big5 (CP950) 與 UTF-8 自動識別
+                </div>
+                <div style="display: flex; gap: 6px;">
+                    <button type="button" class="btn btn-outline btn-sm" id="btn-force-big5" style="padding: 2px 8px; font-size: 0.78rem;">🇹🇼 切換為 Big5</button>
+                    <button type="button" class="btn btn-outline btn-sm" id="btn-force-utf8" style="padding: 2px 8px; font-size: 0.78rem;">🌐 切換為 UTF-8</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 略過標題列核取方塊 -->
+        <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="batch-skip-header" checked style="width: 16px; height: 16px; cursor: pointer;">
+            <label for="batch-skip-header" style="font-size: 0.88rem; cursor: pointer; color: var(--text-main); font-weight: 600;">
+                第一列是欄位標題 (例如：no, b_name)，匯入時自動略過
+            </label>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+            <label for="batch-textarea">資料內容與預覽區 (可直接貼上)：</label>
+            <textarea id="batch-textarea" rows="6" placeholder="可直接從 Excel 選取表格後按 Ctrl+V 貼上；&#10;或拖曳 CSV 檔案至此。&#10;範例：&#10;編號,客戶名稱,電話&#10;A01,永聯企業股份有限公司,02-23456789&#10;A02,大順行,04-22334455" style="width: 100%; font-family: monospace; font-size: 0.88rem;"></textarea>
+        </div>
+
+        <!-- 即時解析預覽 (確認欄位與中文未亂碼) -->
+        <div style="margin-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--text-muted); font-weight: 600;">
+                <span>📊 即時解析結果預覽 (前 3 筆)：</span>
+                <span id="batch-parsed-summary">尚未解析資料</span>
+            </div>
+            <div class="batch-preview-table-container">
+                <table class="batch-preview-table" id="batch-preview-table">
+                    <thead><tr id="batch-preview-thead"></tr></thead>
+                    <tbody id="batch-preview-tbody"><tr><td style="color:#94a3b8; text-align:center;">尚無預覽資料</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" class="btn btn-outline btn-sm" id="batch-cancel">取消</button>
+            <button type="button" class="btn btn-success btn-sm" id="batch-confirm">🚀 開始批次產生</button>
+        </div>
+    </div>
+</div>
+
+<!-- 列印模式選擇 Modal -->
+<div class="modal-backdrop" id="print-modal">
+    <div class="modal-box" style="max-width: 460px;">
+        <h3>🖨️ A4 列印模式設定</h3>
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">
+            請選擇您希望輸出的列印格式：
+        </p>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+            <label for="print-mode-select">列印排版樣式</label>
+            <select id="print-mode-select">
+                <option value="list" selected>📄 逐條詳細明細表 (每條橫列顯示完整欄位)</option>
+                <option value="grid">🏷️ 標籤貼紙網格 (多欄小卡片，適合裁切/貼紙)</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="print-grid-cols-group" style="margin-bottom: 14px; display: none;">
+            <label for="print-grid-cols">標籤每列欄數</label>
+            <select id="print-grid-cols">
+                <option value="2">2 欄 (大尺寸標籤)</option>
+                <option value="3" selected>3 欄 (標準標籤貼紙 - 推薦)</option>
+                <option value="4">4 欄 (密集小標籤)</option>
+            </select>
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" class="btn btn-outline btn-sm" id="print-cancel">取消</button>
+            <button type="button" class="btn btn-primary btn-sm" id="print-confirm">開始列印</button>
+        </div>
+    </div>
+</div>
+
+<!-- 自訂確認對話框 -->
+<div class="modal-backdrop" id="confirm-modal">
+    <div class="modal-box" style="max-width: 400px;">
+        <h3 id="confirm-title">確認操作</h3>
+        <p id="confirm-message" style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 16px;">確定要執行此操作嗎？</p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-outline btn-sm" id="confirm-cancel">取消</button>
+            <button type="button" class="btn btn-danger btn-sm" id="confirm-ok">確定執行</button>
+        </div>
+    </div>
+</div>
+
+<!-- A4 列印專用容器 -->
+<div id="print-area"></div>
+
+<!-- Toast 通知容器 -->
+<div id="toast-container"></div>
+
+<script>
+/**
+ * ============================================================================
+ * 內建純 JavaScript QR-Code 編碼核心引擎 (支援 UTF-8 繁中 / 糾錯等級 L, M, Q, H)
+ * ============================================================================
+ */
+const QRCodeEngine = (function () {
+    const EXP_TABLE = new Array(256);
+    const LOG_TABLE = new Array(256);
+    for (let i = 0; i < 8; i++) EXP_TABLE[i] = 1 << i;
+    for (let i = 8; i < 256; i++) {
+        EXP_TABLE[i] = EXP_TABLE[i - 4] ^ EXP_TABLE[i - 5] ^ EXP_TABLE[i - 6] ^ EXP_TABLE[i - 8];
+    }
+    for (let i = 0; i < 255; i++) LOG_TABLE[EXP_TABLE[i]] = i;
+
+    function glog(n) { if (n < 1) throw new Error("glog(" + n + ")"); return LOG_TABLE[n]; }
+    function gexp(n) {
+        while (n < 0) n += 255;
+        while (n >= 256) n -= 255;
+        return EXP_TABLE[n];
+    }
+
+    function Polynomial(num, shift) {
+        let offset = 0;
+        while (offset < num.length && num[offset] === 0) offset++;
+        this.num = new Array(num.length - offset + shift);
+        for (let i = 0; i < num.length - offset; i++) this.num[i] = num[i + offset];
+    }
+    Polynomial.prototype.get = function (i) { return this.num[i]; };
+    Polynomial.prototype.getLength = function () { return this.num.length; };
+    Polynomial.prototype.multiply = function (e) {
+        const num = new Array(this.getLength() + e.getLength() - 1).fill(0);
+        for (let i = 0; i < this.getLength(); i++) {
+            for (let j = 0; j < e.getLength(); j++) {
+                num[i + j] ^= gexp(glog(this.get(i)) + glog(e.get(j)));
+            }
+        }
+        return new Polynomial(num, 0);
+    };
+    Polynomial.prototype.mod = function (e) {
+        if (this.getLength() - e.getLength() < 0) return this;
+        const ratio = glog(this.get(0)) - glog(e.get(0));
+        const num = new Array(this.getLength());
+        for (let i = 0; i < this.getLength(); i++) num[i] = this.get(i);
+        for (let i = 0; i < e.getLength(); i++) num[i] ^= gexp(glog(e.get(i)) + ratio);
+        return new Polynomial(num, 0).mod(e);
+    };
+
+    const RS_BLOCK_TABLE = [
+        [1, 26, 19], [1, 26, 16], [1, 26, 13], [1, 26, 9],
+        [1, 44, 34], [1, 44, 28], [1, 44, 22], [1, 44, 16],
+        [1, 70, 55], [1, 70, 44], [2, 35, 17], [2, 35, 13],
+        [1, 100, 80], [2, 50, 32], [2, 50, 24], [4, 25, 9],
+        [1, 134, 108], [2, 67, 43], [2, 33, 15, 2, 34, 16], [2, 33, 11, 2, 34, 12],
+        [2, 86, 68], [4, 43, 27], [4, 43, 19], [4, 43, 15],
+        [2, 98, 78], [4, 49, 31], [2, 32, 14, 4, 33, 15], [4, 39, 13, 1, 40, 14],
+        [2, 121, 97], [2, 60, 38, 2, 61, 39], [4, 40, 18, 2, 41, 19], [4, 40, 14, 2, 41, 15],
+        [2, 146, 116], [3, 58, 36, 2, 59, 37], [4, 36, 16, 4, 37, 17], [4, 36, 12, 4, 37, 13],
+        [2, 86, 68, 2, 87, 69], [4, 69, 43, 1, 70, 44], [6, 43, 19, 2, 44, 20], [6, 43, 15, 2, 44, 16],
+        [4, 101, 81], [1, 80, 50, 4, 81, 51], [4, 50, 22, 4, 51, 23], [3, 36, 12, 8, 37, 13],
+        [2, 116, 92, 2, 117, 93], [6, 58, 36, 2, 59, 37], [4, 46, 20, 6, 47, 21], [7, 42, 14, 4, 43, 15],
+        [4, 133, 107], [8, 59, 37, 1, 60, 38], [8, 44, 20, 4, 45, 21], [12, 33, 11, 4, 34, 12],
+        [3, 145, 115, 1, 146, 116], [4, 64, 40, 5, 65, 41], [11, 36, 16, 5, 37, 17], [11, 36, 12, 5, 37, 13],
+        [5, 109, 87, 1, 110, 88], [5, 65, 41, 5, 66, 42], [5, 54, 24, 7, 55, 25], [11, 36, 12, 7, 37, 13],
+        [5, 122, 98, 1, 123, 99], [7, 73, 45, 3, 74, 46], [15, 43, 19, 2, 44, 20], [3, 45, 15, 13, 46, 16],
+        [1, 135, 107, 5, 136, 108], [10, 74, 46, 1, 75, 47], [1, 50, 22, 15, 51, 23], [2, 42, 14, 17, 43, 15],
+        [5, 150, 120, 1, 151, 121], [9, 69, 43, 4, 70, 44], [17, 50, 22, 1, 51, 23], [2, 42, 14, 19, 43, 15],
+        [3, 141, 113, 4, 142, 114], [3, 70, 44, 11, 71, 45], [17, 47, 21, 4, 48, 22], [9, 39, 13, 16, 40, 14],
+        [3, 135, 107, 5, 136, 108], [3, 67, 41, 13, 68, 42], [15, 54, 24, 5, 55, 25], [15, 43, 15, 10, 44, 16]
+    ];
+
+    const ERROR_CORRECT_LEVEL = { L: 1, M: 0, Q: 3, H: 2 };
+
+    function getRSBlocks(typeNumber, errorCorrectLevel) {
+        const offset = { 1: 0, 0: 1, 3: 2, 2: 3 }[errorCorrectLevel];
+        const rsBlock = RS_BLOCK_TABLE[(typeNumber - 1) * 4 + offset];
+        const list = [];
+        for (let i = 0; i < rsBlock.length; i += 3) {
+            const count = rsBlock[i];
+            const totalCount = rsBlock[i + 1];
+            const dataCount = rsBlock[i + 2];
+            for (let j = 0; j < count; j++) list.push({ totalCount, dataCount });
+        }
+        return list;
+    }
+
+    const PATTERN_POSITION_TABLE = [
+        [],
+        [6, 18], [6, 22], [6, 26], [6, 30], [6, 34],
+        [6, 22, 38], [6, 24, 42], [6, 26, 46], [6, 28, 50], [6, 30, 54],
+        [6, 32, 58], [6, 34, 62], [6, 26, 46, 66], [6, 26, 48, 70], [6, 26, 50, 74],
+        [6, 30, 54, 78], [6, 30, 56, 82], [6, 30, 58, 86], [6, 34, 62, 90]
+    ];
+
+    const G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+    const G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+    const G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+
+    function getBCHDigit(data) {
+        let digit = 0;
+        while (data !== 0) { digit++; data >>>= 1; }
+        return digit;
+    }
+
+    function getBCHTypeInfo(data) {
+        let d = data << 10;
+        while (getBCHDigit(d) - getBCHDigit(G15) >= 0) d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15)));
+        return ((data << 10) | d) ^ G15_MASK;
+    }
+
+    function getBCHTypeNumber(data) {
+        let d = data << 12;
+        while (getBCHDigit(d) - getBCHDigit(G18) >= 0) d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18)));
+        return (data << 12) | d;
+    }
+
+    function getErrorCorrectPolynomial(errorCorrectLength) {
+        let a = new Polynomial([1], 0);
+        for (let i = 0; i < errorCorrectLength; i++) a = a.multiply(new Polynomial([1, gexp(i)], 0));
+        return a;
+    }
+
+    function BitBuffer() {
+        this.buffer = [];
+        this.length = 0;
+    }
+    BitBuffer.prototype.put = function (num, length) {
+        for (let i = 0; i < length; i++) this.putBit(((num >>> (length - i - 1)) & 1) === 1);
+    };
+    BitBuffer.prototype.putBit = function (bit) {
+        const bufIndex = Math.floor(this.length / 8);
+        if (this.buffer.length <= bufIndex) this.buffer.push(0);
+        if (bit) this.buffer[bufIndex] |= (0x80 >>> (this.length % 8));
+        this.length++;
+    };
+
+    function stringToUtf8Bytes(str) {
+        const encoder = new TextEncoder();
+        return Array.from(encoder.encode(str));
+    }
+
+    function getMask(maskPattern, i, j) {
+        switch (maskPattern) {
+            case 0: return (i + j) % 2 === 0;
+            case 1: return i % 2 === 0;
+            case 2: return j % 3 === 0;
+            case 3: return (i + j) % 3 === 0;
+            case 4: return (Math.floor(i / 2) + Math.floor(j / 3)) % 2 === 0;
+            case 5: return (i * j) % 2 + (i * j) % 3 === 0;
+            case 6: return ((i * j) % 2 + (i * j) % 3) % 2 === 0;
+            case 7: return ((i * j) % 3 + (i + j) % 2) % 2 === 0;
+            default: return false;
+        }
+    }
+
+    function QRModel(typeNumber, errorCorrectLevel) {
+        this.typeNumber = typeNumber;
+        this.errorCorrectLevel = errorCorrectLevel;
+        this.modules = null;
+        this.moduleCount = 0;
+        this.dataCache = null;
+        this.dataBytes = [];
+    }
+
+    QRModel.prototype.addData = function (utf8Bytes) {
+        this.dataBytes = utf8Bytes;
+        this.dataCache = null;
+    };
+    QRModel.prototype.isDark = function (r, c) { return this.modules[r][c]; };
+    QRModel.prototype.getModuleCount = function () { return this.moduleCount; };
+
+    QRModel.prototype.make = function () {
+        this.makeImpl(false, this.getBestMaskPattern());
+    };
+
+    QRModel.prototype.makeImpl = function (test, maskPattern) {
+        this.moduleCount = this.typeNumber * 4 + 17;
+        this.modules = new Array(this.moduleCount);
+        for (let row = 0; row < this.moduleCount; row++) {
+            this.modules[row] = new Array(this.moduleCount).fill(null);
+        }
+
+        this.setupPositionProbePattern(0, 0);
+        this.setupPositionProbePattern(this.moduleCount - 7, 0);
+        this.setupPositionProbePattern(0, this.moduleCount - 7);
+        this.setupPositionAdjustPattern();
+        this.setupTimingPattern();
+        this.setupTypeInfo(test, maskPattern);
+        if (this.typeNumber >= 7) this.setupTypeNumber(test);
+
+        if (this.dataCache === null) {
+            this.dataCache = QRModel.createData(this.typeNumber, this.errorCorrectLevel, this.dataBytes);
+        }
+        this.mapData(this.dataCache, maskPattern);
+    };
+
+    QRModel.prototype.setupPositionProbePattern = function (row, col) {
+        for (let r = -1; r <= 7; r++) {
+            if (row + r <= -1 || this.moduleCount <= row + r) continue;
+            for (let c = -1; c <= 7; c++) {
+                if (col + c <= -1 || this.moduleCount <= col + c) continue;
+                if ((0 <= r && r <= 6 && (c === 0 || c === 6)) ||
+                    (0 <= c && c <= 6 && (r === 0 || r === 6)) ||
+                    (2 <= r && r <= 4 && 2 <= c && c <= 4)) {
+                    this.modules[row + r][col + c] = true;
+                } else {
+                    this.modules[row + r][col + c] = false;
+                }
+            }
+        }
+    };
+
+    QRModel.prototype.getBestMaskPattern = function () {
+        let minLostPoint = 0, pattern = 0;
+        for (let i = 0; i < 8; i++) {
+            this.makeImpl(true, i);
+            const lostPoint = this.getLostPoint();
+            if (i === 0 || minLostPoint > lostPoint) {
+                minLostPoint = lostPoint;
+                pattern = i;
+            }
+        }
+        return pattern;
+    };
+
+    QRModel.prototype.setupTimingPattern = function () {
+        for (let r = 8; r < this.moduleCount - 8; r++) {
+            if (this.modules[r][6] !== null) continue;
+            this.modules[r][6] = (r % 2 === 0);
+        }
+        for (let c = 8; c < this.moduleCount - 8; c++) {
+            if (this.modules[6][c] !== null) continue;
+            this.modules[6][c] = (c % 2 === 0);
+        }
+    };
+
+    QRModel.prototype.setupPositionAdjustPattern = function () {
+        const pos = PATTERN_POSITION_TABLE[this.typeNumber - 1];
+        for (let i = 0; i < pos.length; i++) {
+            for (let j = 0; j < pos.length; j++) {
+                const row = pos[i], col = pos[j];
+                if (this.modules[row][col] !== null) continue;
+                for (let r = -2; r <= 2; r++) {
+                    for (let c = -2; c <= 2; c++) {
+                        this.modules[row + r][col + c] = (r === -2 || r === 2 || c === -2 || c === 2 || (r === 0 && c === 0));
+                    }
+                }
+            }
+        }
+    };
+
+    QRModel.prototype.setupTypeNumber = function (test) {
+        const bits = getBCHTypeNumber(this.typeNumber);
+        for (let i = 0; i < 18; i++) {
+            const mod = (!test && ((bits >> i) & 1) === 1);
+            this.modules[Math.floor(i / 3)][i % 3 + this.moduleCount - 8 - 3] = mod;
+            this.modules[i % 3 + this.moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+        }
+    };
+
+    QRModel.prototype.setupTypeInfo = function (test, maskPattern) {
+        const data = (this.errorCorrectLevel << 3) | maskPattern;
+        const bits = getBCHTypeInfo(data);
+        for (let i = 0; i < 15; i++) {
+            const mod = (!test && ((bits >> i) & 1) === 1);
+            if (i < 6) this.modules[i][8] = mod;
+            else if (i < 8) this.modules[i + 1][8] = mod;
+            else this.modules[this.moduleCount - 15 + i][8] = mod;
+
+            if (i < 8) this.modules[8][this.moduleCount - i - 1] = mod;
+            else if (i < 9) this.modules[8][15 - i - 1 + 1] = mod;
+            else this.modules[8][15 - i - 1] = mod;
+        }
+        this.modules[this.moduleCount - 8][8] = (!test);
+    };
+
+    QRModel.prototype.mapData = function (data, maskPattern) {
+        let inc = -1, row = this.moduleCount - 1, bitIndex = 7, byteIndex = 0;
+        for (let col = this.moduleCount - 1; col > 0; col -= 2) {
+            if (col === 6) col--;
+            while (true) {
+                for (let c = 0; c < 2; c++) {
+                    if (this.modules[row][col - c] === null) {
+                        let dark = false;
+                        if (byteIndex < data.length) dark = (((data[byteIndex] >>> bitIndex) & 1) === 1);
+                        if (getMask(maskPattern, row, col - c)) dark = !dark;
+                        this.modules[row][col - c] = dark;
+                        bitIndex--;
+                        if (bitIndex === -1) {
+                            byteIndex++;
+                            bitIndex = 7;
+                        }
+                    }
+                }
+                row += inc;
+                if (row < 0 || this.moduleCount <= row) {
+                    row -= inc;
+                    inc = -inc;
+                    break;
+                }
+            }
+        }
+    };
+
+    QRModel.prototype.getLostPoint = function () {
+        const count = this.getModuleCount();
+        let lostPoint = 0;
+        for (let r = 0; r < count; r++) {
+            for (let c = 0; c < count; c++) {
+                let sameCount = 0;
+                const dark = this.isDark(r, c);
+                for (let dr = -1; dr <= 1; dr++) {
+                    if (r + dr < 0 || count <= r + dr) continue;
+                    for (let dc = -1; dc <= 1; dc++) {
+                        if (c + dc < 0 || count <= c + dc) continue;
+                        if (dr === 0 && dc === 0) continue;
+                        if (dark === this.isDark(r + dr, c + dc)) sameCount++;
+                    }
+                }
+                if (sameCount > 5) lostPoint += (3 + sameCount - 5);
+            }
+        }
+        for (let r = 0; r < count - 1; r++) {
+            for (let c = 0; c < count - 1; c++) {
+                let cnt = 0;
+                if (this.isDark(r, c)) cnt++;
+                if (this.isDark(r + 1, c)) cnt++;
+                if (this.isDark(r, c + 1)) cnt++;
+                if (this.isDark(r + 1, c + 1)) cnt++;
+                if (cnt === 0 || cnt === 4) lostPoint += 3;
+            }
+        }
+        return lostPoint;
+    };
+
+    QRModel.createData = function (typeNumber, errorCorrectLevel, dataBytes) {
+        const rsBlocks = getRSBlocks(typeNumber, errorCorrectLevel);
+        const buffer = new BitBuffer();
+        buffer.put(4, 4);
+        buffer.put(dataBytes.length, typeNumber < 10 ? 8 : 16);
+        for (let i = 0; i < dataBytes.length; i++) buffer.put(dataBytes[i], 8);
+
+        let totalDataCount = 0;
+        for (let i = 0; i < rsBlocks.length; i++) totalDataCount += rsBlocks[i].dataCount;
+
+        if (buffer.length > totalDataCount * 8) throw new Error("資料容量超出 QR-Code 上限");
+
+        if (buffer.length + 4 <= totalDataCount * 8) buffer.put(0, 4);
+        while (buffer.length % 8 !== 0) buffer.putBit(false);
+
+        while (true) {
+            if (buffer.length >= totalDataCount * 8) break;
+            buffer.put(0xEC, 8);
+            if (buffer.length >= totalDataCount * 8) break;
+            buffer.put(0x11, 8);
+        }
+        return QRModel.createBytes(buffer, rsBlocks);
+    };
+
+    QRModel.createBytes = function (buffer, rsBlocks) {
+        let offset = 0, maxDcCount = 0, maxEcCount = 0;
+        const dcdata = new Array(rsBlocks.length), ecdata = new Array(rsBlocks.length);
+
+        for (let r = 0; r < rsBlocks.length; r++) {
+            const dcCount = rsBlocks[r].dataCount;
+            const ecCount = rsBlocks[r].totalCount - dcCount;
+            maxDcCount = Math.max(maxDcCount, dcCount);
+            maxEcCount = Math.max(maxEcCount, ecCount);
+
+            dcdata[r] = new Array(dcCount);
+            for (let i = 0; i < dcdata[r].length; i++) dcdata[r][i] = 0xff & buffer.buffer[i + offset];
+            offset += dcCount;
+
+            const rsPoly = getErrorCorrectPolynomial(ecCount);
+            const rawPoly = new Polynomial(dcdata[r], rsPoly.getLength() - 1);
+            const modPoly = rawPoly.mod(rsPoly);
+
+            ecdata[r] = new Array(rsPoly.getLength() - 1);
+            for (let i = 0; i < ecdata[r].length; i++) {
+                const modIndex = i + modPoly.getLength() - ecdata[r].length;
+                ecdata[r][i] = (modIndex >= 0) ? modPoly.get(modIndex) : 0;
+            }
+        }
+
+        let totalCodeCount = 0;
+        for (let i = 0; i < rsBlocks.length; i++) totalCodeCount += rsBlocks[i].totalCount;
+
+        const data = new Array(totalCodeCount);
+        let index = 0;
+        for (let i = 0; i < maxDcCount; i++) {
+            for (let r = 0; r < rsBlocks.length; r++) {
+                if (i < dcdata[r].length) data[index++] = dcdata[r][i];
+            }
+        }
+        for (let i = 0; i < maxEcCount; i++) {
+            for (let r = 0; r < rsBlocks.length; r++) {
+                if (i < ecdata[r].length) data[index++] = ecdata[r][i];
+            }
+        }
+        return data;
+    };
+
+    function createQRModel(text, eccChar = "M") {
+        const ecc = ERROR_CORRECT_LEVEL[eccChar] !== undefined ? ERROR_CORRECT_LEVEL[eccChar] : ERROR_CORRECT_LEVEL.M;
+        const utf8Bytes = stringToUtf8Bytes(text);
+
+        for (let typeNumber = 1; typeNumber <= 20; typeNumber++) {
+            const rsBlocks = getRSBlocks(typeNumber, ecc);
+            let totalDataBytes = 0;
+            for (let i = 0; i < rsBlocks.length; i++) totalDataBytes += rsBlocks[i].dataCount;
+            const headerBytes = typeNumber < 10 ? 2 : 3;
+            if (utf8Bytes.length + headerBytes <= totalDataBytes) {
+                const qr = new QRModel(typeNumber, ecc);
+                qr.addData(utf8Bytes);
+                qr.make();
+                return qr;
+            }
+        }
+        throw new Error("內容過長，超過 QR-Code 規格上限！");
+    }
+
+    function drawToCanvas(canvas, text, eccChar = "M", size = 200, fgColor = "#000000", bgColor = "#ffffff") {
+        const ctx = canvas.getContext("2d");
+        canvas.width = size;
+        canvas.height = size;
+
+        if (!text) {
+            ctx.fillStyle = "#f8fafc";
+            ctx.fillRect(0, 0, size, size);
+            ctx.fillStyle = "#94a3b8";
+            ctx.font = "13px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("等待輸入資料", size / 2, size / 2);
+            return null;
+        }
+
+        try {
+            const qr = createQRModel(text, eccChar);
+            const count = qr.getModuleCount();
+            const quietZone = 2;
+            const totalModules = count + quietZone * 2;
+            const tileW = size / totalModules;
+            const tileH = size / totalModules;
+
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, size, size);
+
+            ctx.fillStyle = fgColor;
+            for (let row = 0; row < count; row++) {
+                for (let col = 0; col < count; col++) {
+                    if (qr.isDark(row, col)) {
+                        const w = Math.ceil((col + 1 + quietZone) * tileW) - Math.floor((col + quietZone) * tileW);
+                        const h = Math.ceil((row + 1 + quietZone) * tileH) - Math.floor((row + quietZone) * tileH);
+                        ctx.fillRect(
+                            Math.floor((col + quietZone) * tileW),
+                            Math.floor((row + quietZone) * tileH),
+                            w,
+                            h
+                        );
+                    }
+                }
+            }
+            return canvas.toDataURL("image/png");
+        } catch (err) {
+            ctx.fillStyle = "#fef2f2";
+            ctx.fillRect(0, 0, size, size);
+            ctx.fillStyle = "#dc2626";
+            ctx.font = "12px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("文字過長無法編碼", size / 2, size / 2);
+            return null;
+        }
+    }
+
+    function generateDataURL(text, eccChar = "M", size = 240, fgColor = "#000000", bgColor = "#ffffff") {
+        const tempCanvas = document.createElement("canvas");
+        return drawToCanvas(tempCanvas, text, eccChar, size, fgColor, bgColor);
+    }
+
+    return {
+        drawToCanvas,
+        generateDataURL
+    };
+})();
+
+/**
+ * ============================================================================
+ * 中文編碼 (UTF-8 / Big5 CP950) 雙軌解碼引擎 (徹底解決 Big5 匯入亂碼問題)
+ * ============================================================================
+ */
+const ChineseEncodingDecoder = (function () {
+    /**
+     * 以原生 FileReader 讀取 Blob 文字（最高相容性保證，原生支援 Big5 與 CP950）
+     */
+    function readBlobWithEncoding(blob, encoding) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result || "");
+            reader.onerror = () => {
+                try {
+                    // 若 FileReader 失敗，轉向 TextDecoder 兜底
+                    blob.arrayBuffer().then(buf => {
+                        try {
+                            resolve(new TextDecoder(encoding).decode(buf));
+                        } catch (e) {
+                            resolve(new TextDecoder("utf-8").decode(buf));
+                        }
+                    });
+                } catch (e2) {
+                    resolve("");
+                }
+            };
+            reader.readAsText(blob, encoding);
+        });
+    }
+
+    /**
+     * 智慧檢測位元組特徵（判斷 UTF-8 還是 Big5）
+     */
+    function detectEncodingFromBytes(bytes) {
+        // 1. 檢測 UTF-8 BOM (\xEF\xBB\xBF)
+        if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+            return "utf-8-bom";
+        }
+
+        // 2. 檢驗是否為 100% 純 ASCII
+        let isPureAscii = true;
+        for (let i = 0; i < bytes.length; i++) {
+            if (bytes[i] > 0x7F) {
+                isPureAscii = false;
+                break;
+            }
+        }
+        if (isPureAscii) return "ascii"; // 純 ASCII 兩者皆相容
+
+        // 3. 嚴格 UTF-8 驗證
+        let isStrictUtf8 = false;
+        try {
+            new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+            isStrictUtf8 = true;
+        } catch (e) {
+            isStrictUtf8 = false;
+        }
+
+        // 如果不是有效 UTF-8，在繁體中文 Windows/Excel CSV 環境下必為 Big5/CP950
+        if (!isStrictUtf8) {
+            return "big5";
+        }
+
+        // 4. 若嚴格符合 UTF-8，再抽樣前 4096 bytes 檢驗是否包含繁中 CJK 字元
+        // 避免少數特殊 Big5 序號恰巧符合 UTF-8 規則
+        try {
+            const sample = new TextDecoder("utf-8").decode(bytes.subarray(0, 4096));
+            const hasCjk = /[\u4e00-\u9fa5]/.test(sample);
+            if (hasCjk) return "utf-8";
+        } catch (e) {}
+
+        return "utf-8";
+    }
+
+    /**
+     * 核心解碼函式 (支援 Promise 非同步)
+     * @param {ArrayBuffer} buffer
+     * @param {string} mode "auto" | "big5" | "utf-8"
+     */
+    async function decode(buffer, mode = "auto") {
+        const bytes = new Uint8Array(buffer);
+        const blob = new Blob([buffer]);
+
+        // 1. 處理 BOM 檔頭
+        if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+            const text = await readBlobWithEncoding(new Blob([bytes.subarray(3)]), "utf-8");
+            return { text, detected: "UTF-8 (含 BOM 檔頭)" };
+        }
+
+        // 2. 使用者手動強制指定
+        if (mode === "big5") {
+            const text = await readBlobWithEncoding(blob, "big5");
+            return { text, detected: "Big5 / ANSI (手動指定)" };
+        }
+        if (mode === "utf-8") {
+            const text = await readBlobWithEncoding(blob, "utf-8");
+            return { text, detected: "UTF-8 (手動指定)" };
+        }
+
+        // 3. 自動識別
+        const detectedMode = detectEncodingFromBytes(bytes);
+        if (detectedMode === "big5") {
+            const text = await readBlobWithEncoding(blob, "big5");
+            return { text, detected: "Big5 / ANSI (Excel/ERP 繁體中文)" };
+        } else {
+            const text = await readBlobWithEncoding(blob, "utf-8");
+            return { text, detected: "UTF-8 (Unicode 標準)" };
+        }
+    }
+
+    return { decode };
+})();
+
+/**
+ * ============================================================================
+ * RFC-4180 標準 CSV / TSV 解析狀態機 (支援引號內逗號、換行與雙引號跳脫)
+ * ============================================================================
+ */
+const CSVParser = (function () {
+    function parse(text) {
+        if (!text || typeof text !== "string") return [];
+
+        // 自動識別分隔符號：檢查非引號區域的逗號、Tab 或分號數量
+        let delimiter = ",";
+        const firstLine = text.split(/\r?\n/)[0] || "";
+        const tabCount = (firstLine.match(/\t/g) || []).length;
+        const commaCount = (firstLine.match(/,/g) || []).length;
+        const semiCount = (firstLine.match(/;/g) || []).length;
+
+        if (tabCount > commaCount && tabCount >= semiCount) {
+            delimiter = "\t"; // Excel 直接複製貼上
+        } else if (semiCount > commaCount && semiCount > tabCount) {
+            delimiter = ";"; // 部分 ERP 分號分隔
+        }
+
+        const rows = [];
+        let currentRow = [];
+        let currentField = "";
+        let insideQuotes = false;
+        let i = 0;
+        const len = text.length;
+
+        while (i < len) {
+            const char = text[i];
+            const nextChar = text[i + 1];
+
+            if (char === '"') {
+                if (insideQuotes && nextChar === '"') {
+                    currentField += '"';
+                    i += 2;
+                    continue;
+                }
+                insideQuotes = !insideQuotes;
+                i++;
+                continue;
+            }
+
+            if (!insideQuotes && char === delimiter) {
+                currentRow.push(currentField.trim());
+                currentField = "";
+                i++;
+                continue;
+            }
+
+            if (!insideQuotes && (char === "\r" || char === "\n")) {
+                if (char === "\r" && nextChar === "\n") i++;
+                currentRow.push(currentField.trim());
+                if (currentRow.some(c => c !== "")) rows.push(currentRow);
+                currentRow = [];
+                currentField = "";
+                i++;
+                continue;
+            }
+
+            currentField += char;
+            i++;
+        }
+
+        if (currentField !== "" || currentRow.length > 0) {
+            currentRow.push(currentField.trim());
+            if (currentRow.some(c => c !== "")) rows.push(currentRow);
+        }
+
+        return rows;
+    }
+
+    return { parse };
+})();
+
+/**
+ * ============================================================================
+ * 系統主邏輯
+ * ============================================================================
+ */
+document.addEventListener("DOMContentLoaded", () => {
+    const STORAGE_KEYS = {
+        FIELDS: "offline_qr_sys_fields_v2",
+        RECORDS: "offline_qr_sys_records_v2",
+        OPTIONS: "offline_qr_sys_options_v2"
+    };
+
+    const DEFAULT_FIELDS = ["編號", "姓名", "電話", "備註"];
+
+    let state = {
+        fields: [...DEFAULT_FIELDS],
+        records: [],
+        options: {
+            delimiter: "\\n",
+            includeLabel: "true",
+            ecc: "M",
+            fgColor: "#000000"
+        },
+        editingRecordId: null,
+        searchTerm: ""
+    };
+
+    let currentBatchBuffer = null;
+
+    // DOM 節點
+    const fieldCountInput = document.getElementById("field-count");
+    const fieldNamesContainer = document.getElementById("field-names-container");
+    const dataInputsContainer = document.getElementById("data-inputs-container");
+    const delimiterSelect = document.getElementById("delimiter-select");
+    const includeLabelSelect = document.getElementById("include-label-select");
+    const eccSelect = document.getElementById("ecc-select");
+    const fgColorInput = document.getElementById("qr-fg-color");
+    const liveQrCanvas = document.getElementById("live-qr-canvas");
+    const liveQrText = document.getElementById("live-qr-text");
+    const recordCountSpan = document.getElementById("record-count");
+    const recordsThead = document.getElementById("records-thead");
+    const recordsTbody = document.getElementById("records-tbody");
+    const searchInput = document.getElementById("search-input");
+    const searchResultInfo = document.getElementById("search-result-info");
+    const editingIndicator = document.getElementById("editing-indicator");
+    const btnCancelEdit = document.getElementById("btn-cancel-edit");
+
+    function showToast(message, type = "info") {
+        const container = document.getElementById("toast-container");
+        const toast = document.createElement("div");
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = "0";
+            toast.style.transition = "opacity 0.25s";
+            setTimeout(() => toast.remove(), 250);
+        }, 2800);
+    }
+
+    function showConfirm(title, message) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById("confirm-modal");
+            document.getElementById("confirm-title").textContent = title;
+            document.getElementById("confirm-message").textContent = message;
+            modal.classList.add("active");
+
+            const btnOk = document.getElementById("confirm-ok");
+            const btnCancel = document.getElementById("confirm-cancel");
+
+            const cleanup = (res) => {
+                modal.classList.remove("active");
+                btnOk.removeEventListener("click", onOk);
+                btnCancel.removeEventListener("click", onCancel);
+                resolve(res);
+            };
+
+            const onOk = () => cleanup(true);
+            const onCancel = () => cleanup(false);
+
+            btnOk.addEventListener("click", onOk);
+            btnCancel.addEventListener("click", onCancel);
+        });
+    }
+
+    function loadFromStorage() {
+        try {
+            const savedFields = localStorage.getItem(STORAGE_KEYS.FIELDS);
+            if (savedFields) {
+                const parsed = JSON.parse(savedFields);
+                if (Array.isArray(parsed) && parsed.length >= 1 && parsed.length <= 10) state.fields = parsed;
+            }
+
+            const savedRecords = localStorage.getItem(STORAGE_KEYS.RECORDS);
+            if (savedRecords) {
+                const parsedRec = JSON.parse(savedRecords);
+                if (Array.isArray(parsedRec)) state.records = parsedRec;
+            }
+
+            const savedOptions = localStorage.getItem(STORAGE_KEYS.OPTIONS);
+            if (savedOptions) {
+                state.options = { ...state.options, ...JSON.parse(savedOptions) };
+            }
+        } catch (e) {
+            console.warn("載入 localStorage 發生問題:", e);
+        }
+
+        fieldCountInput.value = state.fields.length;
+        delimiterSelect.value = state.options.delimiter;
+        includeLabelSelect.value = state.options.includeLabel;
+        eccSelect.value = state.options.ecc;
+        fgColorInput.value = state.options.fgColor || "#000000";
+    }
+
+    function saveRecordsToStorage() {
+        try {
+            localStorage.setItem(STORAGE_KEYS.RECORDS, JSON.stringify(state.records));
+        } catch (e) {
+            showToast("本機儲存空間不足，請匯出備份後清理！", "error");
+        }
+    }
+
+    function saveOptionsToStorage() {
+        try {
+            localStorage.setItem(STORAGE_KEYS.OPTIONS, JSON.stringify(state.options));
+        } catch (e) {}
+    }
+
+    function renderFieldSettings() {
+        fieldNamesContainer.innerHTML = "";
+        state.fields.forEach((name, index) => {
+            const wrapper = document.createElement("div");
+            wrapper.className = "field-name-item";
+
+            const label = document.createElement("span");
+            label.textContent = `#${index + 1}`;
+
+            const input = document.createElement("input");
+            input.type = "text";
+            input.value = name;
+            input.placeholder = `欄位 ${index + 1}`;
+            input.dataset.index = index;
+
+            input.addEventListener("input", (e) => {
+                const idx = parseInt(e.target.dataset.index, 10);
+                state.fields[idx] = e.target.value.trim() || `欄位${idx + 1}`;
+                updateInputLabelsAndTableHeaders();
+                updateLivePreview();
+            });
+
+            wrapper.appendChild(label);
+            wrapper.appendChild(input);
+            fieldNamesContainer.appendChild(wrapper);
+        });
+    }
+
+    function renderDataInputs() {
+        const existingInputs = dataInputsContainer.querySelectorAll("input");
+        const tempValues = Array.from(existingInputs).map(inp => inp.value);
+
+        dataInputsContainer.innerHTML = "";
+        state.fields.forEach((fieldName, index) => {
+            const group = document.createElement("div");
+            group.className = "form-group";
+
+            const label = document.createElement("label");
+            label.setAttribute("for", `data-input-${index}`);
+            label.textContent = fieldName;
+            label.dataset.fieldLabelIndex = index;
+
+            const input = document.createElement("input");
+            input.type = "text";
+            input.id = `data-input-${index}`;
+            input.placeholder = `請輸入${fieldName}...`;
+            input.value = tempValues[index] || "";
+            input.dataset.index = index;
+
+            input.addEventListener("input", updateLivePreview);
+
+            input.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    const nextInput = document.getElementById(`data-input-${index + 1}`);
+                    if (nextInput) {
+                        nextInput.focus();
+                    } else {
+                        addOrUpdateRecord();
+                    }
+                }
+            });
+
+            group.appendChild(label);
+            group.appendChild(input);
+            dataInputsContainer.appendChild(group);
+        });
+
+        updateLivePreview();
+    }
+
+    function updateInputLabelsAndTableHeaders() {
+        state.fields.forEach((fieldName, index) => {
+            const lbl = dataInputsContainer.querySelector(`label[data-field-label-index="${index}"]`);
+            if (lbl) lbl.textContent = fieldName;
+
+            const inp = document.getElementById(`data-input-${index}`);
+            if (inp) inp.placeholder = `請輸入${fieldName}...`;
+        });
+        renderRecordsTable();
+    }
+
+    function getDelimiterChar() {
+        const val = delimiterSelect.value;
+        if (val === "\\n") return "\n";
+        if (val === "\\t") return "\t";
+        return val;
+    }
+
+    function buildQRContent(values) {
+        const hasAnyValue = values.some(v => (v || "").trim() !== "");
+        if (!hasAnyValue) return "";
+
+        const delimiter = getDelimiterChar();
+        const includeLabel = includeLabelSelect.value === "true";
+
+        const parts = state.fields.map((fieldName, idx) => {
+            const val = (values[idx] || "").trim();
+            return includeLabel ? `${fieldName}:${val}` : val;
+        });
+
+        return parts.join(delimiter);
+    }
+
+    function getCurrentInputValues() {
+        const inputs = dataInputsContainer.querySelectorAll("input");
+        return Array.from(inputs).map(inp => inp.value.trim());
+    }
+
+    function updateLivePreview() {
+        const values = getCurrentInputValues();
+        const qrText = buildQRContent(values);
+        const ecc = eccSelect.value;
+        const fgColor = fgColorInput.value;
+
+        liveQrText.textContent = qrText || "(尚未輸入資料)";
+        QRCodeEngine.drawToCanvas(liveQrCanvas, qrText, ecc, 180, fgColor);
+    }
+
+    function addOrUpdateRecord() {
+        const values = getCurrentInputValues();
+        if (!values.some(v => v !== "")) {
+            showToast("請至少輸入一個欄位的資料！", "error");
+            const firstInput = document.getElementById("data-input-0");
+            if (firstInput) firstInput.focus();
+            return;
+        }
+
+        const qrText = buildQRContent(values);
+        const ecc = eccSelect.value;
+        const fgColor = fgColorInput.value;
+        const qrDataUrl = QRCodeEngine.generateDataURL(qrText, ecc, 240, fgColor);
+
+        if (!qrDataUrl) {
+            showToast("資料長度超過 QR 限制，無法產生！", "error");
+            return;
+        }
+
+        if (state.editingRecordId) {
+            const idx = state.records.findIndex(r => r.id === state.editingRecordId);
+            if (idx !== -1) {
+                state.records[idx].values = values;
+                state.records[idx].qrText = qrText;
+                state.records[idx].qrDataUrl = qrDataUrl;
+                state.records[idx].updatedAt = new Date().toLocaleString("zh-TW", { hour12: false });
+                showToast("已成功更新資料！", "success");
+            }
+            cancelEditing();
+        } else {
+            const newRecord = {
+                id: Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+                values: values,
+                qrText: qrText,
+                qrDataUrl: qrDataUrl,
+                createdAt: new Date().toLocaleString("zh-TW", { hour12: false })
+            };
+            state.records.push(newRecord);
+            showToast("已成功加入清單！", "success");
+        }
+
+        saveRecordsToStorage();
+        renderRecordsTable();
+        clearDataInputs(true);
+    }
+
+    function startEditing(id) {
+        const rec = state.records.find(r => r.id === id);
+        if (!rec) return;
+
+        state.editingRecordId = id;
+        editingIndicator.style.display = "flex";
+        document.getElementById("btn-add-record").textContent = "💾 儲存修改";
+        document.getElementById("btn-add-record").classList.replace("btn-success", "btn-primary");
+
+        state.fields.forEach((_, idx) => {
+            const inp = document.getElementById(`data-input-${idx}`);
+            if (inp) inp.value = rec.values[idx] || "";
+        });
+
+        updateLivePreview();
+        const first = document.getElementById("data-input-0");
+        if (first) {
+            first.focus();
+            first.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+    }
+
+    function cancelEditing() {
+        state.editingRecordId = null;
+        editingIndicator.style.display = "none";
+        document.getElementById("btn-add-record").textContent = "➕ 加入清單";
+        document.getElementById("btn-add-record").classList.replace("btn-primary", "btn-success");
+        clearDataInputs(false);
+    }
+
+    function cloneRecord(id) {
+        const rec = state.records.find(r => r.id === id);
+        if (!rec) return;
+
+        state.fields.forEach((_, idx) => {
+            const inp = document.getElementById(`data-input-${idx}`);
+            if (inp) inp.value = rec.values[idx] || "";
+        });
+
+        updateLivePreview();
+        showToast("已複製資料至輸入框，修改後按 Enter 即可新增", "info");
+        const first = document.getElementById("data-input-0");
+        if (first) first.focus();
+    }
+
+    function clearDataInputs(focusFirst = true) {
+        const inputs = dataInputsContainer.querySelectorAll("input");
+        inputs.forEach(inp => inp.value = "");
+        updateLivePreview();
+        if (focusFirst && inputs[0]) inputs[0].focus();
+    }
+
+    function deleteRecord(id) {
+        state.records = state.records.filter(r => r.id !== id);
+        if (state.editingRecordId === id) cancelEditing();
+        saveRecordsToStorage();
+        renderRecordsTable();
+        showToast("已刪除該筆資料", "info");
+    }
+
+    function renderRecordsTable() {
+        recordCountSpan.textContent = state.records.length;
+
+        const trHead = document.createElement("tr");
+        const headers = ["序號", "QR-Code", ...state.fields, "快速操作"];
+        headers.forEach(text => {
+            const th = document.createElement("th");
+            th.textContent = text;
+            trHead.appendChild(th);
+        });
+        recordsThead.innerHTML = "";
+        recordsThead.appendChild(trHead);
+
+        const term = state.searchTerm.toLowerCase().trim();
+        const filteredRecords = state.records.filter(rec => {
+            if (!term) return true;
+            const valuesMatch = rec.values.some(v => (v || "").toLowerCase().includes(term));
+            const qrMatch = (rec.qrText || "").toLowerCase().includes(term);
+            return valuesMatch || qrMatch;
+        });
+
+        if (term) {
+            searchResultInfo.textContent = `搜尋結果：符合 ${filteredRecords.length} 筆 (總共 ${state.records.length} 筆)`;
+        } else {
+            searchResultInfo.textContent = "";
+        }
+
+        recordsTbody.innerHTML = "";
+        if (filteredRecords.length === 0) {
+            const trEmpty = document.createElement("tr");
+            const tdEmpty = document.createElement("td");
+            tdEmpty.colSpan = headers.length;
+            tdEmpty.className = "empty-state";
+            tdEmpty.textContent = state.records.length === 0
+                ? "目前清單中尚無資料，請在上方輸入後點擊「加入清單」或使用「批次匯入」。"
+                : "找不到符合條件的資料。";
+            trEmpty.appendChild(tdEmpty);
+            recordsTbody.appendChild(trEmpty);
+            return;
+        }
+
+        filteredRecords.forEach((rec, idx) => {
+            const tr = document.createElement("tr");
+
+            const tdSeq = document.createElement("td");
+            tdSeq.style.fontWeight = "700";
+            tdSeq.textContent = idx + 1;
+            tr.appendChild(tdSeq);
+
+            const tdQr = document.createElement("td");
+            const thumbWrap = document.createElement("div");
+            thumbWrap.className = "qr-thumb-wrap";
+
+            const img = document.createElement("img");
+            img.src = rec.qrDataUrl;
+            img.alt = "QR";
+            img.className = "qr-thumb";
+            img.title = "點擊可下載 PNG 圖片";
+            img.addEventListener("click", () => downloadSingleQR(rec));
+
+            thumbWrap.appendChild(img);
+            tdQr.appendChild(thumbWrap);
+            tr.appendChild(tdQr);
+
+            state.fields.forEach((_, fIdx) => {
+                const tdVal = document.createElement("td");
+                tdVal.textContent = rec.values[fIdx] || "";
+                tr.appendChild(tdVal);
+            });
+
+            const tdAct = document.createElement("td");
+            tdAct.style.whiteSpace = "nowrap";
+
+            const btnEdit = document.createElement("button");
+            btnEdit.type = "button";
+            btnEdit.className = "btn btn-outline btn-sm";
+            btnEdit.textContent = "✏️";
+            btnEdit.title = "編輯此筆";
+            btnEdit.style.marginRight = "4px";
+            btnEdit.addEventListener("click", () => startEditing(rec.id));
+
+            const btnClone = document.createElement("button");
+            btnClone.type = "button";
+            btnClone.className = "btn btn-outline btn-sm";
+            btnClone.textContent = "📑";
+            btnClone.title = "複製資料到輸入框";
+            btnClone.style.marginRight = "4px";
+            btnClone.addEventListener("click", () => cloneRecord(rec.id));
+
+            const btnDl = document.createElement("button");
+            btnDl.type = "button";
+            btnDl.className = "btn btn-outline btn-sm";
+            btnDl.textContent = "💾";
+            btnDl.title = "下載 PNG 圖檔";
+            btnDl.style.marginRight = "4px";
+            btnDl.addEventListener("click", () => downloadSingleQR(rec));
+
+            const btnDel = document.createElement("button");
+            btnDel.type = "button";
+            btnDel.className = "btn btn-outline btn-sm";
+            btnDel.style.color = "var(--danger)";
+            btnDel.textContent = "🗑️";
+            btnDel.title = "刪除此筆";
+            btnDel.addEventListener("click", () => deleteRecord(rec.id));
+
+            tdAct.appendChild(btnEdit);
+            tdAct.appendChild(btnClone);
+            tdAct.appendChild(btnDl);
+            tdAct.appendChild(btnDel);
+            tr.appendChild(tdAct);
+
+            recordsTbody.appendChild(tr);
+        });
+    }
+
+    function downloadSingleQR(rec) {
+        const fileName = (rec.values[0] || "QRCode") + "_" + Date.now() + ".png";
+        const a = document.createElement("a");
+        a.href = rec.qrDataUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast(`已下載圖片：${fileName}`, "success");
+    }
+
+    document.getElementById("btn-download-live-qr").addEventListener("click", () => {
+        const values = getCurrentInputValues();
+        const qrText = buildQRContent(values);
+        if (!qrText) {
+            showToast("目前無任何 QR 內容可下載！", "error");
+            return;
+        }
+        const dataUrl = liveQrCanvas.toDataURL("image/png");
+        const a = document.createElement("a");
+        a.href = dataUrl;
+        a.download = `QRCode_預覽_${Date.now()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast("已成功下載即時 QR-Code 圖片！", "success");
+    });
+
+    document.getElementById("btn-copy-live-qr").addEventListener("click", async () => {
+        try {
+            liveQrCanvas.toBlob(async (blob) => {
+                if (!blob) throw new Error("Canvas 轉換失敗");
+                await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+                showToast("已成功將 QR-Code 複製到剪貼簿！", "success");
+            });
+        } catch (err) {
+            showToast("瀏覽器限制，無法直接複製圖片", "error");
+        }
+    });
+
+    // ------------------------------------------------------------------------
+    // 批次匯入與預覽邏輯 (升級版)
+    // ------------------------------------------------------------------------
+    const batchModal = document.getElementById("batch-modal");
+    const batchTextarea = document.getElementById("batch-textarea");
+    const batchCsvFile = document.getElementById("batch-csv-file");
+    const batchEncodingSelect = document.getElementById("batch-encoding-select");
+    const batchEncodingStatus = document.getElementById("batch-encoding-status");
+    const batchSkipHeader = document.getElementById("batch-skip-header");
+    const btnForceBig5 = document.getElementById("btn-force-big5");
+    const btnForceUtf8 = document.getElementById("btn-force-utf8");
+    const batchPreviewTable = document.getElementById("batch-preview-table");
+    const batchPreviewThead = document.getElementById("batch-preview-thead");
+    const batchPreviewTbody = document.getElementById("batch-preview-tbody");
+    const batchParsedSummary = document.getElementById("batch-parsed-summary");
+
+    function updateBatchPreview() {
+        const text = batchTextarea.value;
+        if (!text.trim()) {
+            batchPreviewThead.innerHTML = "";
+            batchPreviewTbody.innerHTML = '<tr><td style="color:#94a3b8; text-align:center;">尚無預覽資料</td></tr>';
+            batchParsedSummary.textContent = "尚未解析資料";
+            return;
+        }
+
+        let rows = CSVParser.parse(text);
+        if (batchSkipHeader.checked && rows.length > 1) {
+            rows = rows.slice(1);
+        }
+
+        batchParsedSummary.textContent = `共偵測到 ${rows.length} 列資料`;
+
+        batchPreviewThead.innerHTML = "";
+        const thSeq = document.createElement("th");
+        thSeq.textContent = "#";
+        batchPreviewThead.appendChild(thSeq);
+
+        state.fields.forEach((fName) => {
+            const th = document.createElement("th");
+            th.textContent = fName;
+            batchPreviewThead.appendChild(th);
+        });
+
+        batchPreviewTbody.innerHTML = "";
+        const previewRows = rows.slice(0, 4);
+
+        previewRows.forEach((cols, rIdx) => {
+            const tr = document.createElement("tr");
+            const tdSeq = document.createElement("td");
+            tdSeq.textContent = rIdx + 1;
+            tdSeq.style.color = "var(--text-muted)";
+            tr.appendChild(tdSeq);
+
+            state.fields.forEach((_, fIdx) => {
+                const td = document.createElement("td");
+                td.textContent = cols[fIdx] || "—";
+                if (!cols[fIdx]) td.style.color = "#cbd5e1";
+                tr.appendChild(td);
+            });
+            batchPreviewTbody.appendChild(tr);
+        });
+    }
+
+    async function processBatchBuffer(buffer, forceMode = null) {
+        if (!buffer) return;
+        currentBatchBuffer = buffer;
+        const selectedMode = forceMode || batchEncodingSelect.value;
+        if (forceMode) batchEncodingSelect.value = forceMode;
+
+        batchEncodingStatus.textContent = "⏳ 正在分析中文編碼中...";
+        const result = await ChineseEncodingDecoder.decode(buffer, selectedMode);
+
+        batchTextarea.value = result.text;
+        batchEncodingStatus.textContent = `✅ 檔案解析完成！當前識別格式：${result.detected}`;
+        updateBatchPreview();
+    }
+
+    batchTextarea.addEventListener("input", updateBatchPreview);
+    batchSkipHeader.addEventListener("change", updateBatchPreview);
+
+    document.getElementById("btn-open-batch").addEventListener("click", () => {
+        batchTextarea.value = "";
+        batchCsvFile.value = "";
+        currentBatchBuffer = null;
+        batchEncodingStatus.textContent = "💡 提示：支援繁體中文 Big5 (CP950) 與 UTF-8 自動識別";
+        batchModal.classList.add("active");
+        updateBatchPreview();
+        batchTextarea.focus();
+    });
+
+    document.getElementById("batch-cancel").addEventListener("click", () => {
+        batchModal.classList.remove("active");
+    });
+
+    batchCsvFile.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            await processBatchBuffer(event.target.result);
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    batchEncodingSelect.addEventListener("change", async () => {
+        if (currentBatchBuffer) {
+            await processBatchBuffer(currentBatchBuffer);
+            showToast("已重新以指定編碼解析！", "info");
+        }
+    });
+
+    btnForceBig5.addEventListener("click", async () => {
+        if (currentBatchBuffer) {
+            await processBatchBuffer(currentBatchBuffer, "big5");
+            showToast("已強制切換為 Big5 解碼！", "success");
+        } else {
+            showToast("請先選擇或拖曳 CSV 檔案！", "info");
+        }
+    });
+
+    btnForceUtf8.addEventListener("click", async () => {
+        if (currentBatchBuffer) {
+            await processBatchBuffer(currentBatchBuffer, "utf-8");
+            showToast("已強制切換為 UTF-8 解碼！", "info");
+        } else {
+            showToast("請先選擇或拖曳 CSV 檔案！", "info");
+        }
+    });
+
+    batchTextarea.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        batchTextarea.classList.add("drag-active");
+    });
+    batchTextarea.addEventListener("dragleave", () => {
+        batchTextarea.classList.remove("drag-active");
+    });
+    batchTextarea.addEventListener("drop", (e) => {
+        e.preventDefault();
+        batchTextarea.classList.remove("drag-active");
+        const file = e.dataTransfer.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            await processBatchBuffer(event.target.result);
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    document.getElementById("batch-confirm").addEventListener("click", () => {
+        const text = batchTextarea.value.trim();
+        if (!text) {
+            showToast("請先貼上資料或選取檔案！", "error");
+            return;
+        }
+
+        let rows = CSVParser.parse(text);
+
+        if (batchSkipHeader.checked && rows.length > 1) {
+            rows = rows.slice(1);
+        }
+
+        let importedCount = 0;
+        const ecc = eccSelect.value;
+        const fgColor = fgColorInput.value;
+
+        rows.forEach(cols => {
+            const values = state.fields.map((_, i) => cols[i] || "");
+            if (values.some(v => v !== "")) {
+                const qrText = buildQRContent(values);
+                const qrDataUrl = QRCodeEngine.generateDataURL(qrText, ecc, 240, fgColor);
+                if (qrDataUrl) {
+                    state.records.push({
+                        id: Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+                        values: values,
+                        qrText: qrText,
+                        qrDataUrl: qrDataUrl,
+                        createdAt: new Date().toLocaleString("zh-TW", { hour12: false })
+                    });
+                    importedCount++;
+                }
+            }
+        });
+
+        if (importedCount > 0) {
+            saveRecordsToStorage();
+            renderRecordsTable();
+            batchModal.classList.remove("active");
+            showToast(`成功批次產生 ${importedCount} 筆 QR-Code 資料！`, "success");
+        } else {
+            showToast("未能解析出有效資料，請檢查格式", "error");
+        }
+    });
+
+    // ------------------------------------------------------------------------
+    // 列印模組
+    // ------------------------------------------------------------------------
+    const printModal = document.getElementById("print-modal");
+    const printModeSelect = document.getElementById("print-mode-select");
+    const printGridColsGroup = document.getElementById("print-grid-cols-group");
+    const printGridCols = document.getElementById("print-grid-cols");
+
+    document.getElementById("btn-open-print-dialog").addEventListener("click", () => {
+        if (state.records.length === 0) {
+            showToast("清單內目前無任何資料可列印！", "error");
+            return;
+        }
+        printModal.classList.add("active");
+    });
+
+    document.getElementById("print-cancel").addEventListener("click", () => {
+        printModal.classList.remove("active");
+    });
+
+    printModeSelect.addEventListener("change", () => {
+        printGridColsGroup.style.display = printModeSelect.value === "grid" ? "flex" : "none";
+    });
+
+    document.getElementById("print-confirm").addEventListener("click", () => {
+        printModal.classList.remove("active");
+        executePrint(printModeSelect.value, parseInt(printGridCols.value, 10));
+    });
+
+    function executePrint(mode, cols = 3) {
+        const printArea = document.getElementById("print-area");
+        printArea.innerHTML = "";
+
+        const nowStr = new Date().toLocaleString("zh-TW", { hour12: false });
+
+        if (mode === "list") {
+            printArea.className = "print-list-view";
+            let html = `
+                <div class="print-header">
+                    <h2>QR-Code 逐條資料明細報表</h2>
+                    <div class="print-meta">列印時間：${nowStr} ｜ 總筆數：${state.records.length} 筆</div>
+                </div>
+            `;
+
+            state.records.forEach((rec, idx) => {
+                html += `
+                    <div class="print-row-item">
+                        <div class="print-seq">#${idx + 1}</div>
+                        <div class="print-qr-box">
+                            <img src="${rec.qrDataUrl}" alt="QR">
+                        </div>
+                        <div class="print-fields-grid">
+                            ${state.fields.map((fieldName, fIdx) => `
+                                <div class="print-field-entry">
+                                    <span class="print-field-label">${fieldName}：</span>
+                                    <span class="print-field-value">${rec.values[fIdx] || "—"}</span>
+                                </div>
+                            `).join("")}
+                        </div>
+                    </div>
+                `;
+            });
+            printArea.innerHTML = html;
+        } else {
+            printArea.className = "print-grid-view";
+            printArea.style.setProperty("--print-cols", cols);
+
+            let html = `
+                <div class="print-header" style="grid-column: 1 / -1;">
+                    <h2>QR-Code 標籤貼紙清單</h2>
+                    <div class="print-meta">列印時間：${nowStr} ｜ 總筆數：${state.records.length} 筆</div>
+                </div>
+            `;
+
+            state.records.forEach((rec) => {
+                const primaryVal = rec.values[0] || "";
+                const subVal = rec.values[1] || "";
+                html += `
+                    <div class="print-grid-item">
+                        <img src="${rec.qrDataUrl}" alt="QR">
+                        <div class="print-grid-desc">
+                            ${primaryVal ? `<div class="print-grid-desc-strong">${primaryVal}</div>` : ""}
+                            ${subVal ? `<div>${subVal}</div>` : ""}
+                        </div>
+                    </div>
+                `;
+            });
+            printArea.innerHTML = html;
+        }
+
+        setTimeout(() => {
+            window.print();
+        }, 150);
+    }
+
+    // ------------------------------------------------------------------------
+    // 匯出 CSV (Excel 防亂碼 UTF-8 with BOM)
+    // ------------------------------------------------------------------------
+    function exportToCSV() {
+        if (state.records.length === 0) {
+            showToast("清單目前無資料可匯出！", "error");
+            return;
+        }
+
+        const escapeCSV = (val) => {
+            const str = String(val ?? "");
+            if (str.includes('"') || str.includes(",") || str.includes("\n") || str.includes("\r") || str.includes("\t")) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
+
+        const rows = [];
+        const headerRow = ["序號", ...state.fields, "QR完整內容", "建立時間"];
+        rows.push(headerRow.map(escapeCSV).join(","));
+
+        state.records.forEach((rec, idx) => {
+            const rowValues = [
+                idx + 1,
+                ...state.fields.map((_, fIdx) => rec.values[fIdx] || ""),
+                rec.qrText.replace(/\n/g, " | "),
+                rec.createdAt || ""
+            ];
+            rows.push(rowValues.map(escapeCSV).join(","));
+        });
+
+        // 加入 UTF-8 BOM (\uFEFF) 確保 Excel 開啟繁體中文 100% 不亂碼
+        const csvContent = "\uFEFF" + rows.join("\r\n");
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+
+        const now = new Date();
+        const ts = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `QRCode清單_${ts}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast(`已成功匯出 ${state.records.length} 筆資料為 CSV！`, "success");
+    }
+
+    // 備份與還原
+    document.getElementById("btn-export-backup").addEventListener("click", () => {
+        const backupData = {
+            version: "2.3",
+            exportTime: new Date().toISOString(),
+            fields: state.fields,
+            options: state.options,
+            records: state.records
+        };
+        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `QRCode系統備份_${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("已成功下載系統完整備份檔案！", "success");
+    });
+
+    const backupFileInput = document.getElementById("backup-file-input");
+    document.getElementById("btn-import-backup").addEventListener("click", () => backupFileInput.click());
+
+    backupFileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            try {
+                const data = JSON.parse(event.target.result);
+                if (!Array.isArray(data.records) || !Array.isArray(data.fields)) {
+                    throw new Error("備份檔格式不符");
+                }
+                const ok = await showConfirm("還原系統資料", `檔案包含 ${data.records.length} 筆資料，還原將覆蓋目前資料，是否繼續？`);
+                if (!ok) return;
+
+                state.fields = data.fields;
+                state.records = data.records;
+                if (data.options) state.options = { ...state.options, ...data.options };
+
+                localStorage.setItem(STORAGE_KEYS.FIELDS, JSON.stringify(state.fields));
+                localStorage.setItem(STORAGE_KEYS.RECORDS, JSON.stringify(state.records));
+                saveOptionsToStorage();
+
+                fieldCountInput.value = state.fields.length;
+                renderFieldSettings();
+                renderDataInputs();
+                renderRecordsTable();
+                showToast("系統資料已順利還原！", "success");
+            } catch (err) {
+                showToast("還原失敗：備份檔案無效或已毀損", "error");
+            }
+        };
+        reader.readAsText(file);
+    });
+
+    // 介面事件綁定
+    fieldCountInput.addEventListener("change", () => {
+        let count = parseInt(fieldCountInput.value, 10);
+        if (isNaN(count) || count < 1) count = 1;
+        if (count > 10) count = 10;
+        fieldCountInput.value = count;
+
+        const newFields = [];
+        for (let i = 0; i < count; i++) newFields.push(state.fields[i] || `欄位${i + 1}`);
+        state.fields = newFields;
+
+        renderFieldSettings();
+        renderDataInputs();
+        renderRecordsTable();
+    });
+
+    document.getElementById("btn-save-fields").addEventListener("click", () => {
+        localStorage.setItem(STORAGE_KEYS.FIELDS, JSON.stringify(state.fields));
+        showToast("欄位名稱設定已成功儲存！", "success");
+    });
+
+    document.getElementById("btn-reset-fields").addEventListener("click", async () => {
+        const ok = await showConfirm("恢復預設欄位", "確定要將欄位結構恢復為預設嗎？");
+        if (!ok) return;
+        state.fields = [...DEFAULT_FIELDS];
+        fieldCountInput.value = state.fields.length;
+        localStorage.setItem(STORAGE_KEYS.FIELDS, JSON.stringify(state.fields));
+        renderFieldSettings();
+        renderDataInputs();
+        renderRecordsTable();
+        showToast("已重置為預設欄位", "info");
+    });
+
+    [delimiterSelect, includeLabelSelect, eccSelect, fgColorInput].forEach(el => {
+        el.addEventListener("change", () => {
+            state.options = {
+                delimiter: delimiterSelect.value,
+                includeLabel: includeLabelSelect.value,
+                ecc: eccSelect.value,
+                fgColor: fgColorInput.value
+            };
+            saveOptionsToStorage();
+            updateLivePreview();
+        });
+    });
+
+    document.getElementById("btn-add-record").addEventListener("click", addOrUpdateRecord);
+    btnCancelEdit.addEventListener("click", cancelEditing);
+    document.getElementById("btn-clear-inputs").addEventListener("click", () => clearDataInputs(true));
+
+    document.getElementById("btn-clear-all").addEventListener("click", async () => {
+        if (state.records.length === 0) return;
+        const ok = await showConfirm("清空清單資料", `確定要清空清單中全部 ${state.records.length} 筆資料嗎？此操作無法還原。`);
+        if (!ok) return;
+        state.records = [];
+        cancelEditing();
+        saveRecordsToStorage();
+        renderRecordsTable();
+        showToast("已清空所有清單資料", "info");
+    });
+
+    searchInput.addEventListener("input", (e) => {
+        state.searchTerm = e.target.value;
+        renderRecordsTable();
+    });
+
+    document.getElementById("btn-export-csv").addEventListener("click", exportToCSV);
+
+    // 啟動初始化
+    loadFromStorage();
+    renderFieldSettings();
+    renderDataInputs();
+    renderRecordsTable();
+});
+</script>
+</body>
+</html>
