@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🌟 萬用早安圖卡 (Studio 旗艦一頁式)</title>
+    <style>
+        :root {
+            --primary: #06C755;
+            --primary-hover: #05a847;
+            --bg-color: #eef2f6;
+            --card-bg: #ffffff;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --control-bg: #f8fafc;
+        }
+        * { box-sizing: border-box; }
+
+        /* 鎖定全視窗一頁式架構 */
+        html, body {
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .studio-container {
+            background: var(--card-bg);
+            width: calc(100vw - 28px);
+            max-width: 1360px;
+            height: calc(100vh - 28px);
+            max-height: 920px;
+            border-radius: 18px;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+            display: flex;
+            padding: 16px 20px;
+            gap: 20px;
+        }
+
+        /* ---------- 左側控制儀表板 ---------- */
+        .dashboard-col {
+            flex: 1.25;
+            min-width: 440px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .dashboard-col::-webkit-scrollbar { width: 4px; }
+        .dashboard-col::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        /* 標題欄 */
+        .dash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .brand-title {
+            margin: 0; font-size: 17px; font-weight: 800; display: flex; align-items: center; gap: 8px;
+        }
+        .badge-hd {
+            font-size: 10.5px; background: #10b981; color: #fff; padding: 2px 7px;
+            border-radius: 20px; font-weight: 700; letter-spacing: 0.5px;
+        }
+
+        /* 模組化微型卡片 (Section Card) */
+        .setting-card {
+            background: var(--control-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .card-header-label {
+            font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase;
+            letter-spacing: 0.5px; display: flex; align-items: center; justify-content: space-between;
+        }
+
+        /* 表單網格 */
+        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1.2fr 1fr; gap: 8px; }
+        .grid-3 { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 8px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .field { display: flex; flex-direction: column; gap: 2px; position: relative; }
+
+        label {
+            font-size: 11px; font-weight: 700; color: #475569;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+
+        input[type="text"], select, textarea {
+            width: 100%;
+            height: 31px;
+            padding: 4px 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 12px;
+            background: #fff;
+            color: var(--text-dark);
+            font-family: inherit;
+            transition: all 0.15s ease;
+        }
+        input[type="text"]:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(6, 199, 85, 0.15);
+        }
+        textarea { height: 38px; resize: none; line-height: 1.35; padding: 5px 8px; }
+
+        /* 內嵌微型按鈕 */
+        .btn-inline {
+            background: #e2e8f0; color: #334155; border: none; padding: 2px 7px;
+            border-radius: 4px; font-size: 10.5px; font-weight: 700; cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-inline:hover { background: #cbd5e1; }
+        .btn-tag-chk {
+            display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px;
+            cursor: pointer; color: var(--primary); font-weight: 700;
+        }
+
+        /* 圖片微調列 + 滑桿模組 */
+        .tool-btn-group { display: flex; gap: 6px; }
+        .tool-btn {
+            flex: 1; height: 28px; border: 1px solid #cbd5e1; background: #fff;
+            border-radius: 6px; font-size: 11px; font-weight: 700; color: #334155;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;
+            transition: all 0.15s;
+        }
+        .tool-btn:hover { background: #f1f5f9; border-color: #94a3b8; }
+        .tool-btn-primary { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+        .tool-btn-primary:hover { background: #d1fae5; }
+
+        .slider-matrix {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+            gap: 8px;
+            background: #fff;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .slider-item { display: flex; flex-direction: column; gap: 3px; }
+        .slider-item span { font-size: 10.5px; font-weight: 700; color: #64748b; }
+        .slider-item input[type="range"] {
+            width: 100%; height: 4px; accent-color: var(--primary); margin: 2px 0; cursor: pointer;
+        }
+
+        /* ---------- 右側預覽輸出區 ---------- */
+        .preview-col {
+            flex: 1;
+            min-width: 360px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px 14px;
+        }
+
+        /* 頂部氣氛控制列 */
+        .preview-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .fx-controls { display: flex; gap: 6px; flex: 1; max-width: 340px; }
+        .fx-controls select { height: 29px; font-size: 11.5px; font-weight: 600; padding: 2px 6px; }
+        .artboard-tip { font-size: 11px; color: #64748b; text-align: right; }
+        .artboard-tip b { color: var(--primary); }
+
+        /* 畫布工作舞台 */
+        .canvas-stage {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            touch-action: none;
+            overflow: hidden;
+            padding: 4px;
+        }
+        canvas {
+            border-radius: 14px;
+            box-shadow: 0 12px 36px rgba(15, 23, 42, 0.16);
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            background: #1e293b;
+            user-select: none;
+        }
+        .canvas-stage.has-img canvas { cursor: grab; }
+        .canvas-stage.has-img canvas:active { cursor: grabbing; }
+
+        /* 匯出操作按鈕列 */
+        .action-footer { display: flex; gap: 8px; margin-top: 8px; }
+        .btn-action {
+            flex: 1; height: 38px; color: white; border: none; font-size: 13px; font-weight: 700;
+            border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            gap: 6px; transition: all 0.18s; box-shadow: 0 2px 6px rgba(0,0,0,0.06); white-space: nowrap;
+        }
+        .btn-action:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+        .btn-copy-text { background-color: #3b82f6; }
+        .btn-copy-img  { background-color: #8b5cf6; }
+        .btn-download  { background-color: var(--primary); }
+
+        #saveOverlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,.88); z-index: 999;
+            flex-direction: column; align-items: center; justify-content: center; padding: 16px;
+        }
+        #saveOverlay img { max-width: 90%; max-height: 75vh; border-radius: 8px; }
+        #saveOverlay p { color: #fff; font-size: 14px; margin: 10px 0; text-align: center; }
+        #saveOverlay button { background: var(--primary); color: #fff; border: none; border-radius: 6px; padding: 7px 18px; font-size: 13px; cursor: pointer; }
+
+        #toast {
+            position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+            background: rgba(15,23,42,.92); color: #fff; padding: 9px 18px; border-radius: 7px;
+            font-size: 13px; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s;
+        }
+        #toast.show { opacity: 1; transform: translate(-50%, -4px); }
+
+        /* 針對窄平板/手機的優雅縮放 */
+        @media (max-width: 900px) {
+            .studio-container { flex-direction: column; height: 100vh; max-height: none; width: 100vw; border-radius: 0; padding: 10px; }
+            .preview-col { height: 42vh; flex: none; }
+            .dashboard-col { flex: 1; min-width: 0; }
+            .grid-4, .grid-3 { grid-template-columns: 1fr 1fr; }
+            .slider-matrix { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<input type="file" id="imageInput" accept="image/*" style="display:none" onchange="loadImage(event)">
+
+<div class="studio-container">
+    <!-- 左側精緻控制台 -->
+    <div class="dashboard-col">
+        <div class="dash-header">
+            <h2 class="brand-title">🛠️ 萬用早安圖卡 <span class="badge-hd">1080P HD 超清</span></h2>
+            <div style="display:flex; gap:6px;">
+                <button class="btn-inline" onclick="randomSurprise()" title="一鍵隨機搭配行業、配色與語錄">✨ 靈感驚喜</button>
+                <button class="btn-inline" onclick="resetAll()">♻️ 重設</button>
+            </div>
+        </div>
+
+        <!-- 模組 1：風格規格與主題 (4 欄對齊) -->
+        <div class="setting-card">
+            <div class="card-header-label">⚙️ 風格與版型規格</div>
+            <div class="grid-4">
+                <div class="field">
+                    <label>行業快速套版</label>
+                    <select id="industrySelect" onchange="applyIndustryTemplate()">
+                        <option value="cafe" selected>☕ 咖啡早午餐</option>
+                        <option value="fashion">👗 流行穿搭</option>
+                        <option value="grocery">🛒 生鮮團購</option>
+                        <option value="beauty">💅 美甲美睫SPA</option>
+                        <option value="realestate">🏠 房仲好車</option>
+                        <option value="general">☀️ 日常溫馨問候</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>卡片比例 (超清)</label>
+                    <select id="aspectRatioSelect" onchange="changeAspectRatio()">
+                        <option value="4:5" selected>4 : 5 (直式旗艦)</option>
+                        <option value="9:16">9 : 16 (限動短影音)</option>
+                        <option value="1:1">1 : 1 (正方貼文)</option>
+                        <option value="2:3">2 : 3 (質感海報)</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>
+                        色彩風格主題
+                        <button class="btn-inline" onclick="randomColorTheme()" title="隨機切換配色" style="padding:1px 5px; font-size:9.5px;">🎲 換色</button>
+                    </label>
+                    <select id="styleSelect" onchange="drawCanvas()">
+                        <option value="amber" selected>☕ 溫暖焦糖奶茶</option>
+                        <option value="emerald">🌿 質感莫蘭迪綠</option>
+                        <option value="rose">🌸 櫻花浪漫粉</option>
+                        <option value="sunset">🌇 活力日落橙紅</option>
+                        <option value="purple">💜 夢幻奢華紫</option>
+                        <option value="ocean">🌊 清爽蔚藍海洋</option>
+                        <option value="navy">⚓ 經典深海軍藍</option>
+                        <option value="crimson">🔥 限時搶購紅</option>
+                        <option value="mint">🍃 清新薄荷草本</option>
+                        <option value="sunshine">🌻 元氣活力鵝黃</option>
+                        <option value="dark">🖋️ 奢華曜石黑</option>
+                        <option value="nude">🧁 輕柔奶油裸杏</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>底圖適配方式</label>
+                    <select id="fitModeSelect" onchange="autoFitImage()">
+                        <option value="fill" selected>🖼️ 裁切鋪滿 (推薦)</option>
+                        <option value="contain">🔍 完整全圖+毛玻璃</option>
+                        <option value="stretch">📏 拉伸</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模組 2：圖卡文案與促銷資訊 (完美分層與對稱) -->
+        <div class="setting-card">
+            <div class="card-header-label">📝 文案內容與促銷標示</div>
+            
+            <!-- 行 1：品牌與早安大標題 -->
+            <div class="grid-2">
+                <div class="field">
+                    <label>品牌/店名浮水印</label>
+                    <input type="text" id="shopNameInput" value="☕ 晨光好食咖啡館" oninput="drawCanvas()">
+                </div>
+                <div class="field">
+                    <label>
+                        早安大標題
+                        <label class="btn-tag-chk" title="勾選後自動在標題下方顯示今日日期與目前氣溫">
+                            <input type="checkbox" id="showDateChk" onchange="drawCanvas()" style="margin:0; width:auto; height:auto;">
+                            📅 顯示日期氣溫
+                        </label>
+                    </label>
+                    <input type="text" id="bannerTitleInput" value="☀️ 元氣晨光 今日推薦" oninput="drawCanvas()">
+                </div>
+            </div>
+
+            <!-- 行 2：早安問候語錄 -->
+            <div class="field">
+                <label>
+                    早安問候語錄 (支援換行)
+                    <button class="btn-inline" onclick="randomGreeting()" style="padding:1px 6px;">🎲 換一句語錄</button>
+                </label>
+                <textarea id="greetingInput" oninput="drawCanvas()"></textarea>
+            </div>
+
+            <!-- 行 3：商品名稱與價格配置 (3 欄平整) -->
+            <div class="grid-3">
+                <div class="field">
+                    <label>推薦商品/主題名稱</label>
+                    <input type="text" id="titleInput" value="🥐 經典法式可頌 + 手沖美式套餐" oninput="drawCanvas()">
+                </div>
+                <div class="field">
+                    <label>原價 (劃紅線，留空隱藏)</label>
+                    <input type="text" id="originPriceInput" value="原價 $180" oninput="drawCanvas()">
+                </div>
+                <div class="field">
+                    <label>特惠價格標題 (焦點)</label>
+                    <input type="text" id="salePriceInput" value="晨光套餐價 $120" oninput="drawCanvas()">
+                </div>
+            </div>
+
+            <!-- 行 4：促銷徽章與行動呼籲 (CTA) -->
+            <div class="grid-2">
+                <div class="field">
+                    <label>促銷徽章 (卡片右側)</label>
+                    <input type="text" id="badgeInput" value="⏰ 10:30前限定" oninput="drawCanvas()">
+                </div>
+                <div class="field">
+                    <label>行動提示 (CTA 底部備註)</label>
+                    <input type="text" id="ctaInput" value="🏃 每日新鮮出爐，歡迎提早預約" oninput="drawCanvas()">
+                </div>
+            </div>
+        </div>
+
+        <!-- 模組 3：底圖編輯與 5 合 1 矩陣滑桿 -->
+        <div class="setting-card">
+            <div class="card-header-label">🖼️ 底圖操作與精準微調</div>
+            
+            <!-- 圖片快捷操作列 -->
+            <div class="tool-btn-group">
+                <button class="tool-btn tool-btn-primary" onclick="$('imageInput').click()">📷 上傳自訂照片</button>
+                <button class="tool-btn" onclick="setPresetBackground()">🎨 靈感美圖</button>
+                <button class="tool-btn" onclick="rotateImage(90)">🔄 旋轉 90°</button>
+                <button class="tool-btn" onclick="flipImage()">🪞 水平鏡像</button>
+                <button class="tool-btn" onclick="autoFitImage()">🎯 滿版置中</button>
+            </div>
+
+            <!-- 5 合 1 微調矩陣 -->
+            <div class="slider-matrix">
+                <div class="slider-item">
+                    <span>↕ 垂直移動</span>
+                    <input type="range" id="offsetYRange" min="-500" max="500" step="2" value="0" oninput="drawCanvas()">
+                </div>
+                <div class="slider-item">
+                    <span>↔ 水平移動</span>
+                    <input type="range" id="offsetXRange" min="-500" max="500" step="2" value="0" oninput="drawCanvas()">
+                </div>
+                <div class="slider-item">
+                    <span>🔍 圖片縮放</span>
+                    <input type="range" id="zoomRange" min="0.5" max="3.0" step="0.02" value="1.0" oninput="drawCanvas()">
+                </div>
+                <div class="slider-item">
+                    <span>💡 照片亮度</span>
+                    <input type="range" id="brightnessRange" min="0.5" max="1.5" step="0.05" value="1.0" oninput="drawCanvas()">
+                </div>
+                <div class="slider-item">
+                    <span>🪟 毛玻璃霧度</span>
+                    <input type="range" id="glassOpacityRange" min="0.15" max="0.9" step="0.05" value="0.6" oninput="drawCanvas()">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右側畫布工作室與匯出 -->
+    <div class="preview-col">
+        <!-- 畫布頂部微型工具列 -->
+        <div class="preview-header-bar">
+            <div class="fx-controls">
+                <select id="fxSelect" onchange="applyFx(true)" title="選擇氛圍動態特效">
+                    <option value="none">🚫 無特效</option>
+                    <option value="auto" selected>🪄 智慧自動 (節慶/天氣)</option>
+                    <option value="weather">🌦️ 即時天氣連動</option>
+                    <optgroup label="手動氛圍">
+                        <option value="rays">☀️ 晨光透射</option>
+                        <option value="sparkle">✨ 晨曦星芒</option>
+                        <option value="sakura">🌸 浪漫櫻花</option>
+                        <option value="leaves">🍂 質感落葉</option>
+                        <option value="hearts">💖 溫馨愛心</option>
+                        <option value="rain">🌧️ 靜謐細雨</option>
+                        <option value="snow">❄️ 純淨白雪</option>
+                        <option value="newyear">🧧 新春燈籠</option>
+                        <option value="confetti">🎊 慶祝彩帶</option>
+                        <option value="moon">🌕 靜夜中秋</option>
+                        <option value="fireworks">🎆 璀璨煙火</option>
+                    </optgroup>
+                </select>
+                <select id="citySelect" onchange="applyFx(true)" title="天氣觀測縣市"></select>
+            </div>
+            <div class="artboard-tip">👉 <b>點擊畫布換圖</b>｜支援單指拖曳、雙指縮放</div>
+        </div>
+
+        <!-- 畫布中心舞台 -->
+        <div class="canvas-stage" id="canvasWrapper" title="點擊換圖；支援拖曳平移、滾輪/雙指縮放">
+            <canvas id="cardCanvas" width="1080" height="1350"></canvas>
+        </div>
+
+        <!-- 底部主操作鈕 -->
+        <div class="action-footer">
+            <button class="btn-action btn-copy-text" onclick="copyCaption()">📋 複製社群文案</button>
+            <button class="btn-action btn-copy-img" onclick="copyImage()">🖼️ 複製超清圖片</button>
+            <button class="btn-action btn-download" onclick="downloadImage()">📥 下載 1080P 圖卡</button>
+        </div>
+    </div>
+</div>
+
+<div id="saveOverlay">
+    <p>👆 長按圖片即可儲存至手機相簿</p>
+    <img id="saveImg" alt="成品圖">
+    <div style="margin-top:10px;">
+        <button id="shareBtn" style="display:none; margin-right:8px;" onclick="shareImg()">📤 系統分享</button>
+        <button onclick="document.getElementById('saveOverlay').style.display='none'">關閉</button>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Microsoft JhengHei', sans-serif";
+const STORE_KEY = 'universal_card_v3_studio';
+const SAVE_IDS = ['industrySelect','aspectRatioSelect','fitModeSelect','styleSelect',
+    'shopNameInput','badgeInput','bannerTitleInput','greetingInput','titleInput',
+    'originPriceInput','salePriceInput','ctaInput','glassOpacityRange','showDateChk','fxSelect','citySelect'];
+
+const THEME_STYLES = {
+    amber:    { primary: "#b45309", badge: "#f59e0b" },
+    emerald:  { primary: "#15803d", badge: "#22c55e" },
+    rose:     { primary: "#c026d3", badge: "#e879f9" },
+    sunset:   { primary: "#ea580c", badge: "#fb923c" },
+    purple:   { primary: "#7c3aed", badge: "#a78bfa" },
+    ocean:    { primary: "#0284c7", badge: "#38bdf8" },
+    navy:     { primary: "#1e3a8a", badge: "#60a5fa" },
+    crimson:  { primary: "#dc2626", badge: "#ef4444" },
+    mint:     { primary: "#0d9488", badge: "#2dd4bf" },
+    sunshine: { primary: "#d97706", badge: "#fcd34d" },
+    dark:     { primary: "#0f172a", badge: "#475569" },
+    nude:     { primary: "#854d0e", badge: "#fde047" }
+};
+
+const INDUSTRY_DATA = {
+    cafe: {
+        shopName: "☕ 晨光好食咖啡館",
+        bannerTitle: "☀️ 元氣晨光 今日推薦",
+        title: "🥐 經典法式可頌 + 手沖美式套餐",
+        originPrice: "原價 $180",
+        salePrice: "晨光套餐價 $120",
+        badge: "⏰ 10:30前限定",
+        cta: "🏃 每日新鮮出爐，歡迎提早預約",
+        style: "amber",
+        greetings: [
+            "早安！讓濃郁的咖啡香氣，喚醒今天一整天的滿滿活力 ☕",
+            "晨間第一道陽光，配上現烤酥脆可頌，幸福就這麼簡單 ☀️",
+            "生活不一定每天都完美，但一杯好咖啡總能治癒一切 ✨"
+        ]
+    },
+    fashion: {
+        shopName: "✨ 今日服飾精品",
+        bannerTitle: "☀️ GOOD MORNING 早安穿搭",
+        title: "✨ 韓系溫柔質感針織上衣",
+        originPrice: "原價 $1,280",
+        salePrice: "今日早安價 $590",
+        badge: "🔥 熱銷現貨",
+        cta: "📩 截圖私訊小編即可保留款式",
+        style: "emerald",
+        greetings: [
+            "早安！願嶄新的一天，為您帶來無盡的幸運與美麗 ✨",
+            "晨光初現，把最好的穿搭獻給最優雅的您 🌸",
+            "今日微風正好，別忘了用自信迎接美好的一天 💃"
+        ]
+    },
+    grocery: {
+        shopName: "🛒 鮮鄰嚴選生鮮團購",
+        bannerTitle: "🚚 產地直送 今日生鮮特報",
+        title: "🍓 頂級大湖草莓特惠雙盒組",
+        originPrice: "市價 $799",
+        salePrice: "社團特惠 $499",
+        badge: "⚡ 限量30組",
+        cta: "👇 留言 +1 搶先登記，到貨即通知",
+        style: "crimson",
+        greetings: [
+            "早安！凌晨親赴果園產地嚴選，新鮮滋味直接上餐桌 🥦",
+            "早起搶鮮！今日限定破盤超值價，手慢就搶光啦 🏃"
+        ]
+    },
+    beauty: {
+        shopName: "💅 艾莉美甲美睫沙龍",
+        bannerTitle: "🌿 Morning Glow 早鳥美麗時光",
+        title: "✨ 春日清新小花凝膠美甲特惠",
+        originPrice: "定價 $1,600",
+        salePrice: "早鳥預約價 $999",
+        badge: "💆 每日限額2名",
+        cta: "📲 點選私訊預約本週空檔",
+        style: "rose",
+        greetings: [
+            "早安！寵愛自己，是終身浪漫的開始，今天也要閃閃發亮 💄",
+            "指尖上的精緻微光，給您每天工作時的滿滿好心情 🌸"
+        ]
+    },
+    realestate: {
+        shopName: "🏠 誠品嚴選房產中心",
+        bannerTitle: "🔑 今日精選推薦好物件",
+        title: "☀️ 捷運景觀採光三房 (附車位)",
+        originPrice: "屋主惜售 2,880萬",
+        salePrice: "破盤驚喜價 2,680萬",
+        badge: "🏆 專任委託",
+        cta: "📞 專人專車帶看，歡迎隨時預約鑑賞",
+        style: "navy",
+        greetings: [
+            "早安！每天最重要的事，就是回到一個溫暖舒適的家 🏡",
+            "掌握核心地段生活機能，為幸福未來打下穩健基石 🔑"
+        ]
+    },
+    general: {
+        shopName: "🌸 每日美好生活誌",
+        bannerTitle: "☀️ 晨安吉祥 溫馨問候",
+        title: "願你眼裡有星光，身邊皆是溫柔與幸運",
+        originPrice: "",
+        salePrice: "平安喜樂 萬事順心",
+        badge: "✨ 滿滿正能量",
+        cta: "❤️ 祝您今天擁有美好愉快的心情",
+        style: "ocean",
+        greetings: [
+            "早安！每一個清晨都是嶄新的起點，願今日陽光溫暖你的心 ☀️",
+            "心懷感激，歲月生香。祝您與家人平安順遂，健康愉快 🍀",
+            "把微風裝進口袋，把陽光留在心裡，早安，美好的一天！✨"
+        ]
+    }
+};
+
+let userImage = null;
+let imgRotation = 0;
+let imgFlipH = false;
+let lastFile = null;
+
+window.onload = function () {
+    if (loadState()) { setCanvasSize(); drawCanvas(); }
+    else { applyIndustryTemplate(); setPresetBackground(true); }
+    initDragAndDrop();
+    initClipboardPaste();
+    initMultiTouchAndPointer();
+    applyFx(false);
+};
+
+function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function setRange(id, v) {
+    const el = $(id);
+    el.value = Math.min(+el.max, Math.max(+el.min, v));
+}
+
+function saveState() {
+    try {
+        const o = {};
+        SAVE_IDS.forEach(id => { const e = $(id); if(e) o[id] = e.type === 'checkbox' ? e.checked : e.value; });
+        localStorage.setItem(STORE_KEY, JSON.stringify(o));
+    } catch (e) {}
+}
+
+function loadState() {
+    try {
+        const o = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+        if (!o) return false;
+        SAVE_IDS.forEach(id => {
+            if (!(id in o)) return;
+            const e = $(id);
+            if (e) {
+                if (e.type === 'checkbox') e.checked = !!o[id]; else e.value = o[id];
+            }
+        });
+        return true;
+    } catch (e) { return false; }
+}
+
+function resetAll() {
+    try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+    $('aspectRatioSelect').value = '4:5';
+    $('fitModeSelect').value = 'fill';
+    $('glassOpacityRange').value = 0.6;
+    $('brightnessRange').value = 1.0;
+    $('showDateChk').checked = false;
+    $('fxSelect').value = 'auto';
+    $('citySelect').value = '雲林';
+    resetImgTransform();
+    setCanvasSize();
+    applyIndustryTemplate();
+    setPresetBackground(true);
+    applyFx(false);
+    toast('♻️ 已重設為初始標準設定');
+}
+
+function randomSurprise() {
+    const industries = Object.keys(INDUSTRY_DATA);
+    $('industrySelect').value = industries[Math.floor(Math.random() * industries.length)];
+    applyIndustryTemplate();
+    randomColorTheme();
+    setPresetBackground(true);
+    toast('✨ 已為您生成一組靈感搭配！');
+}
+
+function rotateImage(deg) {
+    imgRotation = (imgRotation + deg) % 360;
+    drawCanvas();
+    toast(`🔄 已旋轉 ${imgRotation}°`);
+}
+
+function flipImage() {
+    imgFlipH = !imgFlipH;
+    drawCanvas();
+    toast(imgFlipH ? '🪞 已水平鏡像' : '🪞 已恢復原向');
+}
+
+function resetImgTransform() {
+    imgRotation = 0;
+    imgFlipH = false;
+    $('zoomRange').value = 1.0;
+    $('offsetXRange').value = 0;
+    $('offsetYRange').value = 0;
+    $('brightnessRange').value = 1.0;
+    drawCanvas();
+}
+
+function setPresetBackground(silent) {
+    const pCanvas = document.createElement('canvas');
+    pCanvas.width = 1080; pCanvas.height = 1350;
+    const pctx = pCanvas.getContext('2d');
+    
+    const gradients = [
+        [['#ff9a9e', 0], ['#fecfef', 0.6], ['#a1c4fd', 1]],
+        [['#2b5876', 0], ['#4e4376', 0.5], ['#f8b195', 1]],
+        [['#e0c3fc', 0], ['#8ec5fc', 1]],
+        [['#f6d365', 0], ['#fda085', 0.7], ['#fbc2eb', 1]],
+        [['#3a7bd5', 0], ['#00d2ff', 1]],
+        [['#134e5e', 0], ['#71b280', 1]]
+    ];
+    const pick = gradients[Math.floor(Math.random() * gradients.length)];
+    const grad = pctx.createLinearGradient(0, 0, 1080, 1350);
+    pick.forEach(s => grad.addColorStop(s[1], s[0]));
+    pctx.fillStyle = grad;
+    pctx.fillRect(0, 0, 1080, 1350);
+
+    for(let i = 0; i < 4; i++) {
+        pctx.fillStyle = "rgba(255,255,255,0.07)";
+        pctx.beginPath();
+        pctx.arc(Math.random()*1080, Math.random()*800, 150 + Math.random()*250, 0, Math.PI*2);
+        pctx.fill();
+    }
+
+    const img = new Image();
+    img.onload = () => {
+        userImage = img;
+        $('canvasWrapper').classList.add('has-img');
+        drawCanvas();
+        if(!silent) toast('🎨 已更換隨機靈感漸層美圖');
+    };
+    img.src = pCanvas.toDataURL();
+}
+
+function randomColorTheme() {
+    const keys = Object.keys(THEME_STYLES);
+    $('styleSelect').value = keys[Math.floor(Math.random() * keys.length)];
+    drawCanvas();
+}
+
+function applyIndustryTemplate() {
+    const data = INDUSTRY_DATA[$('industrySelect').value];
+    $('shopNameInput').value = data.shopName;
+    $('bannerTitleInput').value = data.bannerTitle;
+    $('titleInput').value = data.title;
+    $('originPriceInput').value = data.originPrice;
+    $('salePriceInput').value = data.salePrice;
+    $('badgeInput').value = data.badge;
+    $('ctaInput').value = data.cta;
+    $('styleSelect').value = data.style;
+    randomGreeting();
+}
+
+function randomGreeting() {
+    const list = INDUSTRY_DATA[$('industrySelect').value].greetings;
+    const cur = $('greetingInput').value;
+    let pick = list[Math.floor(Math.random() * list.length)];
+    if (list.length > 1 && pick === cur) pick = list[(list.indexOf(pick) + 1) % list.length];
+    $('greetingInput').value = pick;
+    drawCanvas();
+}
+
+function setCanvasSize() {
+    const canvas = $('cardCanvas');
+    const [wRatio, hRatio] = $('aspectRatioSelect').value.split(':').map(Number);
+    canvas.width = 1080;
+    canvas.height = Math.round((1080 * hRatio) / wRatio);
+}
+
+function changeAspectRatio() {
+    setCanvasSize();
+    autoFitImage();
+}
+
+function autoFitImage() {
+    $('zoomRange').value = 1.0;
+    $('offsetXRange').value = 0;
+    $('offsetYRange').value = 0;
+    drawCanvas();
+}
+
+function initClipboardPaste() {
+    window.addEventListener('paste', e => {
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (let item of items) {
+            if (item.type.includes('image')) { handleImageFile(item.getAsFile()); break; }
+        }
+    });
+}
+
+function loadImage(e) {
+    if (e.target.files[0]) handleImageFile(e.target.files[0]);
+    e.target.value = '';
+}
+
+function handleImageFile(file) {
+    if (!file || !file.type.startsWith('image/')) return toast('請上傳正確的圖片格式！');
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+        userImage = img;
+        imgRotation = 0;
+        imgFlipH = false;
+        $('canvasWrapper').classList.add('has-img');
+        autoFitImage();
+        URL.revokeObjectURL(url);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); toast('圖片讀取失敗'); };
+    img.src = url;
+}
+
+function initDragAndDrop() {
+    const wrapper = $('canvasWrapper');
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => window.addEventListener(evt, e => e.preventDefault(), false));
+    wrapper.addEventListener('dragover', () => wrapper.style.opacity = '0.75');
+    wrapper.addEventListener('dragleave', () => wrapper.style.opacity = '1');
+    wrapper.addEventListener('drop', e => {
+        wrapper.style.opacity = '1';
+        if (e.dataTransfer.files[0]) handleImageFile(e.dataTransfer.files[0]);
+    });
+}
+
+function initMultiTouchAndPointer() {
+    const cv = $('cardCanvas');
+    const pointers = new Map();
+    let prevDistance = -1;
+    let ox = 0, oy = 0, sx = 0, sy = 0, moved = false;
+
+    cv.addEventListener('pointerdown', e => {
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        cv.setPointerCapture(e.pointerId);
+
+        if (pointers.size === 1) {
+            moved = false;
+            sx = e.clientX; sy = e.clientY;
+            ox = +$('offsetXRange').value;
+            oy = +$('offsetYRange').value;
+        } else if (pointers.size === 2) {
+            const pts = Array.from(pointers.values());
+            prevDistance = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        }
+    });
+
+    cv.addEventListener('pointermove', e => {
+        if (!pointers.has(e.pointerId)) return;
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+        if (pointers.size === 1 && userImage) {
+            const dx = e.clientX - sx, dy = e.clientY - sy;
+            if (!moved && Math.hypot(dx, dy) < 4) return;
+            moved = true;
+            const k = cv.width / cv.getBoundingClientRect().width;
+            setRange('offsetXRange', ox + dx * k);
+            setRange('offsetYRange', oy + dy * k);
+            drawCanvas();
+        } else if (pointers.size === 2 && userImage) {
+            moved = true;
+            const pts = Array.from(pointers.values());
+            const curDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+            if (prevDistance > 0) {
+                const ratio = curDist / prevDistance;
+                const newZoom = +$('zoomRange').value * (1 + (ratio - 1) * 0.85);
+                setRange('zoomRange', newZoom);
+                drawCanvas();
+            }
+            prevDistance = curDist;
+        }
+    });
+
+    const endPointer = e => {
+        pointers.delete(e.pointerId);
+        if (pointers.size < 2) prevDistance = -1;
+        if (pointers.size === 0) {
+            if (!moved && e.button === 0) $('imageInput').click();
+        }
+    };
+
+    cv.addEventListener('pointerup', endPointer);
+    cv.addEventListener('pointercancel', endPointer);
+
+    cv.addEventListener('wheel', e => {
+        if (!userImage) return;
+        e.preventDefault();
+        setRange('zoomRange', +$('zoomRange').value + (e.deltaY < 0 ? 0.08 : -0.08));
+        drawCanvas();
+    }, { passive: false });
+}
+
+function fitText(ctx, text, weight, size, min, maxW) {
+    ctx.font = `${weight} ${size}px ${FONT}`;
+    while (size > min && ctx.measureText(text).width > maxW) {
+        size -= 1;
+        ctx.font = `${weight} ${size}px ${FONT}`;
+    }
+    if (ctx.measureText(text).width > maxW) {
+        const chars = Array.from(text);
+        while (chars.length > 1 && ctx.measureText(chars.join('') + '…').width > maxW) chars.pop();
+        text = chars.join('') + '…';
+    }
+    return text;
+}
+
+function wrapLines(ctx, text, maxW, maxLines) {
+    const lines = [];
+    let cur = '';
+    for (const ch of text) {
+        if (ch === '\n') { lines.push(cur); cur = ''; continue; }
+        if (cur && ctx.measureText(cur + ch).width > maxW) { lines.push(cur); cur = ch; }
+        else cur += ch;
+    }
+    if (cur || !lines.length) lines.push(cur);
+    if (lines.length > maxLines) {
+        lines.length = maxLines;
+        const chars = Array.from(lines[maxLines - 1]);
+        chars.pop();
+        lines[maxLines - 1] = chars.join('') + '…';
+    }
+    return lines;
+}
+
+/* 1080P 超清渲染 */
+let rafId = 0;
+function drawCanvas() {
+    if (rafId) return;
+    rafId = requestAnimationFrame(() => { rafId = 0; render(); saveState(); });
+}
+
+function render() {
+    const main = $('cardCanvas');
+    if (!main || !main.getContext) return;
+    if (baseCv.width !== main.width || baseCv.height !== main.height) {
+        baseCv.width = main.width; baseCv.height = main.height;
+    }
+    const canvas = baseCv;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+
+    const theme = THEME_STYLES[$('styleSelect').value] || THEME_STYLES.amber;
+    const shopName = ($('shopNameInput').value || "").trim();
+    const bannerTitle = ($('bannerTitleInput').value || "").trim();
+    const greeting = ($('greetingInput').value || "").trim();
+    const title = ($('titleInput').value || "").trim();
+    const originPrice = ($('originPriceInput').value || "").trim();
+    const salePrice = ($('salePriceInput').value || "").trim();
+    const badgeText = ($('badgeInput').value || "").trim();
+    const ctaText = ($('ctaInput').value || "").trim();
+
+    const zoom = parseFloat($('zoomRange').value) || 1;
+    const offsetX = parseFloat($('offsetXRange').value) || 0;
+    const offsetY = parseFloat($('offsetYRange').value) || 0;
+    const glassOpacity = parseFloat($('glassOpacityRange').value) || 0.6;
+    const brightness = parseFloat($('brightnessRange').value) || 1.0;
+    const fitMode = $('fitModeSelect').value;
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.textAlign = "left";
+
+    // 1. 底圖
+    if (userImage) {
+        const isSwapped = (imgRotation === 90 || imgRotation === 270);
+        const naturalW = isSwapped ? userImage.height : userImage.width;
+        const naturalH = isSwapped ? userImage.width : userImage.height;
+        const imgRatio = naturalW / naturalH;
+        const canvasRatio = w / h;
+        let baseW, baseH;
+
+        if (fitMode === 'fill') {
+            if (imgRatio > canvasRatio) { baseH = h; baseW = h * imgRatio; }
+            else { baseW = w; baseH = w / imgRatio; }
+        } else if (fitMode === 'contain') {
+            if (ctx.filter !== undefined) {
+                ctx.save();
+                ctx.filter = `blur(40px) brightness(${brightness * 0.75})`;
+                ctx.drawImage(userImage, -20, -20, w + 40, h + 40);
+                ctx.restore();
+            }
+            if (imgRatio > canvasRatio) { baseW = w; baseH = w / imgRatio; }
+            else { baseH = h; baseW = h * imgRatio; }
+        } else {
+            baseW = w; baseH = h;
+        }
+
+        const fw = baseW * zoom, fh = baseH * zoom;
+
+        ctx.save();
+        ctx.translate(w / 2 + offsetX, h / 2 + offsetY);
+        if (imgRotation) ctx.rotate(imgRotation * Math.PI / 180);
+        if (imgFlipH) ctx.scale(-1, 1);
+        if (ctx.filter !== undefined) ctx.filter = `brightness(${brightness})`;
+
+        const drawW = isSwapped ? fh : fw;
+        const drawH = isSwapped ? fw : fh;
+        ctx.drawImage(userImage, -drawW / 2, -drawH / 2, drawW, drawH);
+        ctx.restore();
+    } else {
+        ctx.fillStyle = "#1e293b";
+        ctx.fillRect(0, 0, w, h);
+    }
+
+    // 2. 頂部遮罩漸層
+    const topGradient = ctx.createLinearGradient(0, 0, 0, 260);
+    topGradient.addColorStop(0, "rgba(0, 0, 0, 0.85)");
+    topGradient.addColorStop(0.7, "rgba(0, 0, 0, 0.45)");
+    topGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = topGradient;
+    ctx.fillRect(0, 0, w, 260);
+
+    let shopText = "", shopBgW = 0;
+    if (shopName) {
+        shopText = fitText(ctx, shopName, "bold", 24, 16, w * 0.42);
+        shopBgW = ctx.measureText(shopText).width + 36;
+        const bgH = 48, bgX = w - shopBgW - 36, bgY = 44;
+        ctx.save();
+        ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(bgX, bgY, shopBgW, bgH, 24);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = `bold 24px ${FONT}`;
+        ctx.fillText(shopText, bgX + 18, bgY + 32);
+        ctx.restore();
+    }
+
+    const bannerMaxW = (shopName ? w - shopBgW - 36 - 24 : w - 48) - 48;
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.85)";
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = "#ffffff";
+    const bt = fitText(ctx, bannerTitle, "bold", 44, 26, bannerMaxW);
+    ctx.fillText(bt, 44, 76);
+
+    ctx.font = `28px ${FONT}`;
+    ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+    const gLines = wrapLines(ctx, greeting, w - 88, 2);
+    gLines.forEach((ln, i) => ctx.fillText(ln, 44, 134 + i * 38));
+
+    if ($('showDateChk').checked) {
+        const d = new Date();
+        const wk = '日一二三四五六'[d.getDay()];
+        const dateY = 134 + gLines.length * 38 + 10;
+        ctx.font = `23px ${FONT}`;
+        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+        const wxs = wxText();
+        ctx.fillText(`📅 ${d.getMonth() + 1}/${d.getDate()} 週${wk}` + (wxs ? `   ｜   ${wxs}` : ''), 44, dateY);
+    }
+    ctx.restore();
+
+    // 3. 底部卡片排版
+    const cardMargin = 28;
+    const cardW = w - cardMargin * 2;
+    const hasOriginPrice = Boolean(originPrice);
+    const cardH = hasOriginPrice ? 275 : 235;
+    const cardY = h - cardH - cardMargin;
+    const cardR = 26;
+
+    if (ctx.filter !== undefined) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(cardMargin, cardY, cardW, cardH, cardR);
+        ctx.clip();
+        ctx.filter = "blur(30px)";
+        ctx.drawImage(canvas, 0, 0);
+        ctx.restore();
+    }
+
+    ctx.save();
+    ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
+    ctx.shadowBlur = 25;
+    ctx.shadowOffsetY = 10;
+    const glassGrad = ctx.createLinearGradient(cardMargin, cardY, cardMargin, cardY + cardH);
+    glassGrad.addColorStop(0, `rgba(255, 255, 255, ${glassOpacity})`);
+    glassGrad.addColorStop(1, `rgba(255, 255, 255, ${Math.max(0.18, glassOpacity - 0.22)})`);
+    ctx.fillStyle = glassGrad;
+    ctx.beginPath();
+    ctx.roundRect(cardMargin, cardY, cardW, cardH, cardR);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(cardMargin, cardY, cardW, cardH, cardR);
+    ctx.stroke();
+    ctx.restore();
+
+    // 4. 內容文字
+    const px = cardMargin + 32;
+    const innerW = cardW - 64;
+
+    ctx.fillStyle = "#0f172a";
+    ctx.fillText(fitText(ctx, title, "bold", 38, 22, innerW), px, cardY + 58);
+
+    if (hasOriginPrice) {
+        ctx.fillStyle = "#64748b";
+        const ot = fitText(ctx, originPrice, "bold", 26, 18, innerW);
+        const otY = cardY + 104;
+        ctx.fillText(ot, px, otY);
+        const tw = ctx.measureText(ot).width;
+        ctx.strokeStyle = "#ef4444";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(px, otY - 7);
+        ctx.lineTo(px + tw, otY - 7);
+        ctx.stroke();
+    }
+
+    let saleFs = 34, badgeFs = 26, saleW = 0, badgeW = 0;
+    const gap = 16;
+    const measure = () => {
+        ctx.font = `bold ${saleFs}px ${FONT}`;
+        saleW = salePrice ? ctx.measureText(salePrice).width + 48 : 0;
+        ctx.font = `bold ${badgeFs}px ${FONT}`;
+        badgeW = badgeText ? ctx.measureText(badgeText).width + 40 : 0;
+    };
+    measure();
+    while (saleW + badgeW + (saleW && badgeW ? gap : 0) > innerW && saleFs > 18) {
+        saleFs -= 1; badgeFs = Math.max(16, badgeFs - 0.8);
+        measure();
+    }
+
+    const badgeY = hasOriginPrice ? cardY + 124 : cardY + 86;
+    const badgeH = 64;
+
+    if (salePrice) {
+        ctx.save();
+        ctx.shadowColor = "rgba(0, 0, 0, 0.22)";
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = theme.primary;
+        ctx.beginPath();
+        ctx.roundRect(px, badgeY, saleW, badgeH, 14);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = `bold ${saleFs}px ${FONT}`;
+        ctx.fillText(salePrice, px + 24, badgeY + badgeH / 2 + saleFs * 0.35);
+    }
+
+    if (badgeText) {
+        const bX = cardMargin + cardW - badgeW - 32;
+        ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+        ctx.strokeStyle = theme.primary;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.roundRect(bX, badgeY, badgeW, badgeH, 14);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = theme.primary;
+        ctx.font = `bold ${badgeFs}px ${FONT}`;
+        ctx.textAlign = "center";
+        ctx.fillText(badgeText, bX + badgeW / 2, badgeY + badgeH / 2 + badgeFs * 0.35);
+        ctx.textAlign = "left";
+    }
+
+    if (ctaText) {
+        ctx.fillStyle = "#334155";
+        ctx.fillText(fitText(ctx, ctaText, "bold", 21, 14, innerW), px, cardY + cardH - 22);
+    }
+
+    compose();
+}
+
+/* 氣氛特效 */
+const R = (a, b) => a + Math.random() * (b - a);
+const baseCv = document.createElement('canvas');
+
+const CITIES = {
+    基隆:[25.13,121.74], 台北:[25.04,121.56], 新北:[25.01,121.46], 桃園:[24.99,121.30], 新竹:[24.81,120.97],
+    苗栗:[24.56,120.82], 台中:[24.15,120.67], 彰化:[24.07,120.54], 南投:[23.91,120.69], 雲林:[23.71,120.54],
+    嘉義:[23.48,120.45], 台南:[22.99,120.21], 高雄:[22.63,120.30], 屏東:[22.67,120.49], 宜蘭:[24.75,121.75],
+    花蓮:[23.98,121.60], 台東:[22.76,121.14], 澎湖:[23.57,119.57], 金門:[24.45,118.38], 連江:[26.16,119.95]
+};
+(function () {
+    const s = $('citySelect');
+    Object.keys(CITIES).forEach(k => s.add(new Option(k, k)));
+    s.value = '雲林';
+})();
+
+const EMOJI = {
+    newyear:   ['🧧','🏮','✨','🎊'],
+    sakura:    ['🌸','🌸','💮'],
+    leaves:    ['🍂','🍁'],
+    hearts:    ['💖','💗','💕']
+};
+const GOLD = '255,215,0', WARM = '255,244,200';
+const FX_PRESETS = {
+    snow:      [{ k:'flake', n:80 }],
+    rain:      [{ k:'rain', n:110 }],
+    sakura:    [{ k:'emoji', set:'sakura', n:22, vy:[35,70], sway:45 }],
+    leaves:    [{ k:'emoji', set:'leaves', n:20, vy:[45,85], sway:35 }],
+    hearts:    [{ k:'emoji', set:'hearts', n:20, vy:[-80,-40], sway:25 }],
+    newyear:   [{ k:'emoji', set:'newyear', n:20, vy:[40,80], sway:30 }, { k:'glitter', n:40, color:GOLD }],
+    confetti:  [{ k:'confetti', n:65 }],
+    fireworks: [{ k:'fireworks' }],
+    rays:      [{ k:'rays' }, { k:'glitter', n:30, color:WARM }],
+    sparkle:   [{ k:'glitter', n:60, color:'255,255,255' }],
+    moon:      [{ k:'moon' }, { k:'glitter', n:40, color:WARM }]
+};
+const fx = { name: 'none', layers: [], t: 0, last: 0, raf: 0, w: 0, h: 0 };
+
+function newP(d, w, h, init) {
+    const p = { x: R(0, w), ph: R(0, 6.28), rot: R(0, 6.28), vr: R(-1.5, 1.5), vx: 0, vy: 0, sway: 0 };
+    if (d.k === 'flake')         { p.s = R(2.5, 7); p.vy = R(35, 80); p.sway = 24; }
+    else if (d.k === 'rain')     { p.len = R(16, 36); p.vy = R(680, 980); p.vx = -120; p.x = R(0, w + 200); }
+    else if (d.k === 'emoji')    { const e = EMOJI[d.set]; p.s = R(24, 46); p.vy = R(d.vy[0], d.vy[1]); p.sway = d.sway; p.ch = e[Math.floor(Math.random() * e.length)]; }
+    else if (d.k === 'confetti') { p.s = R(8, 16); p.vy = R(85, 180); p.sway = 50; p.vr = R(-8, 8); p.c = `hsl(${Math.floor(R(0, 360))},95%,65%)`; }
+    else if (d.k === 'glitter')  { p.s = R(2.5, 6.5); p.vy = R(-10, 10); p.sway = 8; p.sp = R(1.5, 4); }
+    p.y = (d.k === 'glitter' || init) ? R(0, h) : (p.vy > 0 ? -50 : h + 50);
+    return p;
+}
+
+function buildFx() {
+    const main = $('cardCanvas');
+    fx.w = main.width; fx.h = main.height;
+    fx.layers = (FX_PRESETS[fx.name] || []).map(d => {
+        const L = Object.assign({}, d, { p: [] });
+        if (d.k === 'fireworks') { L.bursts = []; L.next = 0; }
+        else for (let i = 0; i < (d.n || 0); i++) L.p.push(newP(L, fx.w, fx.h, true));
+        return L;
+    });
+}
+
+function updateFx(dt) {
+    for (const L of fx.layers) {
+        if (L.k === 'fireworks') {
+            L.next -= dt;
+            if (L.next <= 0) {
+                L.next = R(0.7, 1.4);
+                const n = 40;
+                L.bursts.push({
+                    x: R(fx.w * 0.15, fx.w * 0.85), y: R(fx.h * 0.1, fx.h * 0.45),
+                    age: 0, life: 1.8, hue: R(0, 360),
+                    parts: Array.from({ length: n }, (_, i) => ({ a: i / n * 6.283 + R(-0.08, 0.08), s: R(90, 220) }))
+                });
+            }
+            L.bursts.forEach(b => b.age += dt);
+            L.bursts = L.bursts.filter(b => b.age < b.life);
+            continue;
+        }
+        for (const p of L.p) {
+            p.x += p.vx * dt + (p.sway ? Math.sin(fx.t * 0.9 + p.ph) * p.sway * dt : 0);
+            p.y += p.vy * dt;
+            p.rot += p.vr * dt;
+            if (L.k === 'glitter') {
+                if (p.y < -15) p.y = fx.h + 15; else if (p.y > fx.h + 15) p.y = -15;
+            } else if ((p.vy > 0 && p.y > fx.h + 50) || (p.vy < 0 && p.y < -50)) {
+                Object.assign(p, newP(L, fx.w, fx.h, false));
+            }
+        }
+    }
+}
+
+function drawFx(c, w, h) {
+    const t = fx.t;
+    for (const L of fx.layers) {
+        c.save();
+        if (L.k === 'flake') {
+            c.fillStyle = 'rgba(255,255,255,0.85)';
+            for (const p of L.p) { c.beginPath(); c.arc(p.x, p.y, p.s, 0, 6.283); c.fill(); }
+        } else if (L.k === 'rain') {
+            c.strokeStyle = 'rgba(215,232,255,0.6)'; c.lineWidth = 1.8; c.beginPath();
+            for (const p of L.p) {
+                const k = p.len / Math.hypot(p.vx, p.vy);
+                c.moveTo(p.x, p.y); c.lineTo(p.x + p.vx * k, p.y + p.vy * k);
+            }
+            c.stroke();
+        } else if (L.k === 'emoji') {
+            c.textAlign = 'center'; c.textBaseline = 'middle';
+            for (const p of L.p) {
+                c.save(); c.translate(p.x, p.y); c.rotate(Math.sin(p.rot) * 0.6);
+                c.font = `${p.s}px ${FONT}`; c.fillText(p.ch, 0, 0); c.restore();
+            }
+        } else if (L.k === 'confetti') {
+            for (const p of L.p) {
+                c.save(); c.translate(p.x, p.y); c.rotate(p.rot);
+                c.fillStyle = p.c; c.fillRect(-p.s / 2, -p.s / 3, p.s, p.s * 0.65); c.restore();
+            }
+        } else if (L.k === 'glitter') {
+            for (const p of L.p) {
+                const a = 0.5 + 0.5 * Math.sin(t * p.sp + p.ph), s = p.s;
+                c.fillStyle = `rgba(${L.color},${(a * 0.95).toFixed(2)})`;
+                c.beginPath();
+                c.moveTo(p.x, p.y - s * 2.2); c.lineTo(p.x + s * 0.6, p.y - s * 0.6);
+                c.lineTo(p.x + s * 2.2, p.y); c.lineTo(p.x + s * 0.6, p.y + s * 0.6);
+                c.lineTo(p.x, p.y + s * 2.2); c.lineTo(p.x - s * 0.6, p.y + s * 0.6);
+                c.lineTo(p.x - s * 2.2, p.y); c.lineTo(p.x - s * 0.6, p.y - s * 0.6);
+                c.closePath(); c.fill();
+            }
+        } else if (L.k === 'fireworks') {
+            c.globalCompositeOperation = 'lighter';
+            for (const b of L.bursts) {
+                const alpha = Math.max(0, 1 - b.age / b.life);
+                c.fillStyle = `hsla(${b.hue},100%,65%,${alpha.toFixed(2)})`;
+                for (const q of b.parts) {
+                    const d = q.s * b.age * (1 - 0.25 * b.age / b.life);
+                    c.beginPath();
+                    c.arc(b.x + Math.cos(q.a) * d, b.y + Math.sin(q.a) * d + 80 * b.age * b.age, 3.2, 0, 6.283);
+                    c.fill();
+                }
+            }
+        } else if (L.k === 'rays') {
+            c.globalCompositeOperation = 'screen';
+            const ox = w * 0.1, oy = -40, len = h * 1.3;
+            for (let i = 0; i < 5; i++) {
+                const ang = 0.8 + i * 0.18 + Math.sin(t * 0.4 + i) * 0.04, sp = 0.08;
+                const a = 0.12 + 0.07 * Math.sin(t * 0.6 + i * 1.3);
+                const g = c.createLinearGradient(ox, oy, ox + Math.cos(ang) * len, oy + Math.sin(ang) * len);
+                g.addColorStop(0, `rgba(255,244,200,${a.toFixed(3)})`);
+                g.addColorStop(1, 'rgba(255,244,200,0)');
+                c.fillStyle = g;
+                c.beginPath(); c.moveTo(ox, oy);
+                c.lineTo(ox + Math.cos(ang - sp) * len, oy + Math.sin(ang - sp) * len);
+                c.lineTo(ox + Math.cos(ang + sp) * len, oy + Math.sin(ang + sp) * len);
+                c.closePath(); c.fill();
+            }
+        } else if (L.k === 'moon') {
+            const mx = w * 0.78, my = h * 0.22, r = w * 0.085, pulse = 0.85 + 0.15 * Math.sin(t * 1.2);
+            const glow = c.createRadialGradient(mx, my, r * 0.9, mx, my, r * 3.4);
+            glow.addColorStop(0, `rgba(255,244,200,${(0.42 * pulse).toFixed(3)})`);
+            glow.addColorStop(1, 'rgba(255,244,200,0)');
+            c.fillStyle = glow; c.beginPath(); c.arc(mx, my, r * 3.4, 0, 6.283); c.fill();
+            const disc = c.createRadialGradient(mx - r * 0.3, my - r * 0.3, r * 0.1, mx, my, r);
+            disc.addColorStop(0, '#fffbe6'); disc.addColorStop(1, '#ffe9a8');
+            c.fillStyle = disc; c.beginPath(); c.arc(mx, my, r, 0, 6.283); c.fill();
+        }
+        c.restore();
+    }
+}
+
+function compose() {
+    const main = $('cardCanvas');
+    const c = main.getContext('2d');
+    const w = main.width, h = main.height;
+    c.clearRect(0, 0, w, h);
+    c.drawImage(baseCv, 0, 0);
+    if (fx.layers.length) {
+        if (fx.w !== w || fx.h !== h) buildFx();
+        drawFx(c, w, h);
+    }
+}
+
+function tick(ts) {
+    if (!fx.last) fx.last = ts;
+    const dt = Math.min(0.05, (ts - fx.last) / 1000);
+    fx.last = ts;
+    fx.t += dt;
+    updateFx(dt);
+    compose();
+    fx.raf = requestAnimationFrame(tick);
+}
+
+function startFx(name) {
+    cancelAnimationFrame(fx.raf);
+    fx.raf = 0; fx.last = 0; fx.t = 0;
+    fx.name = name;
+    fx.layers = [];
+    if (FX_PRESETS[name]) { buildFx(); fx.raf = requestAnimationFrame(tick); }
+    else compose();
+}
+
+const CNY = { 2025:'01-29', 2026:'02-17', 2027:'02-06', 2028:'01-26', 2029:'02-13', 2030:'02-03' };
+
+function todayFestival(d) {
+    const m = d.getMonth() + 1, day = d.getDate();
+    if (m === 1 && day === 1)   return { name: '元旦', fx: 'fireworks' };
+    if (m === 12 && day === 31) return { name: '跨年夜', fx: 'fireworks' };
+    if (m === 2 && day === 14)  return { name: '情人節', fx: 'hearts' };
+    if (m === 4 && day === 4)   return { name: '兒童節', fx: 'confetti' };
+    if (m === 12 && (day === 24 || day === 25)) return { name: '聖誕節', fx: 'snow' };
+    
+    if (CNY[d.getFullYear()]) {
+        const [cm, cd] = CNY[d.getFullYear()].split('-').map(Number);
+        const diff = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - new Date(d.getFullYear(), cm - 1, cd)) / 864e5);
+        if (diff === -1) return { name: '除夕', fx: 'newyear' };
+        if (diff >= 0 && diff <= 5) return { name: '春節賀歲', fx: 'newyear' };
+    }
+    return null;
+}
+
+let wx = null, wxBusy = false;
+
+function wxIcon(c, day) {
+    if (c === 0) return day ? '☀️' : '🌙';
+    if (c <= 2) return day ? '🌤️' : '☁️';
+    if (c === 3) return '☁️';
+    if (c >= 95) return '⛈️';
+    if ((c >= 71 && c <= 77) || c === 85 || c === 86) return '❄️';
+    return '🌧️';
+}
+
+function wxFx() {
+    if (!wx) return 'none';
+    const c = wx.code;
+    if ((c >= 51 && c <= 67) || (c >= 80 && c <= 82) || c >= 95) return 'rain';
+    if ((c >= 71 && c <= 77) || c === 85 || c === 86) return 'snow';
+    if (c <= 2) return wx.day ? 'rays' : 'sparkle';
+    return 'none';
+}
+
+function wxText() {
+    const v = $('fxSelect').value;
+    if (!wx || (v !== 'auto' && v !== 'weather') || wx.city !== $('citySelect').value) return '';
+    return `${wxIcon(wx.code, wx.day)} ${wx.temp}°C`;
+}
+
+async function fetchWeather(announce) {
+    if (wxBusy) return;
+    wxBusy = true;
+    const city = $('citySelect').value, [lat, lon] = CITIES[city];
+    try {
+        const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day&timezone=Asia%2FTaipei`);
+        if (!r.ok) throw new Error(r.status);
+        const c = (await r.json()).current;
+        wx = { city, code: c.weather_code, temp: Math.round(c.temperature_2m), day: c.is_day === 1, at: Date.now() };
+        wxBusy = false;
+        applyFx(announce);
+        drawCanvas();
+    } catch (e) {
+        wxBusy = false;
+        if (announce) toast('☁️ 天氣更新逾時');
+    }
+}
+
+function applyFx(announce) {
+    const v = $('fxSelect').value;
+    $('citySelect').style.display = (v === 'auto' || v === 'weather') ? 'inline-block' : 'none';
+    let name = v, note = '';
+    const fest = v === 'auto' ? todayFestival(new Date()) : null;
+    if (fest) {
+        name = fest.fx;
+        note = `🎉 今天是${fest.name}，已為您套用節慶氛圍`;
+    } else if (v === 'auto' || v === 'weather') {
+        const city = $('citySelect').value;
+        name = wxFx();
+        if (!wx || wx.city !== city || Date.now() - wx.at > 600000) fetchWeather(announce);
+        else note = `${wxIcon(wx.code, wx.day)} ${city}目前 ${wx.temp}°C`;
+    }
+    startFx(name);
+    if (announce && note) toast(note);
+}
+
+function copyCaption() {
+    const v = id => ($(id).value || "").trim();
+    const shop = v('shopNameInput'), greeting = v('greetingInput'), title = v('titleInput');
+    const origin = v('originPriceInput'), sale = v('salePriceInput');
+    const badge = v('badgeInput'), cta = v('ctaInput');
+
+    const price = [origin, sale].filter(Boolean).join(' ➔ ');
+    const parts = [
+        `☀️ ${shop ? shop + '｜' : ''}今日美好推薦 ☀️`,
+        greeting,
+        `📌 主打推薦：${title}${badge ? ' (' + badge + ')' : ''}` + (price ? `\n🏷️ 專屬特惠：${price}` : ''),
+        cta ? `✨ ${cta}` : '',
+        `祝您今天順心愉快、好運連連！🍀`
+    ].filter(Boolean);
+
+    navigator.clipboard.writeText(parts.join('\n\n'))
+        .then(() => toast('📋 文案已複製！可直接前往 LINE/FB 貼上'))
+        .catch(() => toast('複製文案失敗'));
+}
+
+function getBlob() {
+    render();
+    return new Promise(res => $('cardCanvas').toBlob(res, 'image/png'));
+}
+
+async function copyImage() {
+    try {
+        const blob = await getBlob();
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        toast('🖼️ 高清圖片已複製！可直接至 LINE/FB 貼上');
+    } catch (e) {
+        toast('請改點「下載 1080P 圖卡」');
+    }
+}
+
+function shareImg() {
+    if (lastFile && navigator.share) navigator.share({ files: [lastFile] }).catch(() => {});
+}
+
+async function downloadImage() {
+    const blob = await getBlob();
+    const name = `morning_card_${Date.now()}.png`;
+    const url = URL.createObjectURL(blob);
+
+    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        $('saveImg').src = url;
+        $('saveOverlay').style.display = 'flex';
+        lastFile = new File([blob], name, { type: 'image/png' });
+        $('shareBtn').style.display =
+            (navigator.canShare && navigator.canShare({ files: [lastFile] })) ? 'inline-block' : 'none';
+        return;
+    }
+
+    const link = document.createElement('a');
+    link.download = name;
+    link.href = url;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+</script>
+
+</body>
+</html>
